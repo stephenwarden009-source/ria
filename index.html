@@ -452,7 +452,27 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       <div class="skip-link" onclick="obNext(4)">← Back</div>
     </div>
   </div>
+<button class="tool-btn" onclick="toggleProfile()">👤 My Profile & Recovery Plan</button>
 
+<div id="profile-editor" style="display:none; padding:15px; background:#1e293b; border-radius:12px; margin-top:10px; border:1px solid #334155;">
+  <div class="ob-lbl">Sponsor / Primary Support</div>
+  <input class="fi" id="set-c1" type="text" placeholder="Name + Contact">
+  
+  <div class="ob-lbl">Family Contact</div>
+  <input class="fi" id="set-c2" type="text" placeholder="Name + Relationship">
+  
+  <div class="ob-lbl">Typical Spend per Binge ($)</div>
+  <input class="fi" id="set-binge" type="number" placeholder="e.g. 100">
+
+  <div class="ob-lbl">AI Support Tone</div>
+  <select class="fi" id="set-tone">
+    <option value="Gentle">Gentle</option>
+    <option value="Direct">Direct</option>
+    <option value="Hardline">Hardline</option>
+  </select>
+
+  <button class="ob-btn" onclick="saveMasterProfile()" style="margin-top:15px;">Update Profile</button>
+</div>
   <!-- ══ HOME ══ -->
   <div class="screen" id="screen-home">
     <div class="hero-card">
@@ -736,7 +756,44 @@ var S = {
 
 function save(){ try{ localStorage.setItem('ria3', JSON.stringify(S)); }catch(e){} }
 function load(){ try{ var d=localStorage.getItem('ria3'); if(d){ S=Object.assign(S,JSON.parse(d)); return true; } }catch(e){} return false; }
+// --- PROFILE MANAGEMENT ---
+function toggleProfile() {
+  const editor = document.getElementById('profile-editor');
+  editor.style.display = (editor.style.display === 'none') ? 'block' : 'none';
+  
+  // Pre-fill fields with the data already in your State (S)
+  if (document.getElementById('set-c1')) {
+    document.getElementById('set-c1').value = S.contacts[0] || '';
+    document.getElementById('set-c2').value = S.contacts[1] || '';
+    document.getElementById('set-binge').value = S.bingeAmt || '';
+    document.getElementById('set-tone').value = S.tone || 'gentle';
+  }
+}
 
+function saveMasterProfile() {
+  // 1. Update the State object (S)
+  S.contacts[0] = document.getElementById('set-c1').value;
+  S.contacts[1] = document.getElementById('set-c2').value;
+  S.bingeAmt = parseFloat(document.getElementById('set-binge').value) || 0;
+  S.tone = document.getElementById('set-tone').value;
+
+  // 2. Use your existing save function to push to memory
+  save();
+
+  // 3. Update the "$ Saved" box on the Home Screen
+  // Math: (Spend * Frequency / 30 days) * Days Clean
+  const dailyCost = (S.bingeAmt * (S.bingeFreq || 4)) / 30;
+  const totalSaved = Math.floor(dailyCost * S.days);
+  
+  // Find the element with the class from your screenshot
+  const savedText = document.querySelector('.saved-amount-text');
+  if (savedText) {
+    savedText.innerText = `$${totalSaved}`;
+  }
+
+  alert("Profile Updated!");
+  toggleProfile(); // Close the menu
+}
 // ── BOOT ──
 window.addEventListener('DOMContentLoaded', function(){
   initTheme();
@@ -1170,6 +1227,42 @@ function flash(msg){
   flashT=setTimeout(function(){ el.classList.remove('show'); }, 2600);
 }
 function setT(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
+  // --- PROFILE & RECOVERY MANAGEMENT ---
+function toggleProfile() {
+  const editor = document.getElementById('profile-editor');
+  if (!editor) return;
+  editor.style.display = (editor.style.display === 'none') ? 'block' : 'none';
+  
+  // Pre-fill the fields with whatever is already in your app's memory (S)
+  document.getElementById('set-c1').value = S.contacts[0] || '';
+  document.getElementById('set-c2').value = S.contacts[1] || '';
+  document.getElementById('set-binge').value = S.bingeAmt || '';
+  document.getElementById('set-tone').value = S.tone || 'gentle';
+}
+
+function saveMasterProfile() {
+  // 1. Update your existing State object (S)
+  S.contacts[0] = document.getElementById('set-c1').value;
+  S.contacts[1] = document.getElementById('set-c2').value;
+  S.bingeAmt = parseFloat(document.getElementById('set-binge').value) || 0;
+  S.tone = document.getElementById('set-tone').value;
+
+  // 2. Use your existing save() function to push to phone memory
+  save();
+
+  // 3. Update the "$ Saved" box on your home screen
+  const dailyCost = (S.bingeAmt * (S.bingeFreq || 4)) / 30;
+  const totalSaved = Math.floor(dailyCost * (S.days || 0));
+  
+  const savedText = document.querySelector('.saved-amount-text');
+  if (savedText) {
+    savedText.textContent = `$${totalSaved}`;
+  }
+
+  // 4. Use your existing flash() function for the checkmark
+  flash("Profile Updated!");
+  toggleProfile(); // Hide the menu
+}
 </script>
 </body>
 </html>
