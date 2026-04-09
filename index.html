@@ -2,6 +2,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,15 +10,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#0F172A" />
 <meta name="mobile-web-app-capable" content="yes" />
-<title>RIA — Clean Shell</title>
+<title>RIA — Enhanced Clean Shell</title>
 <style>
 :root{
   --bg:#0F172A; --panel:#1E293B; --panel2:#263548;
   --text:#E2E8F0; --muted:#94A3B8; --border:rgba(255,255,255,.09);
-  --teal:#2DD4BF; --teal2:#5EEAD4; --amber:#F59E0B;
+  --teal:#2DD4BF; --teal2:#5EEAD4; --amber:#F59E0B; --sage:#84A98C; --lav:#A78BFA;
   --safe-bot: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
   --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+[data-theme="light"]{
+  --bg:#F0F4F8; --panel:#FFFFFF; --panel2:#E8EFF7;
+  --text:#0F172A; --muted:#64748B; --border:rgba(0,0,0,.08);
+  --teal:#0B8C78; --teal2:#0A7A68; --amber:#B45309; --sage:#3D6B4F; --lav:#6D28D9;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--font)}
@@ -62,11 +68,11 @@ button{border:none; outline:none; cursor:pointer; font-weight:700}
 .h3{font-size:15px; font-weight:700; margin:0 0 4px}
 .nav{
   position:fixed; left:0; right:0; bottom:0; max-width:480px; margin:0 auto;
-  height:72px; padding-bottom:var(--safe-bot); display:grid; grid-template-columns:repeat(5,1fr);
+  height:72px; padding-bottom:var(--safe-bot); display:grid; grid-template-columns:repeat(6,1fr);
   background:var(--panel); border-top:1px solid var(--border); z-index:60;
 }
 .nav button{
-  background:none; color:var(--muted); border:none; font-size:11px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  background:none; color:var(--muted); border:none; font-size:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
 }
 .nav button.active{color:var(--teal)}
 .statgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
@@ -79,11 +85,11 @@ button{border:none; outline:none; cursor:pointer; font-weight:700}
 .contact{display:flex; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:12px; margin-bottom:10px}
 .contact .grow{flex:1}
 .contact a{
-  width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   background:var(--panel2); color:var(--text); text-decoration:none; border:1px solid var(--border)
 }
-.media-item{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px}
-.media-link{display:block; margin-top:6px; color:var(--teal2); text-decoration:none; word-break:break-all}
+.media-item,.meeting-item{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px}
+.media-link,.meeting-link{display:block; margin-top:6px; color:var(--teal2); text-decoration:none; word-break:break-all}
 .modal-wrap{
   position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; z-index:100;
   align-items:flex-end; justify-content:center;
@@ -97,6 +103,13 @@ button{border:none; outline:none; cursor:pointer; font-weight:700}
 .badge{display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(45,212,191,.12); color:var(--teal2); font-size:12px; font-weight:700}
 .small{font-size:12px; color:var(--muted)}
 hr{border:none; border-top:1px solid var(--border); margin:12px 0}
+.mem-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mem-card{aspect-ratio:1;border-radius:14px;background:var(--panel2);border:1px solid var(--border);overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center}
+.mem-card img{width:100%;height:100%;object-fit:cover}
+.mem-add{border:2px dashed var(--border);position:relative}
+.mem-add input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.mem-caption{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.6));padding:6px 8px;font-size:11px;color:#fff}
+.pill{display:inline-block;padding:7px 10px;border-radius:999px;background:rgba(167,139,250,.12);color:var(--lav);font-size:12px;font-weight:700;margin-right:6px}
 </style>
 </head>
 <body>
@@ -104,6 +117,7 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
   <div class="topbar">
     <div class="logo">R<span>I</span>A</div>
     <div class="icon-row">
+      <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
       <button class="icon-btn" onclick="openSettings()">⚙</button>
     </div>
   </div>
@@ -111,7 +125,7 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
   <div id="onboarding">
     <div class="card hero">
       <div class="h1">Let's build your RIA.</div>
-      <div class="sub">A clean, stable shell first. Save your core profile, your contacts, and your reset media.</div>
+      <div class="sub">A clean, stable shell with your core profile, support contacts, memory wall, and reset media.</div>
     </div>
 
     <div class="card">
@@ -143,20 +157,17 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
 
       <div class="lbl">Sponsor / primary support</div>
       <input id="inp-c1" type="text" placeholder="Name">
-
-      <div class="lbl">Sponsor / primary support phone</div>
+      <div class="lbl">Sponsor phone</div>
       <input id="inp-c1p" type="tel" placeholder="2041234567">
 
       <div class="lbl">Family contact</div>
       <input id="inp-c2" type="text" placeholder="Name">
-
-      <div class="lbl">Family contact phone</div>
+      <div class="lbl">Family phone</div>
       <input id="inp-c2p" type="tel" placeholder="2041234567">
 
       <div class="lbl">Counsellor / therapist</div>
       <input id="inp-c3" type="text" placeholder="Name">
-
-      <div class="lbl">Counsellor / therapist phone</div>
+      <div class="lbl">Counsellor phone</div>
       <input id="inp-c3p" type="tel" placeholder="2041234567">
 
       <div class="lbl">Affirmation</div>
@@ -183,6 +194,12 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
       <div class="lbl">Podcast</div>
       <input id="inp-pod" type="text" placeholder="Title / link">
 
+      <div class="lbl">Memory Wall photos</div>
+      <div class="card" style="padding:12px">
+        <div class="sub">Add a couple of photos now or later from the Memory tab.</div>
+        <input id="inp-mem" type="file" accept="image/*" multiple>
+      </div>
+
       <button class="btn" onclick="finishSetup()">Open My RIA</button>
       <button class="btn2" onclick="quickLaunch()">Skip and open shell</button>
     </div>
@@ -206,8 +223,8 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
     <div class="tilegrid">
       <div class="tile" onclick="go('urgent')">🆘<br>Urgent Help</div>
       <div class="tile" onclick="go('media')">🎧<br>Reset Media</div>
+      <div class="tile" onclick="go('memory')">🖼<br>Memory Wall</div>
       <div class="tile" onclick="go('support')">🤝<br>Support</div>
-      <div class="tile" onclick="go('tools')">🧰<br>Tools</div>
     </div>
   </div>
 
@@ -217,9 +234,13 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
       <div class="sub">Choose one action right now.</div>
     </div>
     <div id="urgent-primary"></div>
-    <div class="card">
-      <button class="btn2" onclick="go('support')">Open support network</button>
-      <button class="btn" onclick="go('media')">Open reset media</button>
+    <div class="meeting-item">
+      <div class="h3">Live meeting links</div>
+      <div class="sub">Tap straight into recovery rooms right now.</div>
+      <a class="meeting-link" href="https://ca-online.org" target="_blank" rel="noopener">Cocaine Anonymous online ↗</a>
+      <a class="meeting-link" href="https://www.aa.org/meeting-guide-app" target="_blank" rel="noopener">Alcoholics Anonymous meeting guide ↗</a>
+      <a class="meeting-link" href="https://na.org/meetingsearch/" target="_blank" rel="noopener">Narcotics Anonymous meeting search ↗</a>
+      <a class="meeting-link" href="https://www.intherooms.com" target="_blank" rel="noopener">In The Rooms ↗</a>
     </div>
   </div>
 
@@ -229,6 +250,18 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
       <div class="sub">Tap links to open them.</div>
     </div>
     <div id="media-list"></div>
+  </div>
+
+  <div class="screen" id="screen-memory">
+    <div class="card hero">
+      <div class="h2">Memory Wall</div>
+      <div class="sub">The people and moments you're fighting for.</div>
+    </div>
+    <div class="card">
+      <div class="pill">Affirmation</div>
+      <div class="sub" id="aff-text">You are fighting for something real.</div>
+    </div>
+    <div id="memory-grid" class="mem-grid"></div>
   </div>
 
   <div class="screen" id="screen-support">
@@ -242,10 +275,7 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
   <div class="screen" id="screen-tools">
     <div class="card">
       <div class="h2">Tools</div>
-      <div class="sub" id="aff-text">You are fighting for something real.</div>
-      <hr>
-      <div class="h3">Quick grounding</div>
-      <div class="sub">Name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, 1 you can taste.</div>
+      <div class="sub">Quick grounding: name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, 1 you can taste.</div>
     </div>
   </div>
 
@@ -253,6 +283,7 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
     <button id="nav-home" class="active" onclick="go('home')">🏠<span>Home</span></button>
     <button id="nav-urgent" onclick="go('urgent')">⚠️<span>Urgent</span></button>
     <button id="nav-media" onclick="go('media')">🎧<span>Media</span></button>
+    <button id="nav-memory" onclick="go('memory')">🖼<span>Memory</span></button>
     <button id="nav-support" onclick="go('support')">🤝<span>Support</span></button>
     <button id="nav-tools" onclick="go('tools')">🧰<span>Tools</span></button>
   </nav>
@@ -327,6 +358,9 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
       <div class="lbl">Podcast</div>
       <input id="s-pod" type="text">
 
+      <div class="lbl">Add memory wall photos</div>
+      <input id="s-mem" type="file" accept="image/*" multiple>
+
       <button class="btn2" onclick="saveSettings()">Save Changes</button>
       <div class="close" onclick="closeSettings()">Close</div>
     </div>
@@ -335,6 +369,7 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
 
 <script>
 const STORAGE_KEY = 'ria3';
+const THEME_KEY = 'ria3_theme';
 
 const DEFAULT_STATE = {
   name:'', days:0, cycle:18, substance:'',
@@ -345,14 +380,13 @@ const DEFAULT_STATE = {
   ],
   affirmation:'', loss:'',
   bingeAmt:0, bingeFreq:4,
-  music:'', show:'', clip:'', pod:''
+  music:'', show:'', clip:'', pod:'',
+  memories:[]
 };
 
 let S = JSON.parse(JSON.stringify(DEFAULT_STATE));
 
-function saveState(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(S));
-}
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); }
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -360,44 +394,23 @@ function loadState(){
     const parsed = JSON.parse(raw);
     S = deepMerge(JSON.parse(JSON.stringify(DEFAULT_STATE)), parsed || {});
     return true;
-  }catch(e){
-    console.error('loadState failed', e);
-    return false;
-  }
+  }catch(e){ console.error('loadState failed', e); return false; }
 }
 function deepMerge(base, incoming){
   if(Array.isArray(base)) return Array.isArray(incoming) ? incoming : base;
   const out = {...base};
   for(const k in incoming){
-    if(base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])){
-      out[k] = deepMerge(base[k], incoming[k] || {});
-    }else{
-      out[k] = incoming[k];
-    }
+    if(base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])) out[k] = deepMerge(base[k], incoming[k] || {});
+    else out[k] = incoming[k];
   }
   return out;
 }
-function extractPhone(v){
-  return String(v || '').replace(/\D/g,'');
-}
-function val(id){
-  const el = document.getElementById(id);
-  return el ? el.value.trim() : '';
-}
-function setVal(id, v){
-  const el = document.getElementById(id);
-  if(el) el.value = v ?? '';
-}
-function text(id, v){
-  const el = document.getElementById(id);
-  if(el) el.textContent = v;
-}
-function fmtMoney(n){
-  return '$' + Number(n || 0).toLocaleString();
-}
-function calcSaved(){
-  return Math.round(((Number(S.bingeAmt)||0) * (Number(S.bingeFreq)||0) / 30) * (Number(S.days)||0));
-}
+function extractPhone(v){ return String(v || '').replace(/\D/g,''); }
+function val(id){ const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function setVal(id, v){ const el = document.getElementById(id); if(el) el.value = v ?? ''; }
+function text(id, v){ const el = document.getElementById(id); if(el) el.textContent = v; }
+function fmtMoney(n){ return '$' + Number(n || 0).toLocaleString(); }
+function calcSaved(){ return Math.round(((Number(S.bingeAmt)||0) * (Number(S.bingeFreq)||0) / 30) * (Number(S.days)||0)); }
 function finishSetup(){
   S.name = val('inp-name') || 'Friend';
   S.days = parseInt(val('inp-days') || '0', 10) || 0;
@@ -416,14 +429,11 @@ function finishSetup(){
   S.show = val('inp-show');
   S.clip = val('inp-clip');
   S.pod = val('inp-pod');
+  handleFiles(document.getElementById('inp-mem')?.files);
   saveState();
   launchApp();
 }
-function quickLaunch(){
-  if(!S.name) S.name = val('inp-name') || 'Friend';
-  saveState();
-  launchApp();
-}
+function quickLaunch(){ if(!S.name) S.name = val('inp-name') || 'Friend'; saveState(); launchApp(); }
 function launchApp(){
   document.getElementById('onboarding').classList.add('hidden');
   document.getElementById('nav').classList.remove('hidden');
@@ -462,6 +472,7 @@ function populate(){
   renderContacts();
   renderUrgent();
   renderMedia();
+  renderMemory();
 }
 function renderContacts(){
   const wrap = document.getElementById('contacts-list');
@@ -534,6 +545,34 @@ function renderMedia(){
     wrap.appendChild(div);
   });
 }
+function renderMemory(){
+  const wrap = document.getElementById('memory-grid');
+  wrap.innerHTML = '';
+  (S.memories || []).forEach((src, i) => {
+    const div = document.createElement('div');
+    div.className = 'mem-card';
+    div.innerHTML = `<img src="${src}" alt="Memory ${i+1}"><div class="mem-caption">Your reason</div>`;
+    wrap.appendChild(div);
+  });
+  const add = document.createElement('div');
+  add.className = 'mem-card mem-add';
+  add.innerHTML = '<span class="small">Add photo</span><input type="file" accept="image/*" multiple>';
+  add.querySelector('input').addEventListener('change', e => { handleFiles(e.target.files); saveState(); renderMemory(); });
+  wrap.appendChild(add);
+}
+function handleFiles(files){
+  if(!files || !files.length) return;
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      S.memories = S.memories || [];
+      S.memories.push(e.target.result);
+      saveState();
+      renderMemory();
+    };
+    reader.readAsDataURL(file);
+  });
+}
 function go(screen){
   document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
   const target = document.getElementById('screen-' + screen);
@@ -543,13 +582,8 @@ function go(screen){
   const navBtn = document.getElementById('nav-' + screen);
   if(navBtn) navBtn.classList.add('active');
 }
-function openSettings(){
-  populate();
-  document.getElementById('modal-settings').classList.add('open');
-}
-function closeSettings(){
-  document.getElementById('modal-settings').classList.remove('open');
-}
+function openSettings(){ populate(); document.getElementById('modal-settings').classList.add('open'); }
+function closeSettings(){ document.getElementById('modal-settings').classList.remove('open'); }
 function saveSettings(){
   S.name = val('s-name') || 'Friend';
   S.days = parseInt(val('s-days') || '0', 10) || 0;
@@ -568,9 +602,24 @@ function saveSettings(){
   S.show = val('s-show');
   S.clip = val('s-clip');
   S.pod = val('s-pod');
+  handleFiles(document.getElementById('s-mem')?.files);
   saveState();
   populate();
   closeSettings();
+}
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem(THEME_KEY, theme);
+  const btn = document.getElementById('theme-btn');
+  if(btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
+}
+function toggleTheme(){
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+function initTheme(){
+  const saved = localStorage.getItem(THEME_KEY) || 'dark';
+  applyTheme(saved);
 }
 function escapeHtml(str){
   return String(str || '')
@@ -582,9 +631,8 @@ function escapeHtml(str){
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  if(loadState() && S.name){
-    launchApp();
-  }
+  initTheme();
+  if(loadState() && S.name) launchApp();
 });
 </script>
 </body>
