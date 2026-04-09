@@ -1,20 +1,45 @@
-const CACHE = 'ria-v7'; // Increased version to force an update
+const CACHE = 'ria-v8';
+
 const ASSETS = [
-  './', 
-  'index.html', 
-  'manifest.json', 
-  'icons/icon-192.png',
-  'icons/icon-512.png'
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/sw.js'
 ];
 
+// INSTALL
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => {
-      console.log('Caching assets...');
-      return c.addAll(ASSETS);
+    caches.open(CACHE).then(cache => {
+      console.log('Caching app shell...');
+      return cache.addAll(ASSETS);
     })
   );
   self.skipWaiting();
 });
 
-// ... the rest of your activate and fetch listeners stay the same
+// ACTIVATE (clear old caches)
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(
+        keys.filter(key => key !== CACHE)
+            .map(key => caches.delete(key))
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+// FETCH (cache-first)
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+
+  e.respondWith(
+    caches.match(e.request).then(response => {
+      return response || fetch(e.request);
+    })
+  );
+});
