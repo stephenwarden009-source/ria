@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html> 
 <html lang="en">
 <head>
@@ -828,22 +829,12 @@ function load(){ try{ var d=localStorage.getItem('ria3'); if(d){ S=Object.assign
 // ── BOOT ──
 window.addEventListener('DOMContentLoaded', function(){
   initTheme();
-  var hasProfile = load() && S.name;
+  var hasProfile = false;
+  try { hasProfile = load() && !!S.name; } catch(e) { console.error('load failed', e); }
   if(hasProfile){
-    launchApp();
-  } else {
-    document.getElementById('onboarding').classList.remove('hidden');
-    document.getElementById('nav').classList.remove('show');
+    setTimeout(function(){ launchApp(); }, 0);
   }
-  renderPreviews();
-  if(S.avatar){
-    var w=document.getElementById('avatar-wrap');
-    if(w){
-      w.innerHTML='<img src="'+S.avatar+'" style="width:100%;height:100%;object-fit:cover;"><input type="file" accept="image/*" onchange="setAvatar(this)" style="position:absolute;inset:0;opacity:0;cursor:pointer;">';
-    }
-  }
-  // SW
-  if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(function(){});
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(function(err){ console.error('SW register failed', err); });
 });
 
 // ── NAVIGATION ──  (THE ONE FUNCTION THAT MUST WORK)
@@ -864,48 +855,50 @@ function go(s){
 
 // ── LAUNCH ──
 function launchApp(){
-  document.getElementById('onboarding').classList.add('hidden');
-  document.getElementById('nav').classList.add('show');
-  populate();
-  go('home');
-  checkMissed();
+  var ob = document.getElementById('onboarding');
+  var nav = document.getElementById('nav');
+  if(ob) ob.classList.add('hidden');
+  if(nav) nav.classList.add('show');
+  try { populate(); } catch(e) { console.error('populate failed', e); }
+  try { go('home'); } catch(e) { console.error('go(home) failed', e); }
+  try { checkMissed(); } catch(e) { console.error('checkMissed failed', e); }
 }
+
 
 
 function populate(){
   updateNameDisplay();
   updateDaysDisplay();
-  if(S.contacts[0]) document.getElementById('call-label').textContent = 'Call ' + (S.contacts[0].split(/[0-9]/)[0].trim() || 'your support');
-  if(S.music) document.getElementById('mi-music').textContent = S.music;
-  if(S.show) document.getElementById('mi-tv').textContent = S.show;
-  if(S.clip) document.getElementById('mi-clip').textContent = S.clip;
-  if(S.pod) document.getElementById('mi-pod').textContent = S.pod;
 
-  var musicTile = document.getElementById('mi-music');
-  if(musicTile && S.music){ var p1 = musicTile.closest('.mitem'); if(p1) p1.onclick = function(){ openLink(S.music); }; }
+  var callLabel = document.getElementById('call-label');
+  if(callLabel && S.contacts[0]) callLabel.textContent = 'Call ' + (S.contacts[0].split(/[0-9]/)[0].trim() || 'your support');
 
-  var tvTile = document.getElementById('mi-tv');
-  if(tvTile && S.show){ var p2 = tvTile.closest('.mitem'); if(p2) p2.onclick = function(){ openLink(S.show); }; }
+  var miMusic = document.getElementById('mi-music');
+  if(miMusic && S.music) miMusic.textContent = S.music;
+  var miTv = document.getElementById('mi-tv');
+  if(miTv && S.show) miTv.textContent = S.show;
+  var miClip = document.getElementById('mi-clip');
+  if(miClip && S.clip) miClip.textContent = S.clip;
+  var miPod = document.getElementById('mi-pod');
+  if(miPod && S.pod) miPod.textContent = S.pod;
 
-  var clipTile = document.getElementById('mi-clip');
-  if(clipTile && S.clip){ var p3 = clipTile.closest('.mitem'); if(p3) p3.onclick = function(){ openLink(S.clip); }; }
+  if(miMusic && S.music){ var p1 = miMusic.closest('.mitem'); if(p1) p1.onclick = function(){ openLink(S.music); }; }
+  if(miTv && S.show){ var p2 = miTv.closest('.mitem'); if(p2) p2.onclick = function(){ openLink(S.show); }; }
+  if(miClip && S.clip){ var p3 = miClip.closest('.mitem'); if(p3) p3.onclick = function(){ openLink(S.clip); }; }
+  if(miPod && S.pod){ var p4 = miPod.closest('.mitem'); if(p4) p4.onclick = function(){ openLink(S.pod); }; }
 
-  var podTile = document.getElementById('mi-pod');
-  if(podTile && S.pod){ var p4 = podTile.closest('.mitem'); if(p4) p4.onclick = function(){ openLink(S.pod); }; }
+  try { buildAff(); } catch(e) { console.error('buildAff failed', e); }
+  var loss = document.getElementById('loss-text');
+  if(loss && S.loss) loss.textContent = S.loss;
 
-  buildAff();
-  if(S.loss) document.getElementById('loss-text').textContent = S.loss;
-  buildMemGrid();
-  renderPreviews();
-  renderExtraMedia('music');
-  renderExtraMedia('tv');
-  renderExtraMedia('clips');
-  renderExtraMedia('pods');
-  buildContacts();
-  renderSavings();
-  renderCalendar();
-  calcStreak();
-  checkBadges();
+  try { buildMemGrid(); } catch(e) { console.error('buildMemGrid failed', e); }
+  try { renderPreviews(); } catch(e) { console.error('renderPreviews failed', e); }
+  try { renderExtraMedia('music'); renderExtraMedia('tv'); renderExtraMedia('clips'); renderExtraMedia('pods'); } catch(e) { console.error('renderExtraMedia failed', e); }
+  try { buildContacts(); } catch(e) { console.error('buildContacts failed', e); }
+  try { renderSavings(); } catch(e) { console.error('renderSavings failed', e); }
+  try { renderCalendar(); } catch(e) { console.error('renderCalendar failed', e); }
+  try { calcStreak(); } catch(e) { console.error('calcStreak failed', e); }
+  try { checkBadges(); } catch(e) { console.error('checkBadges failed', e); }
 
   setVal('s-name', S.name);
   setVal('s-days', S.days);
@@ -928,15 +921,19 @@ function populate(){
   if(greet) greet.textContent = 'Hey ' + (S.name||'friend') + ' — I\'m your RIA. I know your patterns, your triggers, and what\'s at stake. How are you doing right now?';
 }
 
+
 function updateNameDisplay(){
-  document.getElementById('uname').textContent = S.name||'—';
+  var el = document.getElementById('uname');
+  if(el) el.textContent = S.name || '—';
 }
+
 function updateDaysDisplay(){
-  var d = S.days||'—';
-  document.getElementById('udays').textContent = d;
-  document.getElementById('stat-days').textContent = d;
-  document.getElementById('sh-days').textContent = d;
+  var d = S.days || '—';
+  var a = document.getElementById('udays'); if(a) a.textContent = d;
+  var b = document.getElementById('stat-days'); if(b) b.textContent = d;
+  var c = document.getElementById('sh-days'); if(c) c.textContent = d;
 }
+
 
 // ── ONBOARDING ──
 var obCur = 0;
@@ -988,18 +985,6 @@ function quickLaunch(){
 }
 
 function val(id){ var el=document.getElementById(id); return el?el.value.trim():''; }
-function setVal(id,v){ var el=document.getElementById(id); if(el) el.value = (v==null?'':v); }
-function extractPhone(text){ return (text||'').replace(/\D/g,''); }
-function contactName(text){ return (text||'').replace(/[0-9].*$/,'').trim() || (text||''); }
-function bindPrimaryMedia(){
-  var map=[['mi-music',S.music],['mi-tv',S.show],['mi-clip',S.clip],['mi-pod',S.pod]];
-  map.forEach(function(pair){
-    var el=document.getElementById(pair[0]);
-    if(!el || !pair[1]) return;
-    var parent=el.closest('.mitem');
-    if(parent) parent.onclick=function(){ openLink(pair[1]); };
-  });
-}
 function setVal(id,v){ var el=document.getElementById(id); if(el) el.value=(v==null?'':v); }
 
 // ── MOOD ──
@@ -1163,9 +1148,8 @@ function renderExtraMedia(type){
   var c=document.getElementById('extra-'+type); if(!c) return;
   var items=(S.mediaExtra&&S.mediaExtra[type])||[];
   c.innerHTML=items.map(function(item){
-    var title=(item&&item.name)||'Saved item';
-    var url=(item&&item.url)||'';
-    return '<div class="mitem" onclick="openLink(\''+url.replace(/'/g,'%27')+'\')"><span style="font-size:16px;">▶️</span><div style="flex:1;"><div style="font-size:13px;font-weight:700;">'+title+'</div>'+(url?'<div style="font-size:11px;color:var(--text2);margin-top:2px;">'+url+'</div>':'')+'</div></div>';
+    var safeUrl = (item.url||'').replace(/'/g, "%27");
+    return '<div class="mitem" onclick="openLink(\''+safeUrl+'\')"><span style="font-size:16px;">▶️</span><div style="flex:1;"><div style="font-size:13px;font-weight:700;">'+item.name+'</div>'+(item.url?'<div style="font-size:11px;color:var(--text2);margin-top:2px;">'+item.url+'</div>':'')+'</div></div>';
   }).join('');
 }
 
@@ -1216,12 +1200,12 @@ function buildContacts(){
   var avs=['av1','av2','av3'], lbls=['Sponsor','Family','Counsellor'];
   var html=S.contacts.map(function(c,i){
     if(!c) return '';
-    var name=contactName(c);
-    var phone=extractPhone(c);
-    var init=(name||'??').slice(0,2).toUpperCase();
+    var name = c.split(/[0-9]/)[0].trim() || c;
+    var phone = extractPhone(c);
+    var init = name.slice(0,2).toUpperCase();
     return '<div class="contact-row"><div class="av '+avs[i]+'">'+init+'</div><div class="ci"><h4>'+name+'</h4><p>'+lbls[i]+'</p></div><div class="cbtns">'+
-      (phone?'<a class="cbtn" href="tel:'+phone+'">📞</a>':'')+
-      (phone?'<a class="cbtn" href="sms:'+phone+'?body='+encodeURIComponent('I need a check-in.')+'">💬</a>':'')+
+      (phone ? '<a class="cbtn" href="tel:'+phone+'">📞</a>' : '') +
+      (phone ? '<a class="cbtn" href="sms:'+phone+'?body='+encodeURIComponent('I need a check-in.')+'">💬</a>' : '') +
       '</div></div>';
   }).filter(Boolean).join('');
   list.innerHTML=html||'<div style="font-size:13px;color:var(--text3);padding:12px;">No contacts added yet. Tap ⚙ to add.</div>';
@@ -1248,9 +1232,11 @@ function openBreath(){ document.getElementById('modal-breath').classList.add('op
 function openRelapse(){ document.getElementById('modal-relapse').classList.add('open'); }
 
 function openSettings(){
-  populate();
-  document.getElementById('modal-settings').classList.add('open');
+  try { populate(); } catch(e) { console.error('populate failed in settings', e); }
+  var modal = document.getElementById('modal-settings');
+  if(modal) modal.classList.add('open');
 }
+
 function saveSettings(){
   S.name = val('s-name') || 'Friend';
   S.days = parseInt(val('s-days')) || 0;
@@ -1354,21 +1340,20 @@ function toggleTheme(){ applyTheme(currentTheme==='dark'?'light':'dark'); flash(
 
 var flashT=null;
 function flash(msg){
-  var first=S.contacts && S.contacts[0] ? S.contacts[0] : '';
-  var phone=extractPhone(first);
+  var first = S.contacts && S.contacts[0] ? S.contacts[0] : '';
+  var phone = extractPhone(first);
 
   if(msg && msg.indexOf('Calling') !== -1 && phone){
-    window.location.href='tel:'+phone;
+    window.location.href = 'tel:' + phone;
     return;
   }
   if(msg && (msg.indexOf('text') !== -1 || msg.indexOf("I'm Not OK") !== -1) && phone){
-    window.location.href='sms:'+phone+'?body='+encodeURIComponent('I need a check-in.');
+    window.location.href = 'sms:' + phone + '?body=' + encodeURIComponent('I need a check-in.');
     return;
   }
 
   if(flashT) clearTimeout(flashT);
   var el=document.getElementById('flash-el');
-  if(!el) return;
   el.textContent=msg||'✓';
   el.classList.add('show');
   flashT=setTimeout(function(){ el.classList.remove('show'); }, 2600);
