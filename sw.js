@@ -1,4 +1,4 @@
-const CACHE = 'ria-v6'; // Increased version to force an update
+const CACHE = 'ria-v7'; // Increased version to force an update
 const ASSETS = [
   './', 
   'index.html', 
