@@ -1322,5 +1322,130 @@ function saveMasterProfile() {
   toggleProfile(); // Hide the menu
 }
 </script>
+  <script>
+// ─────────────────────────────
+// SIMPLE STORAGE LAYER
+// ─────────────────────────────
+function save(key, value){
+  localStorage.setItem(key, JSON.stringify(value));
+}
+function load(key, fallback=null){
+  const v = localStorage.getItem(key);
+  return v ? JSON.parse(v) : fallback;
+}
+
+// ─────────────────────────────
+// ONBOARDING SAVE (patch finishSetup)
+// ─────────────────────────────
+const originalFinish = window.finishSetup;
+
+window.finishSetup = function(){
+  const user = {
+    name: document.getElementById('inp-name')?.value || '',
+    days: document.getElementById('inp-days')?.value || 0,
+    substance: document.getElementById('inp-sub')?.value || ''
+  };
+
+  const contacts = [
+    { name: document.getElementById('c1')?.value || '', phone: extractPhone(document.getElementById('c1')?.value) },
+    { name: document.getElementById('c2')?.value || '', phone: extractPhone(document.getElementById('c2')?.value) },
+    { name: document.getElementById('c3')?.value || '', phone: extractPhone(document.getElementById('c3')?.value) }
+  ].filter(c => c.name);
+
+  const media = {
+    music: document.getElementById('inp-music')?.value || '',
+    tv: document.getElementById('inp-show')?.value || '',
+    clip: document.getElementById('inp-clip')?.value || '',
+    pod: document.getElementById('inp-pod')?.value || ''
+  };
+
+  save('user', user);
+  save('contacts', contacts);
+  save('media', media);
+
+  if(originalFinish) originalFinish();
+};
+
+// ─────────────────────────────
+// RESTORE DATA ON LOAD
+// ─────────────────────────────
+window.addEventListener('load', () => {
+
+  // USER
+  const user = load('user');
+  if(user){
+    if(document.getElementById('uname')) document.getElementById('uname').textContent = user.name;
+    if(document.getElementById('udays')) document.getElementById('udays').textContent = user.days;
+  }
+
+  // CONTACTS
+  const contacts = load('contacts', []);
+  const callLabel = document.getElementById('call-label');
+  if(contacts.length && callLabel){
+    callLabel.textContent = "Call " + contacts[0].name;
+  }
+
+  // MEDIA
+  const media = load('media');
+  if(media){
+    setMedia('mi-music', media.music);
+    setMedia('mi-tv', media.tv);
+    setMedia('mi-clip', media.clip);
+    setMedia('mi-pod', media.pod);
+  }
+
+});
+
+// ─────────────────────────────
+// HELPER: extract phone number
+// ─────────────────────────────
+function extractPhone(text){
+  if(!text) return '';
+  const digits = text.replace(/\D/g,'');
+  return digits;
+}
+
+// ─────────────────────────────
+// PATCH CALL / TEXT BUTTONS
+// ─────────────────────────────
+window.flash = function(msg){
+  const contacts = load('contacts', []);
+  if(!contacts.length) return alert("No contacts saved");
+
+  const phone = contacts[0].phone;
+
+  if(msg.includes("Calling")){
+    window.location.href = "tel:" + phone;
+  }
+  else if(msg.includes("text")){
+    window.location.href = "sms:" + phone;
+  }
+  else{
+    alert(msg);
+  }
+};
+
+// ─────────────────────────────
+// MEDIA RENDERING
+// ─────────────────────────────
+function setMedia(id, value){
+  if(!value) return;
+  const el = document.getElementById(id);
+  if(!el) return;
+
+  el.innerHTML = value;
+
+  el.parentElement.onclick = () => {
+    if(value.includes("youtube.com") || value.includes("youtu.be")){
+      window.open(value, "_blank");
+    } else if(value.startsWith("http")){
+      window.open(value, "_blank");
+    } else {
+      alert(value);
+    }
+  };
+}
+
+</script>
 </body>
 </html>
