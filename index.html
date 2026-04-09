@@ -2,8 +2,6 @@
 
 
 
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -76,7 +74,7 @@ button{border:none; outline:none; cursor:pointer; font-weight:700}
 .h3{font-size:15px; font-weight:700; margin:0 0 4px}
 .nav{
   position:fixed; left:0; right:0; bottom:0; max-width:480px; margin:0 auto;
-  height:72px; padding-bottom:var(--safe-bot); display:grid; grid-template-columns:repeat(6,1fr);
+  height:72px; padding-bottom:var(--safe-bot); display:grid; grid-template-columns:repeat(7,1fr);
   background:var(--panel); border-top:1px solid var(--border); z-index:60;
 }
 .nav button{
@@ -238,6 +236,15 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
       <div class="stat"><div class="n" id="stat-saved">$0</div><div class="small">Saved</div></div>
       <div class="stat"><div class="n" id="stat-cycle">—</div><div class="small">Cycle</div></div>
     </div>
+    <div class="card" id="mood-card">
+      <div class="h3">How are you feeling?</div>
+      <div class="sub">Choose the lane that fits right now. You can change it any time.</div>
+      <div class="tilegrid" style="margin-top:10px">
+        <div class="tile" onclick="setMood('ok')">😌<br>Feeling OK</div>
+        <div class="tile" onclick="setMood('risk')">⚠️<br>Feeling urge / at risk</div>
+      </div>
+      <div id="mood-feedback" class="sub" style="margin-top:10px"></div>
+    </div>
     <div class="card">
       <div class="h3">Why you're here</div>
       <div class="sub" id="loss-text">Complete setup to see your words here.</div>
@@ -355,11 +362,33 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
     </div>
   </div>
 
+  <div class="screen" id="screen-ai">
+    <div class="card hero">
+      <div class="h2">AI Support</div>
+      <div class="sub">Simple reassurance and recommendation chat based on how you're feeling.</div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div id="chat-log" style="max-height:320px;overflow:auto;padding:14px"></div>
+      <div style="border-top:1px solid var(--border);padding:12px">
+        <div style="display:flex;gap:8px">
+          <input id="chat-input" type="text" placeholder="Type what's going on...">
+          <button class="btn2" style="width:auto;margin-top:0;padding:12px 14px" onclick="sendChat()">Send</button>
+        </div>
+        <div class="tool-actions" style="margin-top:8px">
+          <button class="btn3" onclick="quickChat('I am feeling an urge')">Urge</button>
+          <button class="btn3" onclick="quickChat('I feel lonely')">Lonely</button>
+          <button class="btn3" onclick="quickChat('I already used')">I used</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <nav id="nav" class="nav hidden">
     <button id="nav-home" class="active" onclick="go('home')">🏠<span>Home</span></button>
     <button id="nav-urgent" onclick="go('urgent')">⚠️<span>Urgent</span></button>
     <button id="nav-media" onclick="go('media')">🎧<span>Media</span></button>
     <button id="nav-memory" onclick="go('memory')">🖼<span>Memory</span></button>
+    <button id="nav-ai" onclick="go('ai')">🤖<span>AI</span></button>
     <button id="nav-support" onclick="go('support')">🤝<span>Support</span></button>
     <button id="nav-tools" onclick="go('tools')">🧰<span>Tools</span></button>
   </nav>
@@ -474,7 +503,9 @@ const DEFAULT_STATE = {
   bingeAmt:0, bingeFreq:4,
   music:'', show:'', clip:'', pod:'',
   memories:[],
-  checkins:[]
+  checkins:[],
+  mood:'',
+  chatHistory:[]
 };
 
 let S = JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -569,6 +600,13 @@ function populate(){
   renderMedia();
   renderMemory();
   renderCalendar();
+  renderChat();
+  const feedback = document.getElementById('mood-feedback');
+  if(feedback){
+    if(S.mood === 'ok') feedback.textContent = 'You marked yourself as feeling OK.';
+    else if(S.mood === 'risk') feedback.textContent = 'You marked yourself as feeling urge / at risk.';
+    else feedback.textContent = '';
+  }
 }
 function renderContacts(){
   const wrap = document.getElementById('contacts-list');
@@ -803,6 +841,62 @@ function escapeHtml(str){
     .replaceAll("'","&#39;");
 }
 
+
+function setMood(mood){
+  S.mood = mood;
+  saveState();
+  const feedback = document.getElementById('mood-feedback');
+  if(mood === 'ok'){
+    if(feedback) feedback.textContent = 'Good. Keep the day steady. Use Check-In or Tools if you want reinforcement.';
+    go('tools');
+  } else {
+    if(feedback) feedback.textContent = 'Good catch. Go straight to urgent supports, meetings, or AI reassurance.';
+    go('urgent');
+  }
+}
+function renderChat(){
+  const log = document.getElementById('chat-log');
+  if(!log) return;
+  const history = S.chatHistory || [];
+  if(!history.length){
+    log.innerHTML = '<div class="sub">AI: Hey — I am here. Tell me what is happening right now.</div>';
+    return;
+  }
+  log.innerHTML = history.map(item => {
+    const align = item.role === 'user' ? 'right' : 'left';
+    const bg = item.role === 'user' ? 'var(--amber)' : 'var(--panel2)';
+    const color = item.role === 'user' ? '#111827' : 'var(--text)';
+    return `<div style="text-align:${align};margin-bottom:8px"><div style="display:inline-block;max-width:85%;padding:10px 12px;border-radius:14px;background:${bg};color:${color};font-size:13px;line-height:1.5">${escapeHtml(item.text)}</div></div>`;
+  }).join('');
+  log.scrollTop = log.scrollHeight;
+}
+function aiReply(message){
+  const msg = (message || '').toLowerCase();
+  if(msg.includes('used')) return 'You came back here, which matters. Get safe first, then call or text support and use the meeting links in Urgent.';
+  if(msg.includes('urge') || msg.includes('craving') || msg.includes('at risk')) return 'Pause. Use one urgent action now: call support, text support, open a meeting, or start the breathing reset in Tools.';
+  if(msg.includes('lonely') || msg.includes('alone')) return 'Loneliness is a major trigger. Reach toward a person before you reach toward the habit. Open Support or Urgent right now.';
+  if(msg.includes('angry') || msg.includes('stress')) return 'Strong emotion can narrow the decision window. Try HALT and breathing for two minutes before deciding anything.';
+  if(msg.includes('ok')) return 'Good. Protect the momentum: do your check-in, keep structure, and stay close to your plan.';
+  return 'I hear you. Right now, choose one stabilizing move: breathe, contact support, or join a meeting. One move is enough.';
+}
+function quickChat(message){
+  const input = document.getElementById('chat-input');
+  if(input) input.value = message;
+  sendChat();
+}
+function sendChat(){
+  const input = document.getElementById('chat-input');
+  if(!input) return;
+  const message = input.value.trim();
+  if(!message) return;
+  S.chatHistory = S.chatHistory || [];
+  S.chatHistory.push({role:'user', text:message});
+  S.chatHistory.push({role:'ai', text:aiReply(message)});
+  input.value = '';
+  saveState();
+  renderChat();
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   initTheme();
   if(loadState() && S.name) launchApp();
@@ -811,3 +905,6 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
+
+
