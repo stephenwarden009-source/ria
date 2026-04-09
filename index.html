@@ -1,3 +1,4 @@
+
 <!DOCTYPE html> 
 <html lang="en">
 <head>
@@ -328,8 +329,22 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       <input class="fi" id="inp-name" type="text" placeholder="What should we call you?">
       <div class="ob-lbl">Days since your last relapse</div>
       <input class="fi" id="inp-days" type="number" placeholder="e.g. 16" min="0">
-      <div class="ob-lbl">Your substance(s)</div>
-      <select class="fi" id="inp-sub"><option value="">Select...</option><option>Alcohol</option><option>Opioids / Pain medication</option><option>Cocaine / Stimulants</option><option>Cannabis</option><option>Methamphetamine</option><option>Multiple substances</option><option>Prefer not to say</option></select>
+      <div class="ob-lbl">Addiction or issue</div>
+      <select class="fi" id="inp-sub">
+        <option value="">Select...</option>
+        <option>Alcohol</option>
+        <option>Cocaine / stimulants</option>
+        <option>Opioids</option>
+        <option>Marijuana / cannabis</option>
+        <option>Methamphetamine</option>
+        <option>Gambling</option>
+        <option>Social media / digital</option>
+        <option>Shopping / spending</option>
+        <option>Pornography / compulsive sexual behaviour</option>
+        <option>Multiple issues</option>
+        <option>Other</option>
+        <option>Prefer not to say</option>
+      </select>
       <div class="ob-lbl">Typical days between relapses</div>
       <input class="fi" id="inp-cycle" type="number" placeholder="e.g. 18" min="1">
       <button class="ob-btn" onclick="obNext(1)">Continue →</button>
@@ -452,25 +467,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
       <div class="skip-link" onclick="obNext(4)">← Back</div>
     </div>
   </div>
- style="display:none; padding:15px; background:#1e293b; border-radius:12px; margin-top:10px; border:1px solid #334155;">
-  <div class="ob-lbl">Sponsor / Primary Support</div>
-  <input class="fi" id="set-c1" type="text" placeholder="Name + Contact">
-  
-  <div class="ob-lbl">Family Contact</div>
-  <input class="fi" id="set-c2" type="text" placeholder="Name + Relationship">
-  
-  <div class="ob-lbl">Typical Spend per Binge ($)</div>
-  <input class="fi" id="set-binge" type="number" placeholder="e.g. 100">
 
-  <div class="ob-lbl">AI Support Tone</div>
-  <select class="fi" id="set-tone">
-    <option value="Gentle">Gentle</option>
-    <option value="Direct">Direct</option>
-    <option value="Hardline">Hardline</option>
-  </select>
-
-  <button class="ob-btn" onclick="saveMasterProfile()" style="margin-top:15px;">Update Profile</button>
-</div>
   <!-- ══ HOME ══ -->
   <div class="screen" id="screen-home">
     <div class="hero-card">
@@ -677,67 +674,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
     <div class="tool-card" onclick="toggleTool(this)"><div class="tc-head"><div class="tc-title"><div class="tc-ico" style="background:var(--sd);">🌱</div>5-4-3-2-1 Grounding</div><div class="tc-arr">›</div></div><div class="tc-body"><div class="tc-inner">Anchors you in the present. Interrupts the spiral. Do it now.<div class="step" style="margin-top:10px;"><div class="sn" style="background:var(--sd);color:var(--sage);">5</div><div><strong>5 things you SEE.</strong> Name them out loud.</div></div><div class="step"><div class="sn" style="background:var(--sd);color:var(--sage);">4</div><div><strong>4 things you TOUCH.</strong> Feel the texture.</div></div><div class="step"><div class="sn" style="background:var(--sd);color:var(--sage);">3</div><div><strong>3 things you HEAR.</strong> Background sounds.</div></div><div class="step"><div class="sn" style="background:var(--sd);color:var(--sage);">2</div><div><strong>2 things you SMELL.</strong> Even faint smells.</div></div><div class="step"><div class="sn" style="background:var(--sd);color:var(--sage);">1</div><div><strong>1 thing you TASTE.</strong> Your mouth right now.</div></div></div></div></div>
     <div class="tool-card" onclick="toggleTool(this)"><div class="tc-head"><div class="tc-title"><div class="tc-ico" style="background:var(--ld);">🧠</div>SOBER Space</div><div class="tc-arr">›</div></div><div class="tc-body"><div class="tc-inner">5-step pause. 3 minutes. Clinically proven for high-risk moments.<div class="step" style="margin-top:10px;"><div class="sn" style="background:var(--ld);color:var(--lav);">S</div><div><strong>Stop.</strong> Whatever you're doing. Right now.</div></div><div class="step"><div class="sn" style="background:var(--ld);color:var(--lav);">O</div><div><strong>Observe.</strong> What am I feeling? No judgment.</div></div><div class="step"><div class="sn" style="background:var(--ld);color:var(--lav);">B</div><div><strong>Breathe.</strong> One deep breath in, slow out.</div></div><div class="step"><div class="sn" style="background:var(--ld);color:var(--lav);">E</div><div><strong>Expand.</strong> You are more than this moment.</div></div><div class="step"><div class="sn" style="background:var(--ld);color:var(--lav);">R</div><div><strong>Respond.</strong> Choose one recovery action.</div></div></div></div></div>
     <div class="tool-card" onclick="toggleTool(this)" style="border-color:rgba(132,169,140,.25);"><div class="tc-head"><div class="tc-title"><div class="tc-ico" style="background:var(--sd);">🔄</div>If You've Already Used</div><div class="tc-arr">›</div></div><div class="tc-body"><div class="tc-inner" style="color:var(--sage);"><strong>You're not starting over. You're continuing.</strong><div class="step" style="margin-top:10px;color:var(--text2);"><div class="sn" style="background:var(--sd);color:var(--sage);">1</div><div><strong style="color:var(--text);">Get somewhere safe.</strong> Don't be alone. Call someone now.</div></div><div class="step" style="color:var(--text2);"><div class="sn" style="background:var(--sd);color:var(--sage);">2</div><div><strong style="color:var(--text);">Don't stack shame.</strong> One slip doesn't erase your progress. It's data, not identity.</div></div><div class="step" style="color:var(--text2);"><div class="sn" style="background:var(--sd);color:var(--sage);">3</div><div><strong style="color:var(--text);">Call 988 or your sponsor.</strong> Right now. This is what they're there for.</div></div><div style="background:rgba(132,169,140,.1);border:1px solid rgba(132,169,140,.25);border-radius:10px;padding:11px;margin-top:8px;font-size:13px;color:var(--text2);">✓ <strong style="color:var(--text);">You came back.</strong> That is the whole game. That is recovery.</div></div></div></div>
-  <div class="tool-card" onclick="toggleProfile()" style="border-color:var(--teal); margin-top:20px;">
-      <div class="tc-head">
-        <div class="tc-title">
-          <div class="tc-ico" style="background:var(--teal);">👤</div>
-          My Profile & Recovery Plan
-        </div>
-        <div class="tc-arr">›</div>
-      </div>
-    </div>
-
-    <div id="profile-editor" style="display:none; padding:15px; background:rgba(255,255,255,0.05); border-radius:12px; margin:10px 0; border:1px solid var(--border1);">
-      <div class="ob-lbl" style="color:var(--teal); font-weight:bold;">Sponsor / Primary Support</div>
-      <input class="fi" id="set-c1" type="text" placeholder="Name + Contact">
-      
-      <div class="ob-lbl" style="color:var(--teal); font-weight:bold; margin-top:10px;">Family Contact</div>
-      <input class="fi" id="set-c2" type="text" placeholder="Name + Relationship">
-      
-      <div class="ob-lbl" style="color:var(--teal); font-weight:bold; margin-top:10px;">Typical Spend per Binge ($)</div>
-      <input class="fi" id="set-binge" type="number" placeholder="e.g. 100">
-
-      <div class="ob-lbl" style="color:var(--teal); font-weight:bold; margin-top:10px;">AI Support Tone</div>
-      <select class="fi" id="set-tone">
-        <option value="gentle">Gentle</option>
-        <option value="direct">Direct</option>
-        <option value="hardline">Hardline</option>
-      </select>
-
-      <button class="ob-btn" onclick="saveMasterProfile()" style="margin-top:15px; background:var(--teal); width:100%;">Save Changes</button>
-    </div>
-
-  </div> ```
-
----
-
-### Final "To-Do" List:
-1.  **Paste** the block above.
-2.  **Delete** the old button you had up at **Step 5** (so you don't have two of them).
-3.  **Commit** and check your phone.
-
-When you open the **Tools** menu on your phone, you’ll see the "My Profile" card right below the "If You've Already Used" section. Tap it, and the settings will slide out!
-
-<div id="profile-editor" style="display:none; padding:15px; background:rgba(255,255,255,0.05); border-radius:12px; margin:10px 0; border:1px solid var(--border1);">
-  <div class="ob-lbl" style="color:var(--teal); font-weight:bold;">Sponsor / Primary Support</div>
-  <input class="fi" id="set-c1" type="text" placeholder="Name + Contact">
-  
-  <div class="ob-lbl" style="color:var(--teal); font-weight:bold; margin-top:10px;">Family Contact</div>
-  <input class="fi" id="set-c2" type="text" placeholder="Name + Relationship">
-  
-  <div class="ob-lbl" style="color:var(--teal); font-weight:bold; margin-top:10px;">Typical Spend per Binge ($)</div>
-  <input class="fi" id="set-binge" type="number" placeholder="e.g. 100">
-
-  <div class="ob-lbl" style="color:var(--teal); font-weight:bold; margin-top:10px;">AI Support Tone</div>
-  <select class="fi" id="set-tone">
-    <option value="gentle">Gentle</option>
-    <option value="direct">Direct</option>
-    <option value="hardline">Hardline</option>
-  </select>
-
-  <button class="ob-btn" onclick="saveMasterProfile()" style="margin-top:15px; background:var(--teal); width:100%;">Save Changes</button>
-</div>
-  </div>
 
   <!-- ══ SUPPORT ══ -->
   <div class="screen" id="screen-support">
@@ -789,9 +725,83 @@ When you open the **Tools** menu on your phone, you’ll see the "My Profile" ca
 
   <div class="overlay" id="modal-add-media"><div class="modal"><div class="modal-title" id="am-title">Add Media</div><div class="modal-sub">Add a title and optional link — tap it to open during a craving.</div><input class="fi" id="nm-name" type="text" placeholder="Title / name" style="width:100%;margin-bottom:8px;"><input class="fi" id="nm-url" type="text" placeholder="URL or search term (optional)" style="width:100%;margin-bottom:4px;"><button class="btn-teal" onclick="saveMedia()">Save</button><div class="modal-close" onclick="closeModal('modal-add-media')">Cancel</div></div></div>
 
-  <div class="overlay" id="modal-settings"><div class="modal"><div class="modal-title">Settings</div><div class="ob-lbl">Your name</div><input class="fi" id="s-name" type="text" style="width:100%;margin-bottom:8px;" oninput="S.name=this.value;updateNameDisplay();"><div class="ob-lbl">Days clean</div><input class="fi" id="s-days" type="number" style="width:100%;margin-bottom:8px;" oninput="S.days=parseInt(this.value)||0;updateDaysDisplay();"><div class="ob-lbl">Typical spend per binge ($)</div><input class="fi" id="s-binge" type="number" style="width:100%;margin-bottom:8px;" oninput="S.bingeAmt=parseFloat(this.value)||0;"><div class="ob-lbl">AI tone</div><div class="cq-opts" style="margin-bottom:14px;"><div class="cqo sel" onclick="sel(this)">Gentle</div><div class="cqo" onclick="sel(this)">Direct</div><div class="cqo" onclick="sel(this)">Hardline</div></div><button class="btn-teal" onclick="saveSettings()">Save</button></div></div>
+  
+<div class="overlay" id="modal-settings"><div class="modal">
+  <div class="modal-title">Profile & Settings</div>
+  <div class="modal-sub">Review or update your plan any time.</div>
 
-  <div class="flash" id="flash-el"></div>
+  <div class="ob-lbl">Your name</div>
+  <input class="fi" id="s-name" type="text" style="width:100%;margin-bottom:8px;">
+
+  <div class="ob-lbl">Days since last relapse</div>
+  <input class="fi" id="s-days" type="number" style="width:100%;margin-bottom:8px;">
+
+  <div class="ob-lbl">Addiction or issue</div>
+  <select class="fi" id="s-sub" style="width:100%;margin-bottom:8px;">
+    <option value="">Select...</option>
+    <option>Alcohol</option>
+    <option>Cocaine / stimulants</option>
+    <option>Opioids</option>
+    <option>Marijuana / cannabis</option>
+    <option>Methamphetamine</option>
+    <option>Gambling</option>
+    <option>Social media / digital</option>
+    <option>Shopping / spending</option>
+    <option>Pornography / compulsive sexual behaviour</option>
+    <option>Multiple issues</option>
+    <option>Other</option>
+    <option>Prefer not to say</option>
+  </select>
+
+  <div class="ob-lbl">Typical days between relapses</div>
+  <input class="fi" id="s-cycle" type="number" style="width:100%;margin-bottom:8px;">
+
+  <div class="ob-lbl">Sponsor / primary support</div>
+  <input class="fi" id="s-c1" type="text" style="width:100%;margin-bottom:8px;" placeholder="Name + phone">
+
+  <div class="ob-lbl">Family contact</div>
+  <input class="fi" id="s-c2" type="text" style="width:100%;margin-bottom:8px;" placeholder="Name + phone">
+
+  <div class="ob-lbl">Counsellor / therapist</div>
+  <input class="fi" id="s-c3" type="text" style="width:100%;margin-bottom:8px;" placeholder="Name + phone">
+
+  <div class="ob-lbl">Typical spend per binge ($)</div>
+  <input class="fi" id="s-binge" type="number" style="width:100%;margin-bottom:8px;">
+
+  <div class="ob-lbl">Typical binges per month</div>
+  <input class="fi" id="s-freq" type="number" style="width:100%;margin-bottom:8px;">
+
+  <div class="ob-lbl">AI tone</div>
+  <select class="fi" id="s-tone" style="width:100%;margin-bottom:8px;">
+    <option value="gentle">Gentle</option>
+    <option value="direct">Direct</option>
+    <option value="hardline">Hardline</option>
+  </select>
+
+  <div class="ob-lbl">Affirmation</div>
+  <textarea class="fi" id="s-aff" style="height:76px;resize:none;line-height:1.5;"></textarea>
+
+  <div class="ob-lbl">What you lose when you relapse</div>
+  <textarea class="fi" id="s-loss" style="height:76px;resize:none;line-height:1.5;"></textarea>
+
+  <div class="ob-lbl">Reset track</div>
+  <input class="fi" id="s-music" type="text" style="width:100%;margin-bottom:8px;" placeholder="Song / link">
+
+  <div class="ob-lbl">Comfort show or film</div>
+  <input class="fi" id="s-show" type="text" style="width:100%;margin-bottom:8px;" placeholder="Show / link">
+
+  <div class="ob-lbl">Feel-good clip</div>
+  <input class="fi" id="s-clip" type="text" style="width:100%;margin-bottom:8px;" placeholder="Video link">
+
+  <div class="ob-lbl">Podcast</div>
+  <input class="fi" id="s-pod" type="text" style="width:100%;margin-bottom:12px;" placeholder="Podcast / link">
+
+  <button class="btn-teal" onclick="saveSettings()">Save changes</button>
+  <div class="modal-close" onclick="closeModal('modal-settings')">Close</div>
+</div></div>
+
+<div class="flash" id="flash-el"></div>
+
 </div>
 
 <script>
@@ -814,44 +824,6 @@ var S = {
 
 function save(){ try{ localStorage.setItem('ria3', JSON.stringify(S)); }catch(e){} }
 function load(){ try{ var d=localStorage.getItem('ria3'); if(d){ S=Object.assign(S,JSON.parse(d)); return true; } }catch(e){} return false; }
-// --- PROFILE MANAGEMENT ---
-function toggleProfile() {
-  const editor = document.getElementById('profile-editor');
-  editor.style.display = (editor.style.display === 'none') ? 'block' : 'none';
-  
-  // Pre-fill fields with the data already in your State (S)
-  if (document.getElementById('set-c1')) {
-    document.getElementById('set-c1').value = S.contacts[0] || '';
-    document.getElementById('set-c2').value = S.contacts[1] || '';
-    document.getElementById('set-binge').value = S.bingeAmt || '';
-    document.getElementById('set-tone').value = S.tone || 'gentle';
-  }
-}
-
-function saveMasterProfile() {
-  // 1. Update the State object (S)
-  S.contacts[0] = document.getElementById('set-c1').value;
-  S.contacts[1] = document.getElementById('set-c2').value;
-  S.bingeAmt = parseFloat(document.getElementById('set-binge').value) || 0;
-  S.tone = document.getElementById('set-tone').value;
-
-  // 2. Use your existing save function to push to memory
-  save();
-
-  // 3. Update the "$ Saved" box on the Home Screen
-  // Math: (Spend * Frequency / 30 days) * Days Clean
-  const dailyCost = (S.bingeAmt * (S.bingeFreq || 4)) / 30;
-  const totalSaved = Math.floor(dailyCost * S.days);
-  
-  // Find the element with the class from your screenshot
-  const savedText = document.querySelector('.saved-amount-text');
-  if (savedText) {
-    savedText.innerText = `$${totalSaved}`;
-  }
-
-  alert("Profile Updated!");
-  toggleProfile(); // Close the menu
-}
 // ── BOOT ──
 window.addEventListener('DOMContentLoaded', function(){
   initTheme();
@@ -859,7 +831,7 @@ window.addEventListener('DOMContentLoaded', function(){
     launchApp();
   }
   // SW
-  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(function(){});
 });
 
 // ── NAVIGATION ──  (THE ONE FUNCTION THAT MUST WORK)
@@ -887,27 +859,61 @@ function launchApp(){
   checkMissed();
 }
 
+
 function populate(){
   updateNameDisplay();
   updateDaysDisplay();
-  if(S.contacts[0]) document.getElementById('call-label').textContent = S.contacts[0];
+  if(S.contacts[0]) document.getElementById('call-label').textContent = 'Call ' + (S.contacts[0].split(/[0-9]/)[0].trim() || 'your support');
   if(S.music) document.getElementById('mi-music').textContent = S.music;
   if(S.show) document.getElementById('mi-tv').textContent = S.show;
   if(S.clip) document.getElementById('mi-clip').textContent = S.clip;
   if(S.pod) document.getElementById('mi-pod').textContent = S.pod;
+
+  var musicTile = document.getElementById('mi-music');
+  if(musicTile && S.music){ var p1 = musicTile.closest('.mitem'); if(p1) p1.onclick = function(){ openLink(S.music); }; }
+
+  var tvTile = document.getElementById('mi-tv');
+  if(tvTile && S.show){ var p2 = tvTile.closest('.mitem'); if(p2) p2.onclick = function(){ openLink(S.show); }; }
+
+  var clipTile = document.getElementById('mi-clip');
+  if(clipTile && S.clip){ var p3 = clipTile.closest('.mitem'); if(p3) p3.onclick = function(){ openLink(S.clip); }; }
+
+  var podTile = document.getElementById('mi-pod');
+  if(podTile && S.pod){ var p4 = podTile.closest('.mitem'); if(p4) p4.onclick = function(){ openLink(S.pod); }; }
+
   buildAff();
   if(S.loss) document.getElementById('loss-text').textContent = S.loss;
   buildMemGrid();
+  renderPreviews();
+  renderExtraMedia('music');
+  renderExtraMedia('tv');
+  renderExtraMedia('clips');
+  renderExtraMedia('pods');
   buildContacts();
   renderSavings();
   renderCalendar();
   calcStreak();
   checkBadges();
-  document.getElementById('s-name').value = S.name||'';
-  document.getElementById('s-days').value = S.days||'';
-  document.getElementById('s-binge').value = S.bingeAmt||'';
+
+  setVal('s-name', S.name);
+  setVal('s-days', S.days);
+  setVal('s-sub', S.substance);
+  setVal('s-cycle', S.cycle);
+  setVal('s-c1', S.contacts[0]);
+  setVal('s-c2', S.contacts[1]);
+  setVal('s-c3', S.contacts[2]);
+  setVal('s-binge', S.bingeAmt);
+  setVal('s-freq', S.bingeFreq);
+  setVal('s-tone', S.tone || 'gentle');
+  setVal('s-aff', S.affirmation);
+  setVal('s-loss', S.loss);
+  setVal('s-music', S.music);
+  setVal('s-show', S.show);
+  setVal('s-clip', S.clip);
+  setVal('s-pod', S.pod);
+
   var greet = document.getElementById('ai-greeting');
-  if(greet) greet.textContent = 'Hey '+(S.name||'friend')+' — I\'m your RIA. I know your patterns, your triggers, and what\'s at stake. How are you doing right now?';
+  if(greet) greet.textContent = 'Hey ' + (S.name||'friend') + ' — I\'m your RIA. I know your patterns, your triggers, and what\'s at stake. How are you doing right now?';
 }
 
 function updateNameDisplay(){
@@ -970,6 +976,7 @@ function quickLaunch(){
 }
 
 function val(id){ var el=document.getElementById(id); return el?el.value.trim():''; }
+function setVal(id,v){ var el=document.getElementById(id); if(el) el.value=(v==null?'':v); }
 
 // ── MOOD ──
 function setMood(m){
@@ -1127,10 +1134,14 @@ function saveMedia(){
   document.getElementById('nm-name').value=''; document.getElementById('nm-url').value='';
   flash('"'+name+'" saved ✓');
 }
+
 function renderExtraMedia(type){
   var c=document.getElementById('extra-'+type); if(!c) return;
   var items=(S.mediaExtra&&S.mediaExtra[type])||[];
-  c.innerHTML=items.map(function(item){return '<div class="mitem" onclick="flash(\'Opening '+item.name+'...\')"><span style="font-size:16px;">▶️</span><div style="flex:1;font-size:13px;font-weight:700;">'+item.name+'</div></div>';}).join('');
+  c.innerHTML=items.map(function(item){
+    var safeUrl = (item.url||'').replace(/'/g, "%27");
+    return '<div class="mitem" onclick="openLink(\''+safeUrl+'\')"><span style="font-size:16px;">▶️</span><div style="flex:1;"><div style="font-size:13px;font-weight:700;">'+item.name+'</div>'+(item.url?'<div style="font-size:11px;color:var(--text2);margin-top:2px;">'+item.url+'</div>':'')+'</div></div>';
+  }).join('');
 }
 
 // ── MEMORIES ──
@@ -1169,19 +1180,30 @@ function updateAff(){ document.getElementById('aff-text').textContent='"'+(affs[
 function nextAff(){ affIdx=(affIdx+1)%affs.length; updateAff(); }
 function prevAff(){ affIdx=(affIdx-1+affs.length)%affs.length; updateAff(); }
 
+
 // ── CONTACTS ──
+function extractPhone(text){
+  if(!text) return '';
+  return String(text).replace(/\D/g,'');
+}
 function buildContacts(){
   var list=document.getElementById('contacts-list'); if(!list) return;
   var avs=['av1','av2','av3'], lbls=['Sponsor','Family','Counsellor'];
   var html=S.contacts.map(function(c,i){
     if(!c) return '';
-    var init=c.split(/[\s—-]/)[0].slice(0,2).toUpperCase();
-    return '<div class="contact-row"><div class="av '+avs[i]+'">'+init+'</div><div class="ci"><h4>'+c.split(/[—-]/)[0].trim()+'</h4><p>'+lbls[i]+'</p></div><div class="cbtns"><div class="cbtn" onclick="flash(\'Calling...\')">📞</div><div class="cbtn" onclick="flash(\'Text sent ✓\')">💬</div></div></div>';
+    var name = c.split(/[0-9]/)[0].trim() || c;
+    var phone = extractPhone(c);
+    var init = name.slice(0,2).toUpperCase();
+    return '<div class="contact-row"><div class="av '+avs[i]+'">'+init+'</div><div class="ci"><h4>'+name+'</h4><p>'+lbls[i]+'</p></div><div class="cbtns">'+
+      (phone ? '<a class="cbtn" href="tel:'+phone+'">📞</a>' : '') +
+      (phone ? '<a class="cbtn" href="sms:'+phone+'?body='+encodeURIComponent('I need a check-in.')+'">💬</a>' : '') +
+      '</div></div>';
   }).filter(Boolean).join('');
   list.innerHTML=html||'<div style="font-size:13px;color:var(--text3);padding:12px;">No contacts added yet. Tap ⚙ to add.</div>';
 }
 
 // ── BADGES ──
+
 function checkBadges(){
   function earn(i){var b=document.getElementById('bdg-'+i);if(b)b.classList.add('on');}
   if((S.interrupted||0)>=1) earn(0);
@@ -1199,9 +1221,37 @@ function openCheckin(){ document.getElementById('modal-checkin').classList.add('
 function openDelay(){ document.getElementById('modal-delay').classList.add('open'); }
 function openBreath(){ document.getElementById('modal-breath').classList.add('open'); }
 function openRelapse(){ document.getElementById('modal-relapse').classList.add('open'); }
-function openSettings(){ document.getElementById('s-name').value=S.name||''; document.getElementById('s-days').value=S.days||''; document.getElementById('s-binge').value=S.bingeAmt||''; document.getElementById('modal-settings').classList.add('open'); }
-function saveSettings(){ save(); closeModal('modal-settings'); flash('Settings saved ✓'); updateNameDisplay(); updateDaysDisplay(); renderSavings(); }
-function openLink(url){ window.open(url,'_blank'); }
+
+function openSettings(){
+  populate();
+  document.getElementById('modal-settings').classList.add('open');
+}
+function saveSettings(){
+  S.name = val('s-name') || 'Friend';
+  S.days = parseInt(val('s-days')) || 0;
+  S.substance = val('s-sub');
+  S.cycle = parseInt(val('s-cycle')) || 18;
+  S.contacts[0] = val('s-c1');
+  S.contacts[1] = val('s-c2');
+  S.contacts[2] = val('s-c3');
+  S.bingeAmt = parseFloat(val('s-binge')) || 0;
+  S.bingeFreq = parseInt(val('s-freq')) || 4;
+  S.tone = val('s-tone') || 'gentle';
+  S.affirmation = val('s-aff');
+  S.loss = val('s-loss');
+  S.music = val('s-music');
+  S.show = val('s-show');
+  S.clip = val('s-clip');
+  S.pod = val('s-pod');
+  save();
+  closeModal('modal-settings');
+  populate();
+  flash('Settings saved ✓');
+}
+function openLink(url){
+  if(!url) return;
+  window.open(url,'_blank');
+}
 
 // ── TIMER ──
 var timerInt=null, timeLeft=1200;
@@ -1276,8 +1326,21 @@ function applyTheme(t){
 function toggleTheme(){ applyTheme(currentTheme==='dark'?'light':'dark'); flash(currentTheme==='light'?'Light mode ☀️':'Dark mode 🌙'); }
 
 // ── FLASH ──
+
 var flashT=null;
 function flash(msg){
+  var first = S.contacts && S.contacts[0] ? S.contacts[0] : '';
+  var phone = extractPhone(first);
+
+  if(msg && msg.indexOf('Calling') !== -1 && phone){
+    window.location.href = 'tel:' + phone;
+    return;
+  }
+  if(msg && (msg.indexOf('text') !== -1 || msg.indexOf("I'm Not OK") !== -1) && phone){
+    window.location.href = 'sms:' + phone + '?body=' + encodeURIComponent('I need a check-in.');
+    return;
+  }
+
   if(flashT) clearTimeout(flashT);
   var el=document.getElementById('flash-el');
   el.textContent=msg||'✓';
@@ -1286,172 +1349,7 @@ function flash(msg){
 }
 function setT(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
   // --- PROFILE & RECOVERY MANAGEMENT ---
-function toggleProfile() {
-  const editor = document.getElementById('profile-editor');
-  if (!editor) return;
-  editor.style.display = (editor.style.display === 'none') ? 'block' : 'none';
-  
-  // Pre-fill the fields with whatever is already in your app's memory (S)
-  document.getElementById('set-c1').value = S.contacts[0] || '';
-  document.getElementById('set-c2').value = S.contacts[1] || '';
-  document.getElementById('set-binge').value = S.bingeAmt || '';
-  document.getElementById('set-tone').value = S.tone || 'gentle';
-}
 
-function saveMasterProfile() {
-  // 1. Update your existing State object (S)
-  S.contacts[0] = document.getElementById('set-c1').value;
-  S.contacts[1] = document.getElementById('set-c2').value;
-  S.bingeAmt = parseFloat(document.getElementById('set-binge').value) || 0;
-  S.tone = document.getElementById('set-tone').value;
-
-  // 2. Use your existing save() function to push to phone memory
-  save();
-
-  // 3. Update the "$ Saved" box on your home screen
-  const dailyCost = (S.bingeAmt * (S.bingeFreq || 4)) / 30;
-  const totalSaved = Math.floor(dailyCost * (S.days || 0));
-  
-  const savedText = document.querySelector('.saved-amount-text');
-  if (savedText) {
-    savedText.textContent = `$${totalSaved}`;
-  }
-
-  // 4. Use your existing flash() function for the checkmark
-  flash("Profile Updated!");
-  toggleProfile(); // Hide the menu
-}
-</script>
-  <script>
-// ─────────────────────────────
-// SIMPLE STORAGE LAYER
-// ─────────────────────────────
-function save(key, value){
-  localStorage.setItem(key, JSON.stringify(value));
-}
-function load(key, fallback=null){
-  const v = localStorage.getItem(key);
-  return v ? JSON.parse(v) : fallback;
-}
-
-// ─────────────────────────────
-// ONBOARDING SAVE (patch finishSetup)
-// ─────────────────────────────
-const originalFinish = window.finishSetup;
-
-window.finishSetup = function(){
-  const user = {
-    name: document.getElementById('inp-name')?.value || '',
-    days: document.getElementById('inp-days')?.value || 0,
-    substance: document.getElementById('inp-sub')?.value || ''
-  };
-
-  const contacts = [
-    { name: document.getElementById('c1')?.value || '', phone: extractPhone(document.getElementById('c1')?.value) },
-    { name: document.getElementById('c2')?.value || '', phone: extractPhone(document.getElementById('c2')?.value) },
-    { name: document.getElementById('c3')?.value || '', phone: extractPhone(document.getElementById('c3')?.value) }
-  ].filter(c => c.name);
-
-  const media = {
-    music: document.getElementById('inp-music')?.value || '',
-    tv: document.getElementById('inp-show')?.value || '',
-    clip: document.getElementById('inp-clip')?.value || '',
-    pod: document.getElementById('inp-pod')?.value || ''
-  };
-
-  save('user', user);
-  save('contacts', contacts);
-  save('media', media);
-
-  if(originalFinish) originalFinish();
-};
-
-// ─────────────────────────────
-// RESTORE DATA ON LOAD
-// ─────────────────────────────
-window.addEventListener('load', () => {
-
-  // USER
-  const user = load('user');
-  if(user){
-    if(document.getElementById('uname')) document.getElementById('uname').textContent = user.name;
-    if(document.getElementById('udays')) document.getElementById('udays').textContent = user.days;
-  }
-
-  // CONTACTS
-  const contacts = load('contacts', []);
-  const callLabel = document.getElementById('call-label');
-  if(contacts.length && callLabel){
-    callLabel.textContent = "Call " + contacts[0].name;
-  }
-
-  // MEDIA
-  const media = load('media');
-  if(media){
-    setMedia('mi-music', media.music);
-    setMedia('mi-tv', media.tv);
-    setMedia('mi-clip', media.clip);
-    setMedia('mi-pod', media.pod);
-  }
-
-});
-
-// ─────────────────────────────
-// HELPER: extract phone number
-// ─────────────────────────────
-function extractPhone(text){
-  if(!text) return '';
-  const digits = text.replace(/\D/g,'');
-  return digits;
-}
-
-// ─────────────────────────────
-// PATCH CALL / TEXT BUTTONS
-// ─────────────────────────────
-window.flash = function(msg){
-  const contacts = load('contacts', []);
-  if(!contacts.length) return alert("No contacts saved");
-
-  const phone = contacts[0].phone;
-
-  if(msg.includes("Calling")){
-    window.location.href = `tel:${contacts[0].phone}`;
-  }
-  else if(msg.includes("text")){
-    window.location.href = "sms:" + phone;
-  }
-  else{
-    alert(msg);
-  }
-};
-
-// ─────────────────────────────
-// MEDIA RENDERING
-// ─────────────────────────────
-function setMedia(id, value){
-  if(!value) return;
-
-  const el = document.getElementById(id);
-  if(!el) return;
-
-  el.textContent = value;
-
-  const parent = el.closest('.mitem');
-
-  if(parent){
-    parent.style.cursor = "pointer";
-
-    parent.onclick = () => {
-      if(value.includes("youtube.com") || value.includes("youtu.be")){
-        window.open(value, "_blank");
-      } else if(value.startsWith("http")){
-        window.open(value, "_blank");
-      } else {
-        alert(value);
-      }
-    };
-  }
-}
 </script>
 </body>
 </html>
