@@ -726,82 +726,80 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   <div class="overlay" id="modal-add-media"><div class="modal"><div class="modal-title" id="am-title">Add Media</div><div class="modal-sub">Add a title and optional link — tap it to open during a craving.</div><input class="fi" id="nm-name" type="text" placeholder="Title / name" style="width:100%;margin-bottom:8px;"><input class="fi" id="nm-url" type="text" placeholder="URL or search term (optional)" style="width:100%;margin-bottom:4px;"><button class="btn-teal" onclick="saveMedia()">Save</button><div class="modal-close" onclick="closeModal('modal-add-media')">Cancel</div></div></div>
 
   
-<div class="overlay" id="modal-settings"><div class="modal">
-  <div class="modal-title">Profile & Settings</div>
-  <div class="modal-sub">Review or update your plan any time.</div>
+<div class="overlay" id="modal-settings">
+  <div class="modal">
+    <div class="modal-title">Profile & Settings</div>
+    <div class="modal-sub">Review and update your recovery plan any time.</div>
 
-  <div class="ob-lbl">Your name</div>
-  <input class="fi" id="s-name" type="text" style="width:100%;margin-bottom:8px;">
+    <div class="ob-lbl">Your name</div>
+    <input class="fi" id="s-name" type="text">
 
-  <div class="ob-lbl">Days since last relapse</div>
-  <input class="fi" id="s-days" type="number" style="width:100%;margin-bottom:8px;">
+    <div class="ob-lbl">Days since last relapse</div>
+    <input class="fi" id="s-days" type="number" min="0">
 
-  <div class="ob-lbl">Addiction or issue</div>
-  <select class="fi" id="s-sub" style="width:100%;margin-bottom:8px;">
-    <option value="">Select...</option>
-    <option>Alcohol</option>
-    <option>Cocaine / stimulants</option>
-    <option>Opioids</option>
-    <option>Marijuana / cannabis</option>
-    <option>Methamphetamine</option>
-    <option>Gambling</option>
-    <option>Social media / digital</option>
-    <option>Shopping / spending</option>
-    <option>Pornography / compulsive sexual behaviour</option>
-    <option>Multiple issues</option>
-    <option>Other</option>
-    <option>Prefer not to say</option>
-  </select>
+    <div class="ob-lbl">Addiction or issue</div>
+    <select class="fi" id="s-sub">
+      <option value="">Select...</option>
+      <option>Alcohol</option>
+      <option>Cocaine / stimulants</option>
+      <option>Opioids</option>
+      <option>Marijuana / cannabis</option>
+      <option>Methamphetamine</option>
+      <option>Gambling</option>
+      <option>Social media / digital</option>
+      <option>Shopping / spending</option>
+      <option>Pornography / compulsive sexual behaviour</option>
+      <option>Multiple issues</option>
+      <option>Other</option>
+      <option>Prefer not to say</option>
+    </select>
 
-  <div class="ob-lbl">Typical days between relapses</div>
-  <input class="fi" id="s-cycle" type="number" style="width:100%;margin-bottom:8px;">
+    <div class="ob-lbl">Typical days between relapses</div>
+    <input class="fi" id="s-cycle" type="number" min="1">
 
-  <div class="ob-lbl">Sponsor / primary support</div>
-  <input class="fi" id="s-c1" type="text" style="width:100%;margin-bottom:8px;" placeholder="Name + phone">
+    <div class="ob-lbl">Sponsor / Primary support</div>
+    <input class="fi" id="s-c1" type="text" placeholder="Name + contact">
 
-  <div class="ob-lbl">Family contact</div>
-  <input class="fi" id="s-c2" type="text" style="width:100%;margin-bottom:8px;" placeholder="Name + phone">
+    <div class="ob-lbl">Family contact</div>
+    <input class="fi" id="s-c2" type="text" placeholder="Name + contact">
 
-  <div class="ob-lbl">Counsellor / therapist</div>
-  <input class="fi" id="s-c3" type="text" style="width:100%;margin-bottom:8px;" placeholder="Name + phone">
+    <div class="ob-lbl">Counsellor / Therapist</div>
+    <input class="fi" id="s-c3" type="text" placeholder="Name + contact">
 
-  <div class="ob-lbl">Typical spend per binge ($)</div>
-  <input class="fi" id="s-binge" type="number" style="width:100%;margin-bottom:8px;">
+    <div class="ob-lbl">Typical spend per binge ($)</div>
+    <input class="fi" id="s-binge" type="number" min="0">
 
-  <div class="ob-lbl">Typical binges per month</div>
-  <input class="fi" id="s-freq" type="number" style="width:100%;margin-bottom:8px;">
+    <div class="ob-lbl">Typical binges per month</div>
+    <input class="fi" id="s-freq" type="number" min="0">
 
-  <div class="ob-lbl">AI tone</div>
-  <select class="fi" id="s-tone" style="width:100%;margin-bottom:8px;">
-    <option value="gentle">Gentle</option>
-    <option value="direct">Direct</option>
-    <option value="hardline">Hardline</option>
-  </select>
+    <div class="ob-lbl">AI tone</div>
+    <select class="fi" id="s-tone">
+      <option value="gentle">Gentle</option>
+      <option value="direct">Direct</option>
+      <option value="hardline">Hardline</option>
+    </select>
 
-  <div class="ob-lbl">Affirmation</div>
-  <textarea class="fi" id="s-aff" style="height:76px;resize:none;line-height:1.5;"></textarea>
+    <div class="ob-lbl">Affirmation</div>
+    <textarea class="fi" id="s-aff" style="height:72px;resize:none;"></textarea>
 
-  <div class="ob-lbl">What you lose when you relapse</div>
-  <textarea class="fi" id="s-loss" style="height:76px;resize:none;line-height:1.5;"></textarea>
+    <div class="ob-lbl">What you lose when you relapse</div>
+    <textarea class="fi" id="s-loss" style="height:72px;resize:none;"></textarea>
 
-  <div class="ob-lbl">Reset track</div>
-  <input class="fi" id="s-music" type="text" style="width:100%;margin-bottom:8px;" placeholder="Song / link">
+    <div class="ob-lbl">Reset track</div>
+    <input class="fi" id="s-music" type="text" placeholder="Song / artist / link">
 
-  <div class="ob-lbl">Comfort show or film</div>
-  <input class="fi" id="s-show" type="text" style="width:100%;margin-bottom:8px;" placeholder="Show / link">
+    <div class="ob-lbl">Comfort show or film</div>
+    <input class="fi" id="s-show" type="text" placeholder="Title / link">
 
-  <div class="ob-lbl">Feel-good clip</div>
-  <input class="fi" id="s-clip" type="text" style="width:100%;margin-bottom:8px;" placeholder="Video link">
+    <div class="ob-lbl">Favourite clip</div>
+    <input class="fi" id="s-clip" type="text" placeholder="YouTube URL / link">
 
-  <div class="ob-lbl">Podcast</div>
-  <input class="fi" id="s-pod" type="text" style="width:100%;margin-bottom:12px;" placeholder="Podcast / link">
+    <div class="ob-lbl">Podcast</div>
+    <input class="fi" id="s-pod" type="text" placeholder="Podcast / link">
 
-  <button class="btn-teal" onclick="saveSettings()">Save changes</button>
-  <div class="modal-close" onclick="closeModal('modal-settings')">Close</div>
-</div></div>
-
-<div class="flash" id="flash-el"></div>
-
+    <button class="btn-teal" onclick="saveSettings()">Save Changes</button>
+    <div class="modal-close" onclick="closeModal('modal-settings')">Close</div>
+  </div>
 </div>
 
 <script>
