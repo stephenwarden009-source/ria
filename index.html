@@ -1415,7 +1415,7 @@ window.flash = function(msg){
   const phone = contacts[0].phone;
 
   if(msg.includes("Calling")){
-    window.location.href = "tel:" + phone;
+    window.location.href = `tel:${contacts[0].phone}`;
   }
   else if(msg.includes("text")){
     window.location.href = "sms:" + phone;
@@ -1430,22 +1430,28 @@ window.flash = function(msg){
 // ─────────────────────────────
 function setMedia(id, value){
   if(!value) return;
+
   const el = document.getElementById(id);
   if(!el) return;
 
-  el.innerHTML = value;
+  el.textContent = value;
 
-  el.parentElement.onclick = () => {
-    if(value.includes("youtube.com") || value.includes("youtu.be")){
-      window.open(value, "_blank");
-    } else if(value.startsWith("http")){
-      window.open(value, "_blank");
-    } else {
-      alert(value);
-    }
-  };
+  const parent = el.closest('.mitem');
+
+  if(parent){
+    parent.style.cursor = "pointer";
+
+    parent.onclick = () => {
+      if(value.includes("youtube.com") || value.includes("youtu.be")){
+        window.open(value, "_blank");
+      } else if(value.startsWith("http")){
+        window.open(value, "_blank");
+      } else {
+        alert(value);
+      }
+    };
+  }
 }
-
 </script>
 </body>
 </html>
