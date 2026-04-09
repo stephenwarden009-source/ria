@@ -3,6 +3,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,12 +11,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#0F172A" />
 <meta name="mobile-web-app-capable" content="yes" />
-<title>RIA — Enhanced Clean Shell</title>
+<title>RIA — Expanded Stable Shell</title>
 <style>
 :root{
   --bg:#0F172A; --panel:#1E293B; --panel2:#263548;
   --text:#E2E8F0; --muted:#94A3B8; --border:rgba(255,255,255,.09);
-  --teal:#2DD4BF; --teal2:#5EEAD4; --amber:#F59E0B; --sage:#84A98C; --lav:#A78BFA;
+  --teal:#2DD4BF; --teal2:#5EEAD4; --amber:#F59E0B; --sage:#84A98C; --lav:#A78BFA; --red:#F87171; --green:#34D399; --blue:#60A5FA;
   --safe-bot: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
   --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -23,11 +24,12 @@
 [data-theme="light"]{
   --bg:#F0F4F8; --panel:#FFFFFF; --panel2:#E8EFF7;
   --text:#0F172A; --muted:#64748B; --border:rgba(0,0,0,.08);
-  --teal:#0B8C78; --teal2:#0A7A68; --amber:#B45309; --sage:#3D6B4F; --lav:#6D28D9;
+  --teal:#0B8C78; --teal2:#0A7A68; --amber:#B45309; --sage:#3D6B4F; --lav:#6D28D9; --green:#059669; --blue:#1D4ED8;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--font)}
 body{overflow:hidden}
+a{color:inherit}
 #app{position:fixed;inset:0;max-width:480px;margin:0 auto;background:var(--bg)}
 .topbar{
   position:fixed; top:0; left:0; right:0; max-width:480px; margin:0 auto;
@@ -41,8 +43,13 @@ body{overflow:hidden}
 .icon-btn{
   width:36px; height:36px; border-radius:50%;
   border:1px solid var(--border); background:var(--panel); color:var(--text);
-  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative;
 }
+.badge-dot{
+  position:absolute; top:-2px; right:-2px; width:16px; height:16px; border-radius:50%;
+  background:var(--amber); color:#111827; display:none; align-items:center; justify-content:center; font-size:10px; font-weight:800;
+}
+.badge-dot.show{display:flex}
 #onboarding, .screen{
   position:absolute; left:0; right:0; top:56px; bottom:72px;
   overflow:auto; padding:16px;
@@ -62,6 +69,7 @@ textarea{resize:vertical; min-height:76px}
 button{border:none; outline:none; cursor:pointer; font-weight:700}
 .btn{width:100%; padding:14px 16px; border-radius:14px; background:var(--amber); color:#111827; margin-top:12px}
 .btn2{width:100%; padding:14px 16px; border-radius:14px; background:var(--teal); color:#111827; margin-top:12px}
+.btn3{width:100%; padding:12px 14px; border-radius:12px; background:var(--panel2); color:var(--text); margin-top:8px; border:1px solid var(--border)}
 .sub{font-size:13px; color:var(--muted); line-height:1.6}
 .h1{font-size:24px; font-weight:800; margin:0 0 6px}
 .h2{font-size:18px; font-weight:800; margin:0 0 6px}
@@ -88,7 +96,7 @@ button{border:none; outline:none; cursor:pointer; font-weight:700}
   width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
   background:var(--panel2); color:var(--text); text-decoration:none; border:1px solid var(--border)
 }
-.media-item,.meeting-item{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px}
+.media-item,.meeting-item,.tool-card{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px}
 .media-link,.meeting-link{display:block; margin-top:6px; color:var(--teal2); text-decoration:none; word-break:break-all}
 .modal-wrap{
   position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; z-index:100;
@@ -110,6 +118,19 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
 .mem-add input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .mem-caption{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.6));padding:6px 8px;font-size:11px;color:#fff}
 .pill{display:inline-block;padding:7px 10px;border-radius:999px;background:rgba(167,139,250,.12);color:var(--lav);font-size:12px;font-weight:700;margin-right:6px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal-lbl{font-size:10px;color:var(--muted);text-align:center}
+.cal-dot{aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;background:var(--panel2);border:1px solid var(--border)}
+.cal-dot.checked{background:var(--teal);color:#0b172a}
+.cal-dot.today{background:var(--amber);color:#111827}
+.cal-dot.missed{background:rgba(248,113,113,.14);color:var(--red)}
+.tool-card h4{margin:0 0 6px;font-size:15px}
+.tool-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+.tool-actions{display:flex;gap:8px;margin-top:10px}
+.tool-actions button{flex:1}
+.timer-big{font-size:48px;font-weight:800;text-align:center;color:var(--teal);margin:12px 0}
+.breath-state{text-align:center;color:var(--muted);font-size:14px}
+.notice{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.24);color:var(--amber);padding:12px;border-radius:12px}
 </style>
 </head>
 <body>
@@ -117,6 +138,7 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
   <div class="topbar">
     <div class="logo">R<span>I</span>A</div>
     <div class="icon-row">
+      <button class="icon-btn" id="updates-btn" onclick="openUpdates()">💡<span id="updates-badge" class="badge-dot show">!</span></button>
       <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
       <button class="icon-btn" onclick="openSettings()">⚙</button>
     </div>
@@ -125,7 +147,7 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
   <div id="onboarding">
     <div class="card hero">
       <div class="h1">Let's build your RIA.</div>
-      <div class="sub">A clean, stable shell with your core profile, support contacts, memory wall, and reset media.</div>
+      <div class="sub">Stable shell with profile, support contacts, memory wall, reset media, tools, and check-ins.</div>
     </div>
 
     <div class="card">
@@ -226,6 +248,13 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
       <div class="tile" onclick="go('memory')">🖼<br>Memory Wall</div>
       <div class="tile" onclick="go('support')">🤝<br>Support</div>
     </div>
+    <div class="card">
+      <div class="h3">Daily Check-In Calendar</div>
+      <div class="sub">Tap the button to mark today and keep the pattern visible.</div>
+      <button class="btn2" onclick="logCheckin()">✓ Check in today</button>
+      <div style="height:12px"></div>
+      <div class="cal-grid" id="calendar-grid"></div>
+    </div>
   </div>
 
   <div class="screen" id="screen-urgent">
@@ -247,8 +276,9 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
   <div class="screen" id="screen-media">
     <div class="card">
       <div class="h2">Reset Media</div>
-      <div class="sub">Tap links to open them.</div>
+      <div class="sub">Tap links to open them. Your saved music box is below.</div>
     </div>
+    <div id="music-box" class="card"></div>
     <div id="media-list"></div>
   </div>
 
@@ -273,9 +303,55 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
   </div>
 
   <div class="screen" id="screen-tools">
-    <div class="card">
+    <div class="card hero">
       <div class="h2">Tools</div>
-      <div class="sub">Quick grounding: name 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, 1 you can taste.</div>
+      <div class="sub">Immediate actions for crisis, cravings, and drift.</div>
+    </div>
+
+    <div class="tool-card">
+      <h4>🫁 Breathing reset</h4>
+      <p>4-4-6 breathing with a countdown clock to bring the nervous system down fast.</p>
+      <div class="timer-big" id="breath-timer">01:20</div>
+      <div class="breath-state" id="breath-state">Ready</div>
+      <div class="tool-actions">
+        <button class="btn2" onclick="startBreathing()">Start</button>
+        <button class="btn3" onclick="stopBreathing()">Stop</button>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <h4>💡 HALT</h4>
+      <p>Ask what is really driving the urge: Hungry, Angry, Lonely, or Tired.</p>
+      <div class="tool-actions">
+        <button class="btn3">Hungry</button>
+        <button class="btn3">Angry</button>
+      </div>
+      <div class="tool-actions">
+        <button class="btn3">Lonely</button>
+        <button class="btn3">Tired</button>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <h4>🌊 Urge surfing</h4>
+      <p>The urge is a wave. It rises, peaks, then falls. Delay the next action by ten minutes and keep breathing.</p>
+      <button class="btn3" onclick="go('urgent')">Go to urgent actions</button>
+    </div>
+
+    <div class="tool-card">
+      <h4>🧠 SOBER space</h4>
+      <p>Stop. Observe. Breathe. Expand. Respond. One right move is enough to change the next hour.</p>
+    </div>
+
+    <div class="tool-card">
+      <h4>🌱 5-4-3-2-1 grounding</h4>
+      <p>5 things you see. 4 you touch. 3 you hear. 2 you smell. 1 you taste.</p>
+    </div>
+
+    <div class="tool-card">
+      <h4>🔁 If you already used</h4>
+      <p>You are not starting over. Get safe, tell someone, and reconnect to meetings and support immediately.</p>
+      <div class="notice">Coming back is part of recovery. Returning to the app counts.</div>
     </div>
   </div>
 
@@ -365,6 +441,22 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
       <div class="close" onclick="closeSettings()">Close</div>
     </div>
   </div>
+
+  <div class="modal-wrap" id="modal-updates">
+    <div class="modal">
+      <div class="h2">Messages & Updates</div>
+      <div class="sub">A place for app notes, encouragement, and future updates.</div>
+      <div class="card">
+        <div class="h3">Current build</div>
+        <div class="sub">Stable shell restored. Theme toggle, memory wall, tools, music box, calendar check-in, and meeting links are active.</div>
+      </div>
+      <div class="card">
+        <div class="h3">Next likely additions</div>
+        <div class="sub">More advanced streak logic, badges, richer AI support, and deeper relapse pattern tracking.</div>
+      </div>
+      <div class="close" onclick="closeUpdates()">Close</div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -381,10 +473,13 @@ const DEFAULT_STATE = {
   affirmation:'', loss:'',
   bingeAmt:0, bingeFreq:4,
   music:'', show:'', clip:'', pod:'',
-  memories:[]
+  memories:[],
+  checkins:[]
 };
 
 let S = JSON.parse(JSON.stringify(DEFAULT_STATE));
+let breathInterval = null;
+let breathSeconds = 80;
 
 function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); }
 function loadState(){
@@ -473,6 +568,7 @@ function populate(){
   renderUrgent();
   renderMedia();
   renderMemory();
+  renderCalendar();
 }
 function renderContacts(){
   const wrap = document.getElementById('contacts-list');
@@ -518,17 +614,23 @@ function renderUrgent(){
   }
 }
 function renderMedia(){
+  const musicBox = document.getElementById('music-box');
+  musicBox.innerHTML = `
+    <div class="h3">Saved music / song box</div>
+    <div class="sub">${escapeHtml(S.music || 'No reset track saved yet.')}</div>
+    ${/^https?:\/\//i.test(S.music || '') ? `<a class="media-link" href="${escapeHtml(S.music)}" target="_blank" rel="noopener">Open track ↗</a>` : ''}
+  `;
+
   const wrap = document.getElementById('media-list');
   wrap.innerHTML = '';
   const items = [
-    {label:'Reset track', value:S.music},
     {label:'Comfort show or film', value:S.show},
     {label:'Favourite clip', value:S.clip},
     {label:'Podcast', value:S.pod}
   ].filter(x => x.value);
 
   if(!items.length){
-    wrap.innerHTML = '<div class="card"><div class="sub">No media saved yet. Use the gear icon to add links.</div></div>';
+    wrap.innerHTML = '<div class="card"><div class="sub">No other media saved yet. Use the gear icon to add links.</div></div>';
     return;
   }
 
@@ -572,6 +674,40 @@ function handleFiles(files){
     };
     reader.readAsDataURL(file);
   });
+}
+function todayKey(){
+  return new Date().toISOString().slice(0,10);
+}
+function logCheckin(){
+  S.checkins = S.checkins || [];
+  const today = todayKey();
+  if(!S.checkins.includes(today)) S.checkins.push(today);
+  saveState();
+  renderCalendar();
+}
+function renderCalendar(){
+  const wrap = document.getElementById('calendar-grid');
+  if(!wrap) return;
+  const labels = ['M','T','W','T','F','S','S'];
+  let html = labels.map(l => `<div class="cal-lbl">${l}</div>`).join('');
+  const today = new Date();
+  const todayString = today.toISOString().slice(0,10);
+  const start = new Date(today);
+  start.setDate(start.getDate() - 27);
+  const pad = (start.getDay() + 6) % 7;
+  for(let i=0;i<pad;i++) html += '<div></div>';
+  for(let i=0;i<28;i++){
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    const ds = d.toISOString().slice(0,10);
+    let cls = 'cal-dot';
+    let txt = d.getDate();
+    if(ds === todayString){ cls += ' today'; txt = '•'; }
+    else if((S.checkins||[]).includes(ds)){ cls += ' checked'; txt = '✓'; }
+    else cls += ' missed';
+    html += `<div class="${cls}">${txt}</div>`;
+  }
+  wrap.innerHTML = html;
 }
 function go(screen){
   document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
@@ -621,6 +757,43 @@ function initTheme(){
   const saved = localStorage.getItem(THEME_KEY) || 'dark';
   applyTheme(saved);
 }
+function openUpdates(){
+  document.getElementById('modal-updates').classList.add('open');
+  document.getElementById('updates-badge').classList.remove('show');
+}
+function closeUpdates(){
+  document.getElementById('modal-updates').classList.remove('open');
+}
+function startBreathing(){
+  stopBreathing();
+  breathSeconds = 80;
+  updateBreathDisplay('Inhale');
+  const phases = ['Inhale','Hold','Exhale'];
+  let phaseIndex = 0;
+  let phaseTick = 0;
+  breathInterval = setInterval(() => {
+    breathSeconds--;
+    phaseTick++;
+    if(phaseTick >= 4){
+      phaseTick = 0;
+      phaseIndex = (phaseIndex + 1) % phases.length;
+    }
+    updateBreathDisplay(phases[phaseIndex]);
+    if(breathSeconds <= 0) stopBreathing(true);
+  }, 1000);
+}
+function updateBreathDisplay(state){
+  const m = String(Math.floor(breathSeconds / 60)).padStart(2,'0');
+  const s = String(breathSeconds % 60).padStart(2,'0');
+  text('breath-timer', `${m}:${s}`);
+  text('breath-state', state);
+}
+function stopBreathing(done=false){
+  if(breathInterval){ clearInterval(breathInterval); breathInterval = null; }
+  breathSeconds = 80;
+  text('breath-timer', '01:20');
+  text('breath-state', done ? 'Complete' : 'Ready');
+}
 function escapeHtml(str){
   return String(str || '')
     .replaceAll('&','&amp;')
@@ -633,6 +806,7 @@ function escapeHtml(str){
 window.addEventListener('DOMContentLoaded', () => {
   initTheme();
   if(loadState() && S.name) launchApp();
+  else renderCalendar();
 });
 </script>
 </body>
