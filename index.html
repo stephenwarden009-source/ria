@@ -9,6 +9,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#0F172A" />
 <meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="RIA" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
 <title>RIA — Expanded Stable Shell</title>
 <style>
 :root{
@@ -847,8 +852,9 @@ function setMood(mood){
   saveState();
   const feedback = document.getElementById('mood-feedback');
   if(mood === 'ok'){
-    if(feedback) feedback.textContent = 'Good. Keep the day steady. Use Check-In or Tools if you want reinforcement.';
-    go('tools');
+    if(feedback) feedback.textContent = 'Good. Keep it going. You caught yourself in a solid moment — log today in your calendar and protect the momentum.';
+    logCheckin();
+    go('home');
   } else {
     if(feedback) feedback.textContent = 'Good catch. Go straight to urgent supports, meetings, or AI reassurance.';
     go('urgent');
@@ -903,8 +909,20 @@ window.addEventListener('DOMContentLoaded', () => {
   else renderCalendar();
 });
 </script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => {
+      console.log('SW registration failed:', err);
+    });
+  });
+}
+</script>
+
 </body>
 </html>
+
 
 
 
