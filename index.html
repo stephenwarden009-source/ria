@@ -169,86 +169,81 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
     </div>
 
     <div class="card">
-      <div class="lbl">Your first name</div>
-      <input id="inp-name" type="text" placeholder="What should we call you?">
+  <div class="lbl">Your first name</div>
+  <input id="inp-name" type="text" placeholder="What should we call you?">
 
-      <div class="lbl">Days since last relapse</div>
-      <input id="inp-days" type="number" min="0" placeholder="e.g. 16">
+  <div class="lbl">Days since last relapse</div>
+  <input id="inp-days" type="number" min="0" placeholder="e.g. 16">
 
-      <!-- keep the rest of your onboarding fields here -->
-    </div>
+  <div class="lbl">Addiction or issue</div>
+  <select id="inp-sub">
+    <option value="">Select...</option>
+    <option>Alcohol</option>
+    <option>Cocaine / stimulants</option>
+    <option>Opioids</option>
+    <option>Marijuana / cannabis</option>
+    <option>Methamphetamine</option>
+    <option>Gambling</option>
+    <option>Social media / digital</option>
+    <option>Shopping / spending</option>
+    <option>Pornography / compulsive sexual behaviour</option>
+    <option>Multiple issues</option>
+    <option>Other</option>
+    <option>Prefer not to say</option>
+  </select>
+
+  <div class="lbl">Typical days between relapses</div>
+  <input id="inp-cycle" type="number" min="1" placeholder="e.g. 18">
+
+  <div class="lbl">Sponsor / primary support</div>
+  <input id="inp-c1" type="text" placeholder="Name">
+  <div class="lbl">Sponsor phone</div>
+  <input id="inp-c1p" type="tel" placeholder="2041234567">
+
+  <div class="lbl">Family contact</div>
+  <input id="inp-c2" type="text" placeholder="Name">
+  <div class="lbl">Family phone</div>
+  <input id="inp-c2p" type="tel" placeholder="2041234567">
+
+  <div class="lbl">Counsellor / therapist</div>
+  <input id="inp-c3" type="text" placeholder="Name">
+  <div class="lbl">Counsellor phone</div>
+  <input id="inp-c3p" type="tel" placeholder="2041234567">
+
+  <div class="lbl">Affirmation</div>
+  <textarea id="inp-aff" placeholder="Something your sober self wants to remember"></textarea>
+
+  <div class="lbl">What you lose when you relapse</div>
+  <textarea id="inp-loss" placeholder="Be honest. This is for your eyes only."></textarea>
+
+  <div class="lbl">Typical spend per binge ($)</div>
+  <input id="inp-binge" type="number" min="0" placeholder="e.g. 200">
+
+  <div class="lbl">Typical binges per month</div>
+  <input id="inp-freq" type="number" min="0" placeholder="e.g. 4">
+
+  <div class="lbl">Reset track</div>
+  <input id="inp-music" type="text" placeholder="Song / artist / link">
+
+  <div class="lbl">Comfort show or film</div>
+  <input id="inp-show" type="text" placeholder="Title / link">
+
+  <div class="lbl">Favourite clip</div>
+  <input id="inp-clip" type="text" placeholder="YouTube URL / link">
+
+  <div class="lbl">Podcast</div>
+  <input id="inp-pod" type="text" placeholder="Title / link">
+
+  <div class="lbl">Memory Wall photos</div>
+  <div class="card" style="padding:12px">
+    <div class="sub">Add a couple of photos now or later from the Memory tab.</div>
+    <input id="inp-mem" type="file" accept="image/*" multiple>
   </div>
-  
+
+  <button class="btn" onclick="finishSetup()">Open My RIA</button>
+  <button class="btn2" onclick="quickLaunch()">Skip and open shell</button>
 </div>
-      <div class="lbl">Addiction or issue</div>
-      <select id="inp-sub">
-        <option value="">Select...</option>
-        <option>Alcohol</option>
-        <option>Cocaine / stimulants</option>
-        <option>Opioids</option>
-        <option>Marijuana / cannabis</option>
-        <option>Methamphetamine</option>
-        <option>Gambling</option>
-        <option>Social media / digital</option>
-        <option>Shopping / spending</option>
-        <option>Pornography / compulsive sexual behaviour</option>
-        <option>Multiple issues</option>
-        <option>Other</option>
-        <option>Prefer not to say</option>
-      </select>
-
-      <div class="lbl">Typical days between relapses</div>
-      <input id="inp-cycle" type="number" min="1" placeholder="e.g. 18">
-
-      <div class="lbl">Sponsor / primary support</div>
-      <input id="inp-c1" type="text" placeholder="Name">
-      <div class="lbl">Sponsor phone</div>
-      <input id="inp-c1p" type="tel" placeholder="2041234567">
-
-      <div class="lbl">Family contact</div>
-      <input id="inp-c2" type="text" placeholder="Name">
-      <div class="lbl">Family phone</div>
-      <input id="inp-c2p" type="tel" placeholder="2041234567">
-
-      <div class="lbl">Counsellor / therapist</div>
-      <input id="inp-c3" type="text" placeholder="Name">
-      <div class="lbl">Counsellor phone</div>
-      <input id="inp-c3p" type="tel" placeholder="2041234567">
-
-      <div class="lbl">Affirmation</div>
-      <textarea id="inp-aff" placeholder="Something your sober self wants to remember"></textarea>
-
-      <div class="lbl">What you lose when you relapse</div>
-      <textarea id="inp-loss" placeholder="Be honest. This is for your eyes only."></textarea>
-
-      <div class="lbl">Typical spend per binge ($)</div>
-      <input id="inp-binge" type="number" min="0" placeholder="e.g. 200">
-
-      <div class="lbl">Typical binges per month</div>
-      <input id="inp-freq" type="number" min="0" placeholder="e.g. 4">
-
-      <div class="lbl">Reset track</div>
-      <input id="inp-music" type="text" placeholder="Song / artist / link">
-
-      <div class="lbl">Comfort show or film</div>
-      <input id="inp-show" type="text" placeholder="Title / link">
-
-      <div class="lbl">Favourite clip</div>
-      <input id="inp-clip" type="text" placeholder="YouTube URL / link">
-
-      <div class="lbl">Podcast</div>
-      <input id="inp-pod" type="text" placeholder="Title / link">
-
-      <div class="lbl">Memory Wall photos</div>
-      <div class="card" style="padding:12px">
-        <div class="sub">Add a couple of photos now or later from the Memory tab.</div>
-        <input id="inp-mem" type="file" accept="image/*" multiple>
-      </div>
-
-      <button class="btn" onclick="finishSetup()">Open My RIA</button>
-      <button class="btn2" onclick="quickLaunch()">Skip and open shell</button>
-    </div>
-  </div>
+</div>
 
   <div class="screen" id="screen-home">
     <div class="card hero">
