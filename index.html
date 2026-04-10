@@ -784,25 +784,44 @@ function logCheckin(){
 function renderCalendar(){
   const wrap = document.getElementById('calendar-grid');
   if(!wrap) return;
+
   const labels = ['M','T','W','T','F','S','S'];
   let html = labels.map(l => `<div class="cal-lbl">${l}</div>`).join('');
+
   const today = new Date();
   const todayString = today.toISOString().slice(0,10);
+
   const start = new Date(today);
   start.setDate(start.getDate() - 27);
+
   const pad = (start.getDay() + 6) % 7;
-  for(let i=0;i<pad;i++) html += '<div></div>';
-  for(let i=0;i<28;i++){
+  for(let i=0; i<pad; i++) html += '<div></div>';
+
+  for(let i=0; i<28; i++){
     const d = new Date(start);
     d.setDate(d.getDate() + i);
     const ds = d.toISOString().slice(0,10);
+
     let cls = 'cal-dot';
     let txt = d.getDate();
-    if(ds === todayString){ cls += ' today'; txt = '•'; }
-    else if((S.checkins||[]).includes(ds)){ cls += ' checked'; txt = '✓'; }
-    else cls += ' missed';
+    const checked = (S.checkins || []).includes(ds);
+
+    if(ds === todayString && checked){
+      cls += ' checked';
+      txt = '✓';
+    } else if(ds === todayString){
+      cls += ' today';
+      txt = '•';
+    } else if(checked){
+      cls += ' checked';
+      txt = '✓';
+    } else {
+      cls += ' missed';
+    }
+
     html += `<div class="${cls}">${txt}</div>`;
   }
+
   wrap.innerHTML = html;
 }
 function go(screen){
