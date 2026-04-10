@@ -1,7 +1,5 @@
 
 
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -246,7 +244,7 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
       <div class="sub">Choose the lane that fits right now. You can change it any time.</div>
       <div class="tilegrid" style="margin-top:10px">
         <div class="tile" onclick="setMood('ok')">😌<br>Feeling OK</div>
-        <div class="tile" onclick="setMood('risk')">⚠️<br>Feeling urge / at risk</div>
+        <div class="tile" onclick="setMood('risk')">⚠️<br>Feeling Urge</div>
       </div>
       <div id="mood-feedback" class="sub" style="margin-top:10px"></div>
     </div>
@@ -272,16 +270,52 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
   <div class="screen" id="screen-urgent">
     <div class="card hero">
       <div class="h2">Good move. You caught it.</div>
-      <div class="sub">Choose one action right now.</div>
+      <div class="sub">What is your next step?</div>
     </div>
     <div id="urgent-primary"></div>
+
+    <div class="tool-card">
+      <h4>🌊 Urge Surfing</h4>
+      <p>Ride out the craving in a safe, structured way. The urge rises, peaks, then falls.</p>
+      <button class="btn3" onclick="go('tools')">Open full tools</button>
+    </div>
+
+    <div class="tool-card">
+      <h4>💡 HALT check</h4>
+      <p>See if hunger, anger, loneliness, or tiredness is pushing you toward relapse.</p>
+      <div class="tool-actions">
+        <button class="btn3">Hungry</button>
+        <button class="btn3">Angry</button>
+      </div>
+      <div class="tool-actions">
+        <button class="btn3">Lonely</button>
+        <button class="btn3">Tired</button>
+      </div>
+    </div>
+
     <div class="meeting-item">
-      <div class="h3">Live meeting links</div>
+      <div class="h3">Find a meeting</div>
       <div class="sub">Tap straight into recovery rooms right now.</div>
       <a class="meeting-link" href="https://ca-online.org" target="_blank" rel="noopener">Cocaine Anonymous online ↗</a>
       <a class="meeting-link" href="https://www.aa.org/meeting-guide-app" target="_blank" rel="noopener">Alcoholics Anonymous meeting guide ↗</a>
       <a class="meeting-link" href="https://na.org/meetingsearch/" target="_blank" rel="noopener">Narcotics Anonymous meeting search ↗</a>
       <a class="meeting-link" href="https://www.intherooms.com" target="_blank" rel="noopener">In The Rooms ↗</a>
+    </div>
+
+    <div class="tool-card">
+      <h4>🫁 Breathing exercise</h4>
+      <p>Use the timer to bring the nervous system down fast.</p>
+      <div class="timer-big" id="breath-timer-urgent">01:20</div>
+      <div class="breath-state" id="breath-state-urgent">Ready</div>
+      <div class="tool-actions">
+        <button class="btn2" onclick="startBreathingUrgent()">Start</button>
+        <button class="btn3" onclick="stopBreathingUrgent()">Stop</button>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <h4>⚡ Quick reset</h4>
+      <p>Stand up. Drink water. Change rooms. Step outside. Buy ten minutes for your better decision.</p>
     </div>
   </div>
 
@@ -516,6 +550,8 @@ const DEFAULT_STATE = {
 let S = JSON.parse(JSON.stringify(DEFAULT_STATE));
 let breathInterval = null;
 let breathSeconds = 80;
+let breathIntervalUrgent = null;
+let breathSecondsUrgent = 80;
 
 function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); }
 function loadState(){
@@ -837,6 +873,38 @@ function stopBreathing(done=false){
   text('breath-timer', '01:20');
   text('breath-state', done ? 'Complete' : 'Ready');
 }
+
+function startBreathingUrgent(){
+  stopBreathingUrgent();
+  breathSecondsUrgent = 80;
+  updateBreathDisplayUrgent('Inhale');
+  const phases = ['Inhale','Hold','Exhale'];
+  let phaseIndex = 0;
+  let phaseTick = 0;
+  breathIntervalUrgent = setInterval(() => {
+    breathSecondsUrgent--;
+    phaseTick++;
+    if(phaseTick >= 4){
+      phaseTick = 0;
+      phaseIndex = (phaseIndex + 1) % phases.length;
+    }
+    updateBreathDisplayUrgent(phases[phaseIndex]);
+    if(breathSecondsUrgent <= 0) stopBreathingUrgent(true);
+  }, 1000);
+}
+function updateBreathDisplayUrgent(state){
+  const m = String(Math.floor(breathSecondsUrgent / 60)).padStart(2,'0');
+  const s = String(breathSecondsUrgent % 60).padStart(2,'0');
+  text('breath-timer-urgent', `${m}:${s}`);
+  text('breath-state-urgent', state);
+}
+function stopBreathingUrgent(done=false){
+  if(breathIntervalUrgent){ clearInterval(breathIntervalUrgent); breathIntervalUrgent = null; }
+  breathSecondsUrgent = 80;
+  text('breath-timer-urgent', '01:20');
+  text('breath-state-urgent', done ? 'Complete' : 'Ready');
+}
+
 function escapeHtml(str){
   return String(str || '')
     .replaceAll('&','&amp;')
@@ -852,11 +920,11 @@ function setMood(mood){
   saveState();
   const feedback = document.getElementById('mood-feedback');
   if(mood === 'ok'){
-    if(feedback) feedback.textContent = 'Good. Keep it going. You caught yourself in a solid moment — log today in your calendar and protect the momentum.';
+    if(feedback) feedback.textContent = 'Good. Keep it going. You caught yourself in a solid moment — today is worth protecting.';
     logCheckin();
     go('home');
   } else {
-    if(feedback) feedback.textContent = 'Good catch. Go straight to urgent supports, meetings, or AI reassurance.';
+    if(feedback) feedback.textContent = 'Good catch. Go straight to Tools & Support now.';
     go('urgent');
   }
 }
@@ -922,6 +990,8 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
+
 
 
 
