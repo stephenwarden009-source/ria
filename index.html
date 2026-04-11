@@ -1,5 +1,12 @@
 
 
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -549,7 +556,7 @@ const STORAGE_KEY = 'ria3';
 const THEME_KEY = 'ria3_theme';
 
 const DEFAULT_STATE = {
-  name:'', days:0, cycle:18, substance:'',
+  name:'', days:0, startDate:'', cycle:18, substance:'',
   contacts:[
     {label:'Sponsor', name:'', phone:''},
     {label:'Family', name:'', phone:''},
@@ -606,7 +613,7 @@ function getLocalDateKey(date = new Date()){
 function daysAgoToStartDate(daysAgo){
   const d = new Date();
   d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - daysAgo);
+  d.setDate(d.getDate() - Number(daysAgo || 0));
   return getLocalDateKey(d);
 }
 
@@ -634,6 +641,13 @@ function getDaysClean(){
 
 function calcSaved(){
   return Math.round(((Number(S.bingeAmt) || 0) * (Number(S.bingeFreq) || 0) / 30) * getDaysClean());
+}
+
+function migrateStartDate(){
+  if(!S.startDate && Number.isFinite(Number(S.days))){
+    S.startDate = daysAgoToStartDate(Number(S.days) || 0);
+    saveState();
+  }
 }
 
 function finishSetup(){
@@ -664,6 +678,7 @@ function finishSetup(){
 }
 function quickLaunch(){ if(!S.name) S.name = val('inp-name') || 'Friend'; saveState(); launchApp(); }
 function launchApp(){
+  migrateStartDate();
   document.getElementById('onboarding').classList.add('hidden');
   document.getElementById('nav').classList.remove('hidden');
   populate();
@@ -680,9 +695,9 @@ function populate(){
   text('loss-text', S.loss || 'Complete setup to see your words here.');
   text('aff-text', S.affirmation || 'You are fighting for something real.');
   text('badge-issue', S.substance || 'Issue');
-}
+
   setVal('s-name', S.name);
-  setVal('s-days', S.days);
+  setVal('s-days', daysClean);
   setVal('s-sub', S.substance);
   setVal('s-cycle', S.cycle);
   setVal('s-c1', S.contacts[0]?.name);
@@ -706,6 +721,7 @@ function populate(){
   renderMemory();
   renderCalendar();
   renderChat();
+
   const feedback = document.getElementById('mood-feedback');
   if(feedback){
     if(S.mood === 'ok') feedback.textContent = 'You marked yourself as feeling OK.';
@@ -713,6 +729,7 @@ function populate(){
     else feedback.textContent = '';
   }
 }
+
 function renderContacts(){
   const wrap = document.getElementById('contacts-list');
   wrap.innerHTML = '';
@@ -819,7 +836,7 @@ function handleFiles(files){
   });
 }
 function todayKey(){
-  return new Date().toISOString().slice(0,10);
+  return getLocalDateKey();
 }
 function logCheckin(){
   S.checkins = S.checkins || [];
@@ -836,7 +853,7 @@ function renderCalendar(){
   let html = labels.map(l => `<div class="cal-lbl">${l}</div>`).join('');
 
   const today = new Date();
-  const todayString = today.toISOString().slice(0,10);
+  const todayString = getLocalDateKey(today);
 
   const start = new Date(today);
   start.setDate(start.getDate() - 27);
@@ -847,7 +864,7 @@ function renderCalendar(){
   for(let i=0; i<28; i++){
     const d = new Date(start);
     d.setDate(d.getDate() + i);
-    const ds = d.toISOString().slice(0,10);
+    const ds = getLocalDateKey(d);
 
     let cls = 'cal-dot';
     let txt = d.getDate();
@@ -884,7 +901,9 @@ function openSettings(){ populate(); document.getElementById('modal-settings').c
 function closeSettings(){ document.getElementById('modal-settings').classList.remove('open'); }
 function saveSettings(){
   S.name = val('s-name') || 'Friend';
-  S.days = parseInt(val('s-days') || '0', 10) || 0;
+  const inputDays = parseInt(val('s-days') || '0', 10) || 0;
+  S.days = inputDays;
+  S.startDate = daysAgoToStartDate(inputDays);
   S.substance = val('s-sub');
   S.cycle = parseInt(val('s-cycle') || '18', 10) || 18;
   S.contacts = [
@@ -1073,9 +1092,3 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
-
-
-
-
-
-
