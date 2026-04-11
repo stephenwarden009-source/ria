@@ -589,15 +589,60 @@ function deepMerge(base, incoming){
   }
   return out;
 }
+
 function extractPhone(v){ return String(v || '').replace(/\D/g,''); }
 function val(id){ const el = document.getElementById(id); return el ? el.value.trim() : ''; }
 function setVal(id, v){ const el = document.getElementById(id); if(el) el.value = v ?? ''; }
 function text(id, v){ const el = document.getElementById(id); if(el) el.textContent = v; }
 function fmtMoney(n){ return '$' + Number(n || 0).toLocaleString(); }
-function calcSaved(){ return Math.round(((Number(S.bingeAmt)||0) * (Number(S.bingeFreq)||0) / 30) * (Number(S.days)||0)); }
+
+function getLocalDateKey(date = new Date()){
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function daysAgoToStartDate(daysAgo){
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - daysAgo);
+  return getLocalDateKey(d);
+}
+
+function daysBetweenLocal(startDateStr){
+  if(!startDateStr) return 0;
+
+  const parts = startDateStr.split('-').map(Number);
+  if(parts.length !== 3) return 0;
+
+  const [y, m, d] = parts;
+  const start = new Date(y, m - 1, d);
+  const today = new Date();
+
+  start.setHours(0, 0, 0, 0);
+  today.setHours(0, 0, 0, 0);
+
+  const diffMs = today - start;
+  return Math.max(0, Math.floor(diffMs / 86400000));
+}
+
+function getDaysClean(){
+  if(S.startDate) return daysBetweenLocal(S.startDate) + 1;
+  return Number(S.days) || 0;
+}
+
+function calcSaved(){
+  return Math.round(((Number(S.bingeAmt) || 0) * (Number(S.bingeFreq) || 0) / 30) * getDaysClean());
+}
+
 function finishSetup(){
   S.name = val('inp-name') || 'Friend';
-  S.days = parseInt(val('inp-days') || '0', 10) || 0;
+
+  const inputDays = parseInt(val('inp-days') || '0', 10) || 0;
+  S.startDate = daysAgoToStartDate(inputDays);
+  S.days = inputDays; // optional legacy fallback
+
   S.substance = val('inp-sub');
   S.cycle = parseInt(val('inp-cycle') || '18', 10) || 18;
   S.contacts = [
@@ -625,15 +670,17 @@ function launchApp(){
   go('home');
 }
 function populate(){
+  const daysClean = getDaysClean();
+
   text('uname', S.name || '—');
-  text('udays', S.days || '—');
-  text('stat-days', S.days || '—');
+  text('udays', String(daysClean));
+  text('stat-days', String(daysClean));
   text('stat-cycle', S.cycle || '—');
   text('stat-saved', fmtMoney(calcSaved()));
   text('loss-text', S.loss || 'Complete setup to see your words here.');
   text('aff-text', S.affirmation || 'You are fighting for something real.');
   text('badge-issue', S.substance || 'Issue');
-
+}
   setVal('s-name', S.name);
   setVal('s-days', S.days);
   setVal('s-sub', S.substance);
