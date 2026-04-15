@@ -638,10 +638,9 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
       </div>
 
       <div class="red-stack">
-        <button class="red-btn primary" onclick="openAlertModal()">
-          <span class="ttl">🚨 ALERT MY PEOPLE</span>
-          <span class="subtxt">Send a message to your support now</span>
-        </button>
+        <button class="red-btn primary" onclick="alertMyPeople()">
+  <span class="ttl">🚨 ALERT MY PEOPLE</span>
+</button>
         <button class="red-btn" onclick="callPrimarySupport()">
           <span class="ttl">📞 CALL SUPPORT</span>
           <span class="subtxt">Talk to someone immediately</span>
@@ -749,7 +748,19 @@ function getLocalDateKey(date = new Date()){
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
+function alertMyPeople(){
+  const primary = S.contacts.find(c => c && c.phone);
+  
+  if(!primary || !primary.phone){
+    alert("No support contact set. Add one in settings.");
+    return;
+  }
 
+  const phone = primary.phone;
+  const msg = "I’m in trouble and need support right now. Please call or text me.";
+
+  window.location.href = `sms:${phone}?body=${encodeURIComponent(msg)}`;
+}
 function daysAgoToStartDate(daysAgo){
   const d = new Date();
   d.setHours(0, 0, 0, 0);
