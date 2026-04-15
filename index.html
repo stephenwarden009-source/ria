@@ -349,25 +349,26 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
 
   <div id="mood-feedback" class="sub" style="margin-top:10px"></div>
 </div>
-    <div class="card">
-      <div class="h3">Why you're here</div>
-      <div class="sub" id="loss-text">Complete setup to see your words here.</div>
-    </div>
-    <div class="tilegrid">
-      <div class="tile" onclick="go('urgent')">🆘<br>Urgent Help</div>
-      <div class="tile" onclick="go('media')">🎧<br>Reset Media</div>
-      <div class="tile" onclick="go('memory')">🖼<br>Memory Wall</div>
-      <div class="tile" onclick="go('support')">🤝<br>Support</div>
-    </div>
-    <div class="card">
-      <div class="h3">Daily Check-In Calendar</div>
-      <div class="sub">Tap the button to mark today and keep the pattern visible.</div>
-      <button class="btn2" onclick="logCheckin()">✓ Check in today</button>
-      <div style="height:12px"></div>
-      <div class="cal-grid" id="calendar-grid"></div>
-    </div>
-  </div>
 
+<div class="card">
+  <div class="h3">Why you're here</div>
+  <div class="sub" id="loss-text">Complete setup to see your words here.</div>
+</div>
+
+<div class="tilegrid">
+  <div class="tile" onclick="go('tools')">🧰<br>Tools</div>
+  <div class="tile" onclick="go('support')">🤝<br>Support</div>
+  <div class="tile" onclick="go('media')">🎧<br>Reset</div>
+</div>
+
+<div class="card">
+  <div class="h3">Daily Check-In Calendar</div>
+  <div class="sub">Tap the button to mark today and keep the pattern visible.</div>
+  <button class="btn2" onclick="logCheckin()">✓ Check in today</button>
+  <div style="height:12px"></div>
+  <div class="cal-grid" id="calendar-grid"></div>
+</div>
+</div>
   <div class="screen" id="screen-urgent">
     <div class="card hero">
       <div class="h2">Good move. You caught it.</div>
