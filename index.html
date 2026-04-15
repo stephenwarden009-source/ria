@@ -1111,7 +1111,7 @@ if(risk === 'high'){
 } else {
   el.classList.add('hidden');
 }
-}
+
 function getAlertTargets(){
   const indexes = (S.alerts && Array.isArray(S.alerts.contacts) && S.alerts.contacts.length ? S.alerts.contacts : [0,1,2]);
   return indexes.map(i => S.contacts[i]).filter(c => c && extractPhone(c.phone));
