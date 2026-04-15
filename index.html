@@ -326,20 +326,29 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
       <div class="sub">Day <strong id="udays">—</strong> of your recovery journey.</div>
     </div>
     <div id="risk-banner" class="risk-banner hidden"></div>
-    <div class="statgrid">
-      <div class="stat"><div class="n" id="stat-days">—</div><div class="small">Days Clean</div></div>
-      <div class="stat"><div class="n" id="stat-saved">$0</div><div class="small">Saved</div></div>
-      <div class="stat"><div class="n" id="stat-cycle">—</div><div class="small">Cycle</div></div>
+
+<div class="statgrid">
+  <div class="stat"><div class="n" id="stat-days">—</div><div class="small">Days Clean</div></div>
+  <div class="stat"><div class="n" id="stat-saved">$0</div><div class="small">Saved</div></div>
+  <div class="stat"><div class="n" id="stat-cycle">—</div><div class="small">Cycle</div></div>
+</div>
+
+<div class="card" id="mood-card">
+  <div class="h3">Where are you right now?</div>
+  <div class="sub">Choose the lane that fits right now.</div>
+
+  <div class="tilegrid" style="margin-top:10px">
+    <div class="tile" onclick="setMood('ok')">
+      😌<br>I'm OK
     </div>
-    <div class="card" id="mood-card">
-      <div class="h3">How are you feeling?</div>
-      <div class="sub">Choose the lane that fits right now. You can change it any time.</div>
-      <div class="tilegrid" style="margin-top:10px">
-        <div class="tile" onclick="setMood('ok')">😌<br>Feeling OK</div>
-        <div class="tile" onclick="setMood('risk')">⚠️<br>Feeling Urge</div>
-      </div>
-      <div id="mood-feedback" class="sub" style="margin-top:10px"></div>
+
+    <div class="tile" onclick="setMood('risk')" style="border:2px solid var(--amber); background:rgba(245,158,11,.08)">
+      🚨<br>I Need Help Now
     </div>
+  </div>
+
+  <div id="mood-feedback" class="sub" style="margin-top:10px"></div>
+</div>
     <div class="card">
       <div class="h3">Why you're here</div>
       <div class="sub" id="loss-text">Complete setup to see your words here.</div>
