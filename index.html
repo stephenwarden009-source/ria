@@ -1014,7 +1014,7 @@ function renderMemory(){
       <button class="mem-del" onclick="deleteMemory(${i})">✕</button>
     `;
     wrap.appendChild(div);
-  }
+  });  // ← closes forEach
 
   const add = document.createElement('div');
   add.className = 'mem-card mem-add';
@@ -1026,7 +1026,7 @@ function renderMemory(){
   });
 
   wrap.appendChild(add);
-}
+}  
 
   const add = document.createElement('div');
   add.className = 'mem-card mem-add';
