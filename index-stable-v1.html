@@ -1,1 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0F172A" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="RIA" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<title>RIA — Stable Rebuild</title>
+<style>
+:root{
+  --bg:#0F172A; --panel:#1E293B; --panel2:#263548;
+  --text:#E2E8F0; --muted:#94A3B8; --border:rgba(255,255,255,.09);
+  --teal:#2DD4BF; --teal2:#5EEAD4; --amber:#F59E0B; --sage:#84A98C; --lav:#A78BFA; --red:#F87171; --green:#34D399; --blue:#60A5FA;
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+[data-theme="light"]{
+  --bg:#F0F4F8; --panel:#FFFFFF; --panel2:#E8EFF7;
+  --text:#0F172A; --muted:#64748B; --border:rgba(0,0,0,.08);
+  --teal:#0B8C78; --teal2:#0A7A68; --amber:#B45309; --sage:#3D6B4F; --lav:#6D28D9; --green:#059669; --blue:#1D4ED8;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:var(--font)}
+body{overflow:hidden}
+a{color:inherit}
+#app{position:fixed;inset:0;max-width:480px;margin:0 auto;background:var(--bg)}
+.topbar{
+  position:fixed; top:0; left:0; right:0; max-width:480px; margin:0 auto;
+  height:56px; padding:calc(8px + var(--safe-top)) 16px 8px;
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--bg); border-bottom:1px solid var(--border); z-index:50;
+}
+.logo{font-weight:800; letter-spacing:2px}
+.logo span{color:var(--teal)}
+.icon-row{display:flex; gap:8px}
+.icon-btn{
+  width:36px; height:36px; border-radius:50%;
+  border:1px solid var(--border); background:var(--panel); color:var(--text);
+  display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative;
+}
+.badge-dot{
+  position:absolute; top:-2px; right:-2px; width:16px; height:16px; border-radius:50%;
+  background:var(--amber); color:#111827; display:none; align-items:center; justify-content:center; font-size:10px; font-weight:800;
+}
+.badge-dot.show{display:flex}
+#onboarding, .screen{
+  position:absolute; left:0; right:0; top:56px; bottom:72px;
+  overflow:auto; padding:16px;
+}
+.hidden{display:none !important}
+.card{
+  background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:16px; margin-bottom:12px;
+}
+.hero{background:linear-gradient(135deg, rgba(45,212,191,.12), rgba(96,165,250,.08))}
+.lbl{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1.3px; margin:14px 0 6px; font-weight:700}
+input, select, textarea{
+  width:100%; border:none; outline:none; color:var(--text);
+  background:var(--panel2); border:1px solid var(--border); border-radius:12px;
+  padding:12px 13px; font-size:14px; margin-bottom:6px;
+}
+textarea{resize:vertical; min-height:76px}
+button{border:none; outline:none; cursor:pointer; font-weight:700}
+.btn{width:100%; padding:14px 16px; border-radius:14px; background:var(--amber); color:#111827; margin-top:12px}
+.btn2{width:100%; padding:14px 16px; border-radius:14px; background:var(--teal); color:#111827; margin-top:12px}
+.btn3{width:100%; padding:12px 14px; border-radius:12px; background:var(--panel2); color:var(--text); margin-top:8px; border:1px solid var(--border)}
+.sub{font-size:13px; color:var(--muted); line-height:1.6}
+.h1{font-size:24px; font-weight:800; margin:0 0 6px}
+.h2{font-size:18px; font-weight:800; margin:0 0 6px}
+.h3{font-size:15px; font-weight:700; margin:0 0 4px}
+.nav{
+  position:fixed; left:0; right:0; bottom:0; max-width:480px; margin:0 auto;
+  height:72px; padding-bottom:var(--safe-bot); display:grid; grid-template-columns:repeat(7,1fr);
+  background:var(--panel); border-top:1px solid var(--border); z-index:60;
+}
+.nav button{
+  background:none; color:var(--muted); border:none; font-size:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+}
+.nav button.active{color:var(--teal)}
+.statgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px}
+.stat{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:12px; text-align:center}
+.stat .n{font-size:24px; font-weight:800; color:var(--teal)}
+.tilegrid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.tile{background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:16px; text-align:center; cursor:pointer}
+.screen{display:none}
+.screen.active{display:block}
+.contact{display:flex; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px}
+.contact .grow{flex:1}
+.contact a{
+  width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:var(--panel2); color:var(--text); text-decoration:none; border:1px solid var(--border)
+}
+.media-item,.meeting-item,.tool-card{background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:10px}
+.media-link,.meeting-link{display:block; margin-top:6px; color:var(--teal2); text-decoration:none; word-break:break-all}
+.modal-wrap{
+  position:fixed; inset:0; background:rgba(0,0,0,.7); display:none; z-index:100;
+  align-items:flex-end; justify-content:center;
+}
+.modal-wrap.open{display:flex}
+.modal{
+  width:100%; max-width:480px; max-height:88vh; overflow:auto;
+  background:var(--panel); border-top-left-radius:24px; border-top-right-radius:24px; padding:20px 16px 24px;
+}
+.close{margin-top:10px; color:var(--muted); text-align:center; cursor:pointer}
+.badge{display:inline-block; padding:6px 10px; border-radius:999px; background:rgba(45,212,191,.12); color:var(--teal2); font-size:12px; font-weight:700}
+.small{font-size:12px; color:var(--muted)}
+.mem-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mem-card{aspect-ratio:1;border-radius:14px;background:var(--panel2);border:1px solid var(--border);overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center}
+.mem-card img{width:100%;height:100%;object-fit:cover}
+.mem-add{border:2px dashed var(--border);position:relative}
+.mem-add input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.mem-caption{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.65));padding:6px 8px;font-size:11px;color:#fff}
+.mem-del{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(0,0,0,.65);color:#fff;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
+.pill{display:inline-block;padding:7px 10px;border-radius:999px;background:rgba(167,139,250,.12);color:var(--lav);font-size:12px;font-weight:700;margin-right:6px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal-lbl{font-size:10px;color:var(--muted);text-align:center}
+.cal-dot{aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;background:var(--panel2);border:1px solid var(--border)}
+.cal-dot.checked{background:var(--teal);color:#0b172a}
+.cal-dot.today{background:var(--amber);color:#111827}
+.cal-dot.missed{background:rgba(248,113,113,.14);color:var(--red)}
+.tool-card h4{margin:0 0 6px;font-size:15px}
+.tool-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+.tool-actions{display:flex;gap:8px;margin-top:10px}
+.tool-actions button{flex:1}
+.timer-big{font-size:48px;font-weight:800;text-align:center;color:var(--teal);margin:12px 0}
+.breath-state{text-align:center;color:var(--muted);font-size:14px}
+.notice{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.24);color:var(--amber);padding:12px;border-radius:12px}
+.risk-banner{background:rgba(245,158,11,.14); border:1px solid rgba(245,158,11,.24); color:var(--amber); padding:12px; border-radius:12px; margin-bottom:12px}
+.redmode-wrap{position:fixed; inset:0; background:rgba(8,15,28,.98); display:none; z-index:120;}
+.redmode-wrap.open{display:block}
+.redmode{position:absolute; inset:0; max-width:480px; margin:0 auto; padding:calc(16px + var(--safe-top)) 16px calc(18px + var(--safe-bot)); display:flex; flex-direction:column; gap:14px; background:linear-gradient(180deg, rgba(248,113,113,.10), rgba(245,158,11,.10) 28%, rgba(15,23,42,.98) 70%)}
+.red-banner{border-radius:20px; padding:16px; border:1px solid rgba(255,255,255,.12); background:#7f1d1d; box-shadow:0 0 0 1px rgba(255,255,255,.04) inset}
+.red-title{font-size:22px; font-weight:800; line-height:1.15; margin:0 0 6px; color:#fff}
+.red-sub{font-size:13px; color:rgba(255,255,255,.92); line-height:1.5}
+.red-stack{display:grid; gap:12px; margin-top:2px}
+.red-btn{width:100%; text-align:left; border-radius:18px; padding:18px 16px; background:var(--panel); color:var(--text); border:1px solid var(--border); box-shadow:0 10px 24px rgba(0,0,0,.16)}
+.red-btn.primary{background:linear-gradient(135deg, rgba(245,158,11,.95), rgba(248,113,113,.92)); color:#111827; border:none; animation:redPulse 2.2s ease-in-out infinite}
+.red-btn .ttl{display:block; font-size:17px; font-weight:800; margin-bottom:4px}
+.red-btn .subtxt{display:block; font-size:12px; line-height:1.4; opacity:.9}
+.red-foot{margin-top:auto; text-align:center; font-size:13px; color:var(--muted)}
+.red-link{display:inline-block; margin-top:4px; color:var(--amber); font-weight:700; cursor:pointer}
+.buy10-wrap{position:fixed; inset:0; background:rgba(8,15,28,.96); display:none; z-index:121}
+.buy10-wrap.open{display:block}
+.buy10{position:absolute; inset:0; max-width:480px; margin:0 auto; padding:calc(18px + var(--safe-top)) 16px calc(18px + var(--safe-bot)); display:flex; flex-direction:column; gap:14px}
+.buy10-hero{border-radius:20px; padding:18px; background:linear-gradient(135deg, rgba(245,158,11,.16), rgba(45,212,191,.12)); border:1px solid rgba(245,158,11,.22)}
+.buy10-prompt{min-height:68px; display:flex; align-items:center; justify-content:center; text-align:center; background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:14px; font-size:16px; font-weight:700}
+.buy10-actions{display:grid; gap:10px; margin-top:auto}
+@keyframes redPulse{0%,100%{transform:scale(1); box-shadow:0 0 0 0 rgba(248,113,113,.18)}50%{transform:scale(1.01); box-shadow:0 0 0 10px rgba(248,113,113,0)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="logo">R<span>I</span>A</div>
+    <div class="icon-row">
+      <button class="icon-btn" id="updates-btn" onclick="openUpdates()">💡<span id="updates-badge" class="badge-dot show">!</span></button>
+      <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
+      <button class="icon-btn" onclick="openSettings()">⚙</button>
+    </div>
+  </div>
 
+  <div id="onboarding">
+    <div class="card hero">
+      <div class="h2">🔒 This is your space. Totally private.</div>
+      <div class="sub" style="margin-top:10px">Everything you enter in RIA stays on <strong>your device only</strong>.</div>
+      <div class="sub" style="margin-top:10px;color:var(--teal2)"><strong>RIA is a personal relapse intervention tool</strong> — built to help you catch it early and change what happens next.</div>
+    </div>
+    <div class="card"><div class="h1">Let's Build Your RIA</div><div class="sub">Customize your relapse interceptor</div></div>
+    <div class="card">
+      <div class="lbl">Your first name</div><input id="inp-name" type="text" placeholder="What should we call you?">
+      <div class="lbl">Days since last relapse</div><input id="inp-days" type="number" min="0" placeholder="e.g. 16">
+      <div class="lbl">Addiction or issue</div>
+      <select id="inp-sub"><option value="">Select...</option><option>Alcohol</option><option>Cocaine / stimulants</option><option>Opioids</option><option>Marijuana / cannabis</option><option>Methamphetamine</option><option>Gambling</option><option>Social media / digital</option><option>Shopping / spending</option><option>Pornography / compulsive sexual behaviour</option><option>Multiple issues</option><option>Other</option><option>Prefer not to say</option></select>
+      <div class="lbl">Typical days between relapses</div><input id="inp-cycle" type="number" min="1" placeholder="e.g. 18">
+      <div class="lbl">Sponsor / primary support</div><input id="inp-c1" type="text" placeholder="Name">
+      <div class="lbl">Sponsor phone</div><input id="inp-c1p" type="tel" placeholder="2041234567">
+      <div class="lbl">Family contact</div><input id="inp-c2" type="text" placeholder="Name">
+      <div class="lbl">Family phone</div><input id="inp-c2p" type="tel" placeholder="2041234567">
+      <div class="lbl">Counsellor / therapist</div><input id="inp-c3" type="text" placeholder="Name">
+      <div class="lbl">Counsellor phone</div><input id="inp-c3p" type="tel" placeholder="2041234567">
+      <div class="lbl">Affirmation</div><textarea id="inp-aff" placeholder="Something your sober self wants to remember"></textarea>
+      <div class="lbl">What you lose when you relapse</div><textarea id="inp-loss" placeholder="Be honest. This is for your eyes only."></textarea>
+      <div class="lbl">Typical spend per binge ($)</div><input id="inp-binge" type="number" min="0" placeholder="e.g. 200">
+      <div class="lbl">Typical binges per month</div><input id="inp-freq" type="number" min="0" placeholder="e.g. 4">
+      <div class="lbl">Reset track</div><input id="inp-music" type="text" placeholder="Song / artist / link">
+      <div class="lbl">Comfort show or film</div><input id="inp-show" type="text" placeholder="Title / link">
+      <div class="lbl">Favourite clip</div><input id="inp-clip" type="text" placeholder="YouTube URL / link">
+      <div class="lbl">Podcast</div><input id="inp-pod" type="text" placeholder="Title / link">
+      <div class="lbl">Memory Wall photos</div><div class="card" style="padding:12px"><div class="sub">Add a couple of photos now or later from My People + Pets.</div><input id="inp-mem" type="file" accept="image/*" multiple></div>
+      <button class="btn" onclick="finishSetup()">Open My RIA</button>
+      <button class="btn2" onclick="quickLaunch()">Skip and open shell</button>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-home">
+    <div class="card hero">
+      <div class="badge" id="badge-issue">Issue</div>
+      <div class="h2" style="margin-top:10px">Welcome back, <span id="uname">—</span></div>
+      <div class="sub">Day <strong id="udays">—</strong> of your recovery journey.</div>
+    </div>
+    <div id="risk-banner" class="risk-banner hidden"></div>
+    <div class="statgrid">
+      <div class="stat"><div class="n" id="stat-days">—</div><div class="small">Days Clean</div></div>
+      <div class="stat"><div class="n" id="stat-saved">$0</div><div class="small">Saved</div></div>
+      <div class="stat"><div class="n" id="stat-cycle">—</div><div class="small">Cycle</div></div>
+    </div>
+    <div class="card" id="mood-card">
+      <div class="h3">Where are you right now?</div>
+      <div class="sub">Choose the lane that fits right now.</div>
+      <div class="tilegrid" style="margin-top:10px">
+        <div class="tile" onclick="setMood('ok')">😌<br>I'm OK</div>
+        <div class="tile" onclick="setMood('risk')" style="border:2px solid var(--amber); background:rgba(245,158,11,.08)">🚨<br>I Need Help Now</div>
+      </div>
+      <div id="mood-feedback" class="sub" style="margin-top:10px"></div>
+    </div>
+    <div class="card"><div class="h3">Why you're here</div><div class="sub" id="loss-text">Complete setup to see your words here.</div></div>
+    <div class="tilegrid">
+      <div class="tile" onclick="go('tools')">🧰<br>Tools</div>
+      <div class="tile" onclick="go('support')">🤝<br>Support</div>
+      <div class="tile" onclick="go('media')">🎧<br>Reset</div>
+      <div class="tile" onclick="go('memory')">🖼<br>My People + Pets</div>
+    </div>
+    <div class="card">
+      <div class="h3">Daily Check-In Calendar</div>
+      <div class="sub">Tap the button to mark today and keep the pattern visible.</div>
+      <button class="btn2" onclick="logCheckin()">✓ Check in today</button>
+      <div style="height:12px"></div>
+      <div class="cal-grid" id="calendar-grid"></div>
+    </div>
+  </div>
+
+  <div class="screen" id="screen-urgent">
+    <div class="card hero"><div class="h2">Good move. You caught it.</div><div class="sub">What is your next step?</div></div>
+    <div id="urgent-primary"></div>
+    <div class="tool-card"><h4>🌊 Urge Surfing</h4><p>Ride out the craving in a safe, structured way. The urge rises, peaks, then falls.</p><button class="btn3" onclick="go('tools')">Open full tools</button></div>
+    <div class="meeting-item"><div class="h3">Find a meeting</div><div class="sub">Tap straight into recovery rooms right now.</div><a class="meeting-link" href="https://ca-online.org" target="_blank" rel="noopener">Cocaine Anonymous online ↗</a><a class="meeting-link" href="https://www.aa.org/meeting-guide-app" target="_blank" rel="noopener">Alcoholics Anonymous meeting guide ↗</a><a class="meeting-link" href="https://na.org/meetingsearch/" target="_blank" rel="noopener">Narcotics Anonymous meeting search ↗</a><a class="meeting-link" href="https://www.intherooms.com" target="_blank" rel="noopener">In The Rooms ↗</a></div>
+    <div class="tool-card"><h4>🫁 Breathing exercise</h4><p>Use the timer to bring the nervous system down fast.</p><div class="timer-big" id="breath-timer-urgent">01:20</div><div class="breath-state" id="breath-state-urgent">Ready</div><div class="tool-actions"><button class="btn2" onclick="startBreathingUrgent()">Start</button><button class="btn3" onclick="stopBreathingUrgent()">Stop</button></div></div>
+  </div>
+
+  <div class="screen" id="screen-media"><div class="card"><div class="h2">Reset</div><div class="sub">Tap links to open them. Your saved music box is below.</div></div><div id="music-box" class="card"></div><div id="media-list"></div></div>
+
+  <div class="screen" id="screen-memory">
+    <div class="card hero"><div class="h2">My People + Pets</div><div class="sub">The people and animals you're fighting for.</div></div>
+    <div class="card"><div class="pill">Affirmation</div><div class="sub" id="aff-text">You are fighting for something real.</div></div>
+    <div id="memory-grid" class="mem-grid"></div>
+  </div>
+
+  <div class="screen" id="screen-support">
+    <div class="card"><div class="h2">Support</div><div class="sub">Reach a real person or join a meeting right now.</div></div>
+    <div id="contacts-list"></div>
+    <div class="meeting-item"><div class="h3">Meetings & online rooms</div><a class="meeting-link" href="https://ca-online.org" target="_blank" rel="noopener">Cocaine Anonymous online ↗</a><a class="meeting-link" href="https://www.aa.org/meeting-guide-app" target="_blank" rel="noopener">Alcoholics Anonymous meeting guide ↗</a><a class="meeting-link" href="https://na.org/meetingsearch/" target="_blank" rel="noopener">Narcotics Anonymous meeting search ↗</a><a class="meeting-link" href="https://www.intherooms.com" target="_blank" rel="noopener">In The Rooms ↗</a></div>
+  </div>
+
+  <div class="screen" id="screen-tools">
+    <div class="card hero"><div class="h2">Tools</div><div class="sub">Immediate actions for cravings, drift, and destabilization.</div></div>
+    <div class="tool-card"><h4>🫁 Breathing reset</h4><p>4-4-6 breathing with a countdown clock to bring the nervous system down fast.</p><div class="timer-big" id="breath-timer">01:20</div><div class="breath-state" id="breath-state">Ready</div><div class="tool-actions"><button class="btn2" onclick="startBreathing()">Start</button><button class="btn3" onclick="stopBreathing()">Stop</button></div></div>
+    <div class="tool-card"><h4>💡 HALT</h4><p>Ask what is really driving the urge: Hungry, Angry, Lonely, or Tired.</p></div>
+    <div class="tool-card"><h4>🌊 Urge surfing</h4><p>The urge is a wave. It rises, peaks, then falls. Delay the next action by ten minutes and keep breathing.</p><button class="btn3" onclick="openBuy10()">Open Stop the Slide</button></div>
+    <div class="tool-card"><h4>🧠 SOBER space</h4><p>Stop. Observe. Breathe. Expand. Respond. One right move is enough to change the next hour.</p></div>
+    <div class="tool-card"><h4>🔁 If you already used</h4><p>You are not starting over. Get safe, tell someone, and reconnect immediately.</p><div class="notice">Coming back is part of recovery. Returning to the app counts.</div></div>
+  </div>
+
+  <div class="screen" id="screen-ai"><div class="card hero"><div class="h2">AI Support</div><div class="sub">Simple reassurance and recommendation chat based on how you're feeling.</div></div><div class="card" style="padding:0;overflow:hidden"><div id="chat-log" style="max-height:320px;overflow:auto;padding:14px"></div><div style="border-top:1px solid var(--border);padding:12px"><div style="display:flex;gap:8px"><input id="chat-input" type="text" placeholder="Type what's going on..."><button class="btn2" style="width:auto;margin-top:0;padding:12px 14px" onclick="sendChat()">Send</button></div><div class="tool-actions" style="margin-top:8px"><button class="btn3" onclick="quickChat('I am feeling an urge')">Urge</button><button class="btn3" onclick="quickChat('I feel lonely')">Lonely</button><button class="btn3" onclick="quickChat('I already used')">I used</button></div></div></div></div>
+
+  <nav id="nav" class="nav hidden">
+    <button id="nav-home" class="active" onclick="go('home')">🏠<span>Home</span></button>
+    <button id="nav-urgent" onclick="go('urgent')">⚠️<span>Urgent</span></button>
+    <button id="nav-media" onclick="go('media')">🎧<span>Reset</span></button>
+    <button id="nav-memory" onclick="go('memory')">🖼<span>People</span></button>
+    <button id="nav-ai" onclick="go('ai')">🤖<span>AI</span></button>
+    <button id="nav-support" onclick="go('support')">🤝<span>Support</span></button>
+    <button id="nav-tools" onclick="go('tools')">🧰<span>Tools</span></button>
+  </nav>
+
+  <div class="modal-wrap" id="modal-settings"><div class="modal"><div class="h2">Profile & Settings</div><div class="sub">Review and update your plan any time.</div>
+    <div class="lbl">Your name</div><input id="s-name" type="text">
+    <div class="lbl">Days since last relapse</div><input id="s-days" type="number" min="0">
+    <div class="lbl">Addiction or issue</div><select id="s-sub"><option value="">Select...</option><option>Alcohol</option><option>Cocaine / stimulants</option><option>Opioids</option><option>Marijuana / cannabis</option><option>Methamphetamine</option><option>Gambling</option><option>Social media / digital</option><option>Shopping / spending</option><option>Pornography / compulsive sexual behaviour</option><option>Multiple issues</option><option>Other</option><option>Prefer not to say</option></select>
+    <div class="lbl">Typical days between relapses</div><input id="s-cycle" type="number" min="1">
+    <div class="lbl">Sponsor / primary support</div><input id="s-c1" type="text"><div class="lbl">Sponsor phone</div><input id="s-c1p" type="tel">
+    <div class="lbl">Family contact</div><input id="s-c2" type="text"><div class="lbl">Family phone</div><input id="s-c2p" type="tel">
+    <div class="lbl">Counsellor / therapist</div><input id="s-c3" type="text"><div class="lbl">Counsellor phone</div><input id="s-c3p" type="tel">
+    <div class="lbl">Affirmation</div><textarea id="s-aff"></textarea>
+    <div class="lbl">What you lose when you relapse</div><textarea id="s-loss"></textarea>
+    <div class="lbl">Typical spend per binge ($)</div><input id="s-binge" type="number" min="0">
+    <div class="lbl">Typical binges per month</div><input id="s-freq" type="number" min="0">
+    <div class="lbl">Reset track</div><input id="s-music" type="text"><div class="lbl">Comfort show or film</div><input id="s-show" type="text"><div class="lbl">Favourite clip</div><input id="s-clip" type="text"><div class="lbl">Podcast</div><input id="s-pod" type="text"><div class="lbl">Add memory wall photos</div><input id="s-mem" type="file" accept="image/*" multiple>
+    <button class="btn2" onclick="saveSettings()">Save Changes</button><div class="close" onclick="closeSettings()">Close</div>
+  </div></div>
+
+  <div class="modal-wrap" id="modal-updates"><div class="modal"><div class="h2">Messages & Updates</div><div class="sub">A place for app notes, encouragement, and future updates.</div><div class="card"><div class="h3">Current build</div><div class="sub">Stable rebuild with high-risk path, stop-the-slide flow, support actions, and My People + Pets.</div></div><div class="close" onclick="closeUpdates()">Close</div></div></div>
+
+  <div class="redmode-wrap" id="redmode-wrap"><div class="redmode">
+    <div class="red-banner"><div class="red-title">⚠️ HIGH RISK MOMENT</div><div class="red-sub">Do not isolate. Take one action now.</div></div>
+    <div class="red-stack">
+      <button class="red-btn primary" onclick="alertMyPeople()"><span class="ttl">🚨 ALERT MY PEOPLE</span><span class="subtxt">Send a support message now</span></button>
+      <button class="red-btn" onclick="callPrimarySupport()"><span class="ttl">📞 CALL SUPPORT</span><span class="subtxt">Talk to someone immediately</span></button>
+      <button class="red-btn" onclick="textPrimarySupport()"><span class="ttl">💬 TEXT SUPPORT</span><span class="subtxt">Send a quick message</span></button>
+      <button class="red-btn" onclick="openBuy10()"><span class="ttl">⏱ BUY 10 MINUTES</span><span class="subtxt">Delay the urge. Break the sequence.</span></button>
+    </div>
+    <div class="red-foot">If you already used, come back fast. One good move still counts.<div class="red-link" onclick="exitRedMode()">Close</div></div>
+  </div></div>
+
+  <div class="buy10-wrap" id="buy10-wrap"><div class="buy10">
+    <div class="buy10-hero"><div class="h2">Stop the Slide</div><div class="sub">Do not decide anything for 10 minutes. Just follow this.</div></div>
+    <div class="timer-big" id="buy10-timer">10:00</div>
+    <div class="buy10-prompt" id="buy10-prompt">Water. Stand up. Stay here.</div>
+    <div class="buy10-actions">
+      <button class="btn2" onclick="startBuy10()">Start</button>
+      <button class="btn" onclick="alertMyPeople()">🚨 Alert My People</button>
+      <button class="btn3" onclick="callPrimarySupport()">📞 Call Support</button>
+      <button class="btn3" onclick="closeBuy10()">Close</button>
+    </div>
+  </div></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'ria3';
+const THEME_KEY = 'ria3_theme';
+const DEFAULT_STATE = {
+  name:'', days:0, startDate:'', cycle:18, substance:'',
+  contacts:[{label:'Sponsor',name:'',phone:''},{label:'Family',name:'',phone:''},{label:'Counsellor',name:'',phone:''}],
+  affirmation:'', loss:'', bingeAmt:0, bingeFreq:4, music:'', show:'', clip:'', pod:'', memories:[], checkins:[], mood:'', chatHistory:[], redMode:false
+};
+let S = JSON.parse(JSON.stringify(DEFAULT_STATE));
+let breathInterval = null, breathSeconds = 80, breathIntervalUrgent = null, breathSecondsUrgent = 80;
+let buy10Interval = null, buy10Seconds = 600;
+const buy10Prompts = [
+  'Drink water.', 'Stand up.', 'Change rooms.', 'Step outside if you can.', 'Text someone.',
+  'You are riding the peak.', 'This will pass.', 'Delay is progress.', 'Stay here.', 'Choose one good move.'
+];
+
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); }
+function loadState(){ try{ const raw = localStorage.getItem(STORAGE_KEY); if(!raw) return false; S = deepMerge(JSON.parse(JSON.stringify(DEFAULT_STATE)), JSON.parse(raw) || {}); return true; } catch(e){ console.error('loadState failed', e); return false; } }
+function deepMerge(base, incoming){ if(Array.isArray(base)) return Array.isArray(incoming) ? incoming : base; const out = {...base}; for(const k in incoming){ if(base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])) out[k] = deepMerge(base[k], incoming[k] || {}); else out[k] = incoming[k]; } return out; }
+function extractPhone(v){ return String(v || '').replace(/\D/g,''); }
+function val(id){ const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function setVal(id, v){ const el = document.getElementById(id); if(el) el.value = v ?? ''; }
+function text(id, v){ const el = document.getElementById(id); if(el) el.textContent = v; }
+function fmtMoney(n){ return '$' + Number(n || 0).toLocaleString(); }
+function getLocalDateKey(date = new Date()){ const y = date.getFullYear(); const m = String(date.getMonth() + 1).padStart(2, '0'); const d = String(date.getDate()).padStart(2, '0'); return `${y}-${m}-${d}`; }
+function todayKey(){ return getLocalDateKey(); }
+function daysAgoToStartDate(daysAgo){ const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - Number(daysAgo || 0)); return getLocalDateKey(d); }
+function daysBetweenLocal(startDateStr){ if(!startDateStr) return 0; const parts = startDateStr.split('-').map(Number); if(parts.length !== 3) return 0; const [y,m,d] = parts; const start = new Date(y,m-1,d); const today = new Date(); start.setHours(0,0,0,0); today.setHours(0,0,0,0); return Math.max(0, Math.floor((today-start)/86400000)); }
+function getDaysClean(){ if(S.startDate) return daysBetweenLocal(S.startDate) + 1; return Number(S.days) || 0; }
+function calcSaved(){ return Math.round(((Number(S.bingeAmt)||0) * (Number(S.bingeFreq)||0) / 30) * getDaysClean()); }
+function migrateStartDate(){ if(!S.startDate && Number.isFinite(Number(S.days))){ S.startDate = daysAgoToStartDate(Number(S.days)||0); saveState(); } }
+function escapeHtml(str){ return String(str || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
+
+function finishSetup(){
+  S.name = val('inp-name') || 'Friend';
+  const inputDays = parseInt(val('inp-days') || '0', 10) || 0;
+  S.startDate = daysAgoToStartDate(inputDays); S.days = inputDays;
+  S.substance = val('inp-sub'); S.cycle = parseInt(val('inp-cycle') || '18', 10) || 18;
+  S.contacts = [{label:'Sponsor',name:val('inp-c1'),phone:extractPhone(val('inp-c1p'))},{label:'Family',name:val('inp-c2'),phone:extractPhone(val('inp-c2p'))},{label:'Counsellor',name:val('inp-c3'),phone:extractPhone(val('inp-c3p'))}];
+  S.affirmation = val('inp-aff'); S.loss = val('inp-loss'); S.bingeAmt = parseFloat(val('inp-binge') || '0') || 0; S.bingeFreq = parseInt(val('inp-freq') || '4', 10) || 4;
+  S.music = val('inp-music'); S.show = val('inp-show'); S.clip = val('inp-clip'); S.pod = val('inp-pod');
+  handleFiles(document.getElementById('inp-mem')?.files);
+  saveState(); launchApp();
+}
+function quickLaunch(){ if(!S.name) S.name = val('inp-name') || 'Friend'; saveState(); launchApp(); }
+function launchApp(){ migrateStartDate(); document.getElementById('onboarding').classList.add('hidden'); document.getElementById('nav').classList.remove('hidden'); populate(); go('home'); }
+function populate(){
+  const daysClean = getDaysClean();
+  text('uname', S.name || '—'); text('udays', String(daysClean)); text('stat-days', String(daysClean)); text('stat-cycle', S.cycle || '—'); text('stat-saved', fmtMoney(calcSaved()));
+  text('loss-text', S.loss || 'Complete setup to see your words here.'); text('aff-text', S.affirmation || 'You are fighting for something real.'); text('badge-issue', S.substance || 'Issue');
+  setVal('s-name', S.name); setVal('s-days', daysClean); setVal('s-sub', S.substance); setVal('s-cycle', S.cycle); setVal('s-c1', S.contacts[0]?.name); setVal('s-c1p', S.contacts[0]?.phone); setVal('s-c2', S.contacts[1]?.name); setVal('s-c2p', S.contacts[1]?.phone); setVal('s-c3', S.contacts[2]?.name); setVal('s-c3p', S.contacts[2]?.phone); setVal('s-aff', S.affirmation); setVal('s-loss', S.loss); setVal('s-binge', S.bingeAmt); setVal('s-freq', S.bingeFreq); setVal('s-music', S.music); setVal('s-show', S.show); setVal('s-clip', S.clip); setVal('s-pod', S.pod);
+  renderContacts(); renderUrgent(); renderMedia(); renderMemory(); renderCalendar(); renderRiskBanner(); renderChat();
+  const feedback = document.getElementById('mood-feedback'); if(feedback){ if(S.mood === 'ok') feedback.textContent = 'You marked yourself as feeling OK.'; else if(S.mood === 'risk') feedback.textContent = 'You marked yourself as needing help now.'; else feedback.textContent = ''; }
+}
+function applyTheme(theme){ document.documentElement.setAttribute('data-theme', theme); localStorage.setItem(THEME_KEY, theme); const btn = document.getElementById('theme-btn'); if(btn) btn.textContent = theme === 'light' ? '☀️' : '🌙'; }
+function toggleTheme(){ const current = document.documentElement.getAttribute('data-theme') || 'dark'; applyTheme(current === 'dark' ? 'light' : 'dark'); }
+function initTheme(){ const saved = localStorage.getItem(THEME_KEY) || 'dark'; applyTheme(saved); }
+function go(screen){ document.querySelectorAll('.screen').forEach(el => el.classList.remove('active')); const target = document.getElementById('screen-' + screen); if(target) target.classList.add('active'); document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active')); const navBtn = document.getElementById('nav-' + screen); if(navBtn) navBtn.classList.add('active'); }
+function openSettings(){ populate(); document.getElementById('modal-settings').classList.add('open'); }
+function closeSettings(){ document.getElementById('modal-settings').classList.remove('open'); }
+function saveSettings(){ S.name = val('s-name') || 'Friend'; const inputDays = parseInt(val('s-days') || '0', 10) || 0; S.days = inputDays; S.startDate = daysAgoToStartDate(inputDays); S.substance = val('s-sub'); S.cycle = parseInt(val('s-cycle') || '18', 10) || 18; S.contacts = [{label:'Sponsor',name:val('s-c1'),phone:extractPhone(val('s-c1p'))},{label:'Family',name:val('s-c2'),phone:extractPhone(val('s-c2p'))},{label:'Counsellor',name:val('s-c3'),phone:extractPhone(val('s-c3p'))}]; S.affirmation = val('s-aff'); S.loss = val('s-loss'); S.bingeAmt = parseFloat(val('s-binge') || '0') || 0; S.bingeFreq = parseInt(val('s-freq') || '4', 10) || 4; S.music = val('s-music'); S.show = val('s-show'); S.clip = val('s-clip'); S.pod = val('s-pod'); handleFiles(document.getElementById('s-mem')?.files); saveState(); populate(); closeSettings(); }
+function openUpdates(){ document.getElementById('modal-updates').classList.add('open'); document.getElementById('updates-badge').classList.remove('show'); }
+function closeUpdates(){ document.getElementById('modal-updates').classList.remove('open'); }
+function renderContacts(){ const wrap = document.getElementById('contacts-list'); wrap.innerHTML = ''; const items = S.contacts.filter(c => c && (c.name || c.phone)); if(!items.length){ wrap.innerHTML = '<div class="card"><div class="sub">No contacts added yet. Use the gear icon to add them.</div></div>'; return; } items.forEach(c => { const phone = extractPhone(c.phone); const div = document.createElement('div'); div.className = 'contact'; div.innerHTML = `<div class="grow"><div class="h3">${escapeHtml(c.name || c.label)}</div><div class="small">${escapeHtml(c.label)}${phone ? ' · ' + escapeHtml(phone) : ''}</div></div>${phone ? `<a href="tel:${phone}" aria-label="Call">📞</a>` : ''}${phone ? `<a href="sms:${phone}?body=${encodeURIComponent('I need a check-in.')}` + `" aria-label="Text">💬</a>` : ''}`; wrap.appendChild(div); }); }
+function renderUrgent(){ const wrap = document.getElementById('urgent-primary'); wrap.innerHTML = ''; const primary = S.contacts.find(c => c && c.name && c.phone) || S.contacts.find(c => c && c.phone); if(primary){ const phone = extractPhone(primary.phone); wrap.innerHTML = `<div class="contact"><div class="grow"><div class="h3">Primary support: ${escapeHtml(primary.name || primary.label)}</div><div class="small">${escapeHtml(primary.label)} · ${escapeHtml(phone)}</div></div><a href="tel:${phone}" aria-label="Call">📞</a><a href="sms:${phone}?body=${encodeURIComponent('I need a check-in.')}` + `" aria-label="Text">💬</a></div>`; } else { wrap.innerHTML = '<div class="card"><div class="sub">Add at least one support contact in settings.</div></div>'; } }
+function renderMedia(){ const musicBox = document.getElementById('music-box'); musicBox.innerHTML = `<div class="h3">Saved music / song box</div><div class="sub">${escapeHtml(S.music || 'No reset track saved yet.')}</div>${/^https?:\/\//i.test(S.music || '') ? `<a class="media-link" href="${escapeHtml(S.music)}" target="_blank" rel="noopener">Open track ↗</a>` : ''}`; const wrap = document.getElementById('media-list'); wrap.innerHTML = ''; const items = [{label:'Comfort show or film',value:S.show},{label:'Favourite clip',value:S.clip},{label:'Podcast',value:S.pod}].filter(x=>x.value); if(!items.length){ wrap.innerHTML = '<div class="card"><div class="sub">No other media saved yet. Use the gear icon to add links.</div></div>'; return; } items.forEach(item => { const div = document.createElement('div'); div.className = 'media-item'; const safe = escapeHtml(item.value); const isUrl = /^https?:\/\//i.test(item.value); div.innerHTML = `<div class="h3">${escapeHtml(item.label)}</div><div class="small">${safe}</div>${isUrl ? `<a class="media-link" href="${safe}" target="_blank" rel="noopener">Open link ↗</a>` : ''}`; wrap.appendChild(div); }); }
+function renderMemory(){ const wrap = document.getElementById('memory-grid'); if(!wrap) return; wrap.innerHTML = ''; (S.memories || []).forEach((src, i) => { const div = document.createElement('div'); div.className = 'mem-card'; div.innerHTML = `<img src="${src}" alt="Memory ${i+1}"><div class="mem-caption">Your reason</div><button class="mem-del" onclick="deleteMemory(${i})">✕</button>`; wrap.appendChild(div); }); const add = document.createElement('div'); add.className = 'mem-card mem-add'; add.innerHTML = '<span class="small">Add photo</span><input type="file" accept="image/*" multiple>'; add.querySelector('input').addEventListener('change', e => { handleFiles(e.target.files); e.target.value = ''; }); wrap.appendChild(add); }
+function handleFiles(files){ if(!files || !files.length) return; S.memories = S.memories || []; const fileList = Array.from(files).slice(0,6); let loaded = 0; const newImages = []; fileList.forEach(file => { if(!file.type.startsWith('image/')){ loaded++; if(loaded === fileList.length){ S.memories = [...S.memories, ...newImages].slice(0,12); saveState(); renderMemory(); } return; } const reader = new FileReader(); reader.onload = e => { newImages.push(e.target.result); loaded++; if(loaded === fileList.length){ S.memories = [...S.memories, ...newImages].slice(0,12); saveState(); renderMemory(); } }; reader.readAsDataURL(file); }); }
+function deleteMemory(index){ if(!Array.isArray(S.memories)) return; S.memories.splice(index,1); saveState(); renderMemory(); }
+function renderCalendar(){ const wrap = document.getElementById('calendar-grid'); if(!wrap) return; const labels = ['M','T','W','T','F','S','S']; let html = labels.map(l => `<div class="cal-lbl">${l}</div>`).join(''); const today = new Date(); const todayString = getLocalDateKey(today); const start = new Date(today); start.setDate(start.getDate() - 27); const pad = (start.getDay() + 6) % 7; for(let i=0;i<pad;i++) html += '<div></div>'; for(let i=0;i<28;i++){ const d = new Date(start); d.setDate(d.getDate()+i); const ds = getLocalDateKey(d); let cls='cal-dot'; let txt=d.getDate(); const checked=(S.checkins||[]).includes(ds); if(ds===todayString && checked){ cls+=' checked'; txt='✓'; } else if(ds===todayString){ cls+=' today'; txt='•'; } else if(checked){ cls+=' checked'; txt='✓'; } else { cls+=' missed'; } html += `<div class="${cls}">${txt}</div>`; } wrap.innerHTML = html; }
+function logCheckin(){ S.checkins = S.checkins || []; const today = todayKey(); if(!S.checkins.includes(today)) S.checkins.push(today); S.mood='ok'; saveState(); renderCalendar(); renderRiskBanner(); }
+function getRiskState(){ const hour = new Date().getHours(); const checkedToday = (S.checkins || []).includes(todayKey()); if(S.redMode || S.mood === 'risk') return 'high'; if(!checkedToday && hour >= 20) return 'rising'; return 'low'; }
+function renderRiskBanner(){ const el = document.getElementById('risk-banner'); if(!el) return; const risk = getRiskState(); const checkedToday = (S.checkins || []).includes(todayKey()); const hour = new Date().getHours(); if(risk === 'high'){ el.classList.remove('hidden'); el.textContent = 'High risk detected. Go straight to High Risk now.'; } else if(risk === 'rising' && hour >= 20 && !checkedToday){ el.classList.remove('hidden'); el.textContent = 'No check-in tonight usually means drift. Catch it now.'; } else { el.classList.add('hidden'); el.textContent = ''; } }
+function setMood(mood){ S.mood = mood; saveState(); const feedback = document.getElementById('mood-feedback'); if(mood === 'ok'){ if(feedback) feedback.textContent = 'Good. Keep it going. You caught yourself in a solid moment — today is worth protecting.'; logCheckin(); go('home'); exitRedMode(); } else { if(feedback) feedback.textContent = 'Good catch. Go straight to High Risk and take one action now.'; go('urgent'); enterRedMode(); } }
+function enterRedMode(){ S.redMode = true; saveState(); document.getElementById('redmode-wrap').classList.add('open'); }
+function exitRedMode(){ S.redMode = false; saveState(); document.getElementById('redmode-wrap').classList.remove('open'); renderRiskBanner(); }
+function alertMyPeople(){ const primary = S.contacts.find(c => c && c.phone); if(!primary || !primary.phone){ alert('No support contact set. Add one in settings.'); return; } const phone = extractPhone(primary.phone); const msg = "I'm at risk and need support right now. Please call or text me."; window.location.href = `sms:${phone}?body=${encodeURIComponent(msg)}`; }
+function callPrimarySupport(){ const primary = S.contacts.find(c => c && c.phone); if(!primary || !primary.phone){ alert('No support contact set. Add one in settings.'); return; } window.location.href = `tel:${extractPhone(primary.phone)}`; }
+function textPrimarySupport(){ const primary = S.contacts.find(c => c && c.phone); if(!primary || !primary.phone){ alert('No support contact set. Add one in settings.'); return; } window.location.href = `sms:${extractPhone(primary.phone)}?body=${encodeURIComponent('I need a check-in.')}`; }
+function openBuy10(){ document.getElementById('buy10-wrap').classList.add('open'); updateBuy10Display(); }
+function closeBuy10(){ stopBuy10(); document.getElementById('buy10-wrap').classList.remove('open'); }
+function startBuy10(){ stopBuy10(); buy10Seconds = 600; updateBuy10Display(); buy10Interval = setInterval(() => { buy10Seconds--; updateBuy10Display(); if(buy10Seconds <= 0) stopBuy10(true); }, 1000); }
+function updateBuy10Display(){ const m = String(Math.floor(buy10Seconds/60)).padStart(2,'0'); const s = String(buy10Seconds%60).padStart(2,'0'); text('buy10-timer', `${m}:${s}`); const idx = Math.min(9, Math.floor((600-buy10Seconds)/60)); text('buy10-prompt', buy10Prompts[idx] || buy10Prompts[0]); }
+function stopBuy10(done=false){ if(buy10Interval){ clearInterval(buy10Interval); buy10Interval = null; } if(done){ text('buy10-prompt', 'You bought time. Choose the next right move.'); } else { buy10Seconds = 600; text('buy10-timer', '10:00'); text('buy10-prompt', 'Water. Stand up. Stay here.'); } }
+function startBreathing(){ stopBreathing(); breathSeconds = 80; updateBreathDisplay('Inhale'); const phases=['Inhale','Hold','Exhale']; let phaseIndex=0, phaseTick=0; breathInterval = setInterval(()=>{ breathSeconds--; phaseTick++; if(phaseTick>=4){ phaseTick=0; phaseIndex=(phaseIndex+1)%phases.length; } updateBreathDisplay(phases[phaseIndex]); if(breathSeconds<=0) stopBreathing(true); },1000); }
+function updateBreathDisplay(state){ const m=String(Math.floor(breathSeconds/60)).padStart(2,'0'); const s=String(breathSeconds%60).padStart(2,'0'); text('breath-timer', `${m}:${s}`); text('breath-state', state); }
+function stopBreathing(done=false){ if(breathInterval){ clearInterval(breathInterval); breathInterval=null; } breathSeconds=80; text('breath-timer','01:20'); text('breath-state', done ? 'Complete' : 'Ready'); }
+function startBreathingUrgent(){ stopBreathingUrgent(); breathSecondsUrgent=80; updateBreathDisplayUrgent('Inhale'); const phases=['Inhale','Hold','Exhale']; let phaseIndex=0, phaseTick=0; breathIntervalUrgent = setInterval(()=>{ breathSecondsUrgent--; phaseTick++; if(phaseTick>=4){ phaseTick=0; phaseIndex=(phaseIndex+1)%phases.length; } updateBreathDisplayUrgent(phases[phaseIndex]); if(breathSecondsUrgent<=0) stopBreathingUrgent(true); },1000); }
+function updateBreathDisplayUrgent(state){ const m=String(Math.floor(breathSecondsUrgent/60)).padStart(2,'0'); const s=String(breathSecondsUrgent%60).padStart(2,'0'); text('breath-timer-urgent', `${m}:${s}`); text('breath-state-urgent', state); }
+function stopBreathingUrgent(done=false){ if(breathIntervalUrgent){ clearInterval(breathIntervalUrgent); breathIntervalUrgent=null; } breathSecondsUrgent=80; text('breath-timer-urgent','01:20'); text('breath-state-urgent', done ? 'Complete' : 'Ready'); }
+function renderChat(){ const log = document.getElementById('chat-log'); if(!log) return; const history = S.chatHistory || []; if(!history.length){ log.innerHTML = '<div class="sub">AI: Hey — I am here. Tell me what is happening right now.</div>'; return; } log.innerHTML = history.map(item => { const align = item.role === 'user' ? 'right' : 'left'; const bg = item.role === 'user' ? 'var(--amber)' : 'var(--panel2)'; const color = item.role === 'user' ? '#111827' : 'var(--text)'; return `<div style="text-align:${align};margin-bottom:8px"><div style="display:inline-block;max-width:85%;padding:10px 12px;border-radius:14px;background:${bg};color:${color};font-size:13px;line-height:1.5">${escapeHtml(item.text)}</div></div>`; }).join(''); log.scrollTop = log.scrollHeight; }
+function aiReply(message){ const msg = (message || '').toLowerCase(); if(msg.includes('used')) return 'You came back here, which matters. Get safe first, then call or text support and use the meeting links in Support.'; if(msg.includes('urge') || msg.includes('craving') || msg.includes('at risk')) return 'No debate. Open High Risk now. Call or text one person before you leave this screen.'; if(msg.includes('lonely') || msg.includes('alone')) return 'Being alone is the trigger, not the comfort. Open Support now.'; if(msg.includes('angry') || msg.includes('stress')) return 'Strong emotion narrows the decision window. Try HALT and breathing for two minutes before deciding anything.'; if(msg.includes('ok')) return 'Good. Protect the momentum: do your check-in, keep structure, and stay close to your plan.'; return 'Choose one stabilizing move now: breathe, contact support, or join a meeting.'; }
+function quickChat(message){ const input = document.getElementById('chat-input'); if(input) input.value = message; sendChat(); }
+function sendChat(){ const input = document.getElementById('chat-input'); if(!input) return; const message = input.value.trim(); if(!message) return; S.chatHistory = S.chatHistory || []; S.chatHistory.push({role:'user', text:message}); S.chatHistory.push({role:'ai', text:aiReply(message)}); input.value=''; saveState(); renderChat(); }
+window.addEventListener('DOMContentLoaded', () => { initTheme(); stopBuy10(); if(loadState() && S.name) launchApp(); else renderCalendar(); });
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => {
+      console.log('SW registration failed:', err);
+    });
+  });
+}
+</script>
+</body>
+</html>
