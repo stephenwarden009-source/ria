@@ -1001,6 +1001,8 @@ function renderMedia(){
 }
 function renderMemory(){
   const wrap = document.getElementById('memory-grid');
+  if(!wrap) return;
+
   wrap.innerHTML = '';
 
   (S.memories || []).forEach((src, i) => {
@@ -1012,7 +1014,42 @@ function renderMemory(){
       <button class="mem-del" onclick="deleteMemory(${i})">✕</button>
     `;
     wrap.appendChild(div);
+  }
+
+  const add = document.createElement('div');
+  add.className = 'mem-card mem-add';
+  add.innerHTML = '<span class="small">Add photo</span><input type="file" accept="image/*" multiple>';
+
+  add.querySelector('input').addEventListener('change', e => {
+    handleFiles(e.target.files);
+    e.target.value = '';
   });
+
+  wrap.appendChild(add);
+}
+
+  const add = document.createElement('div');
+  add.className = 'mem-card mem-add';
+  add.innerHTML = '<span class="small">Add photo</span><input type="file" accept="image/*" multiple>';
+
+  add.querySelector('input').addEventListener('change', e => {
+    handleFiles(e.target.files);
+    e.target.value = '';
+  });
+
+  wrap.appendChild(add);
+}
+  const add = document.createElement('div');
+  add.className = 'mem-card mem-add';
+  add.innerHTML = '<span class="small">Add photo</span><input type="file" accept="image/*" multiple>';
+
+  add.querySelector('input').addEventListener('change', e => {
+    handleFiles(e.target.files);
+    e.target.value = '';
+  });
+
+  wrap.appendChild(add);
+}
 
   const add = document.createElement('div');
   add.className = 'mem-card mem-add';
