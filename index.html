@@ -906,13 +906,13 @@ function populate(){
   setVal('s-clip', S.clip);
   setVal('s-pod', S.pod);
 
-  renderContacts();
-  renderUrgent();
-  renderMedia();
-  renderMemory();
-  renderCalendar();
-  renderRiskBanner();
-  renderChat();
+  try { renderContacts(); } catch(e){ console.error('renderContacts failed', e); }
+  try { renderUrgent(); } catch(e){ console.error('renderUrgent failed', e); }
+  try { renderMedia(); } catch(e){ console.error('renderMedia failed', e); }
+  try { renderMemory(); } catch(e){ console.error('renderMemory failed', e); }
+  try { renderCalendar(); } catch(e){ console.error('renderCalendar failed', e); }
+  try { renderRiskBanner(); } catch(e){ console.error('renderRiskBanner failed', e); }
+  try { renderChat(); } catch(e){ console.error('renderChat failed', e); }
 
   const feedback = document.getElementById('mood-feedback');
   if(feedback){
@@ -1321,7 +1321,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(err => {
+   navigator.serviceWorker.register('sw.js').catch(err => {
       console.log('SW registration failed:', err);
     });
   });
