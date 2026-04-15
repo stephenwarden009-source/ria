@@ -1300,7 +1300,80 @@ function sendChat(){
   saveState();
   renderChat();
 }
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem(THEME_KEY, theme);
+  const btn = document.getElementById('theme-btn');
+  if(btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
+}
 
+function toggleTheme(){
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+function initTheme(){
+  const saved = localStorage.getItem(THEME_KEY) || 'dark';
+  applyTheme(saved);
+}
+
+function todayKey(){
+  return getLocalDateKey();
+}
+
+function renderCalendar(){
+  const wrap = document.getElementById('calendar-grid');
+  if(!wrap) return;
+
+  const labels = ['M','T','W','T','F','S','S'];
+  let html = labels.map(l => `<div class="cal-lbl">${l}</div>`).join('');
+
+  const today = new Date();
+  const todayString = getLocalDateKey(today);
+
+  const start = new Date(today);
+  start.setDate(start.getDate() - 27);
+
+  const pad = (start.getDay() + 6) % 7;
+  for(let i=0; i<pad; i++) html += '<div></div>';
+
+  for(let i=0; i<28; i++){
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    const ds = getLocalDateKey(d);
+
+    let cls = 'cal-dot';
+    let txt = d.getDate();
+    const checked = (S.checkins || []).includes(ds);
+
+    if(ds === todayString && checked){
+      cls += ' checked';
+      txt = '✓';
+    } else if(ds === todayString){
+      cls += ' today';
+      txt = '•';
+    } else if(checked){
+      cls += ' checked';
+      txt = '✓';
+    } else {
+      cls += ' missed';
+    }
+
+    html += `<div class="${cls}">${txt}</div>`;
+  }
+
+  wrap.innerHTML = html;
+}
+
+function go(screen){
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById('screen-' + screen);
+  if(target) target.classList.add('active');
+
+  document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active'));
+  const navBtn = document.getElementById('nav-' + screen);
+  if(navBtn) navBtn.classList.add('active');
+}
 window.addEventListener('DOMContentLoaded', () => {
   initTheme();
   stopBuy10();
