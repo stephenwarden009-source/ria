@@ -1050,20 +1050,7 @@ function renderMemory(){
   wrap.appendChild(add);
 }
 
-  const add = document.createElement('div');
-  add.className = 'mem-card mem-add';
-  add.innerHTML = '<span class="small">Add photo</span><input type="file" accept="image/*" multiple>';
-
-  add.querySelector('input').addEventListener('change', e => {
-    handleFiles(e.target.files);
-    e.target.value = '';
-  });
-
-  wrap.appendChild(add);
-};
-
-  wrap.appendChild(add);
-}
+  
 function handleFiles(files){
   if(!files || !files.length) return;
 
