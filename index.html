@@ -1014,7 +1014,7 @@ function renderMemory(){
       <button class="mem-del" onclick="deleteMemory(${i})">✕</button>
     `;
     wrap.appendChild(div);
-  });  // ← closes forEach
+  });
 
   const add = document.createElement('div');
   add.className = 'mem-card mem-add';
@@ -1026,8 +1026,7 @@ function renderMemory(){
   });
 
   wrap.appendChild(add);
-}  
-
+}
   const add = document.createElement('div');
   add.className = 'mem-card mem-add';
   add.innerHTML = '<span class="small">Add photo</span><input type="file" accept="image/*" multiple>';
@@ -1288,12 +1287,22 @@ function getRiskState(){
 function renderRiskBanner(){
   const el = document.getElementById('risk-banner');
   if(!el) return;
+
   const risk = getRiskState();
-  if(risk === 'low'){
+  const checkedToday = (S.checkins || []).includes(todayKey());
+  const hour = new Date().getHours();
+
+  if(risk === 'high'){
+    el.classList.remove('hidden');
+    el.textContent = 'High risk detected. Go straight to High Risk now.';
+  } else if(risk === 'rising' && hour >= 20 && !checkedToday){
+    el.classList.remove('hidden');
+    el.textContent = 'No check-in tonight usually means drift. Catch it now.';
+  } else {
     el.classList.add('hidden');
     el.textContent = '';
-    return;
   }
+}
   const now = new Date();
 const hour = now.getHours();
 const hasCheckedIn = (S.checkins || []).includes(getLocalDateKey());
