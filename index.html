@@ -663,23 +663,22 @@ hr{border:none; border-top:1px solid var(--border); margin:12px 0}
     </div>
   </div>
 
-  <div class="buy10-wrap" id="buy10-wrap">
-    <div class="buy10">
-      <div class="buy10-hero">
-        <div class="h2">Stop the Slide</div>
-        <div class="sub">Do not decide anything for 10 minutes. Just follow this.</div>
-      </div>
-      <div class="timer-big" id="buy10-timer">10:00</div>
-      <div class="buy10-prompt" id="buy10-prompt">Press start. Water. Stand up. Stay here.</div>
-      <div class="buy10-actions">
-        <button class="btn2" id="buy10-start" onclick="startBuy10()">Start</button>
-        <button class="btn" onclick="openAlertModal()">🚨 Alert My People</button>
-        <button class="btn3" onclick="callPrimarySupport()">📞 Call Support</button>
-        <button class="btn3" onclick="closeBuy10()">Close</button>
-      </div>
+ <div class="buy10-wrap" id="buy10-wrap">
+  <div class="buy10">
+    <div class="buy10-hero">
+      <div class="h2">Stop the Slide</div>
+      <div class="sub">Do not decide anything for 10 minutes. Just follow this.</div>
+    </div>
+    <div class="timer-big" id="buy10-timer">10:00</div>
+    <div class="buy10-prompt" id="buy10-prompt">Press start. Water. Stand up. Stay here.</div>
+    <div class="buy10-actions">
+      <button class="btn2" id="buy10-start" onclick="startBuy10()">Start</button>
+      <button class="btn" onclick="alertMyPeople()">🚨 Alert My People</button>
+      <button class="btn3" onclick="callPrimarySupport()">📞 Call Support</button>
+      <button class="btn3" onclick="closeBuy10()">Close</button>
     </div>
   </div>
-
+</div>
 </div>
 
 <script>
@@ -1177,10 +1176,19 @@ function renderRiskBanner(){
     el.textContent = '';
     return;
   }
+  const now = new Date();
+const hour = now.getHours();
+const hasCheckedIn = (S.checkins || []).includes(getLocalDateKey());
+
+if(risk === 'high'){
   el.classList.remove('hidden');
-  if(risk === 'high') el.textContent = 'High risk detected. Go straight to Urgent or Red Mode now.';
-  else if(risk === 'rising') el.textContent = 'No check-in tonight usually means drift. Catch it now.';
-  else el.textContent = 'Rising risk window. Protect the next few hours.';
+  el.textContent = 'High risk detected. Go straight to Urgent or Red Mode now.';
+} else if(risk === 'rising' && hour >= 20 && !hasCheckedIn){
+  el.classList.remove('hidden');
+  el.textContent = 'No check-in tonight usually means drift. Catch it now.';
+} else {
+  el.classList.add('hidden');
+}
 }
 function getAlertTargets(){
   const indexes = (S.alerts && Array.isArray(S.alerts.contacts) && S.alerts.contacts.length ? S.alerts.contacts : [0,1,2]);
