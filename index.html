@@ -1326,15 +1326,15 @@ function setMood(mood){
   S.mood = mood;
   saveState();
   const feedback = document.getElementById('mood-feedback');
+
   if(mood === 'ok'){
     if(feedback) feedback.textContent = 'Good. Keep it going. You caught yourself in a solid moment — today is worth protecting.';
     logCheckin();
     go('home');
   } else {
-    if(feedback) feedback.textContent = 'Good catch. Red Mode is available now.';
+    if(feedback) feedback.textContent = 'Good catch. Go straight to High Risk and take one action now.';
     go('urgent');
     enterRedMode();
-    openBuy10();
   }
 }
 function renderChat(){
