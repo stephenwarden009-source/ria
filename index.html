@@ -1027,36 +1027,13 @@ function renderMemory(){
 
   wrap.appendChild(add);
 }
-  const add = document.createElement('div');
-  add.className = 'mem-card mem-add';
-  add.innerHTML = '<span class="small">Add photo</span><input type="file" accept="image/*" multiple>';
 
-  add.querySelector('input').addEventListener('change', e => {
-    handleFiles(e.target.files);
-    e.target.value = '';
-  });
-
-  wrap.appendChild(add);
-}
-  const add = document.createElement('div');
-  add.className = 'mem-card mem-add';
-  add.innerHTML = '<span class="small">Add photo</span><input type="file" accept="image/*" multiple>';
-
-  add.querySelector('input').addEventListener('change', e => {
-    handleFiles(e.target.files);
-    e.target.value = '';
-  });
-
-  wrap.appendChild(add);
-}
-
-  
 function handleFiles(files){
   if(!files || !files.length) return;
 
   S.memories = S.memories || [];
 
-  const fileList = Array.from(files).slice(0, 6); // cap to avoid overload
+  const fileList = Array.from(files).slice(0, 6);
   let loaded = 0;
   const newImages = [];
 
@@ -1085,177 +1062,7 @@ function handleFiles(files){
     reader.readAsDataURL(file);
   });
 }
-function todayKey(){
-  return getLocalDateKey();
-}
-function logCheckin(){
-  S.checkins = S.checkins || [];
-  const today = todayKey();
-  if(!S.checkins.includes(today)) S.checkins.push(today);
-  saveState();
-  renderCalendar();
-}
-function renderCalendar(){
-  const wrap = document.getElementById('calendar-grid');
-  if(!wrap) return;
 
-  const labels = ['M','T','W','T','F','S','S'];
-  let html = labels.map(l => `<div class="cal-lbl">${l}</div>`).join('');
-
-  const today = new Date();
-  const todayString = getLocalDateKey(today);
-
-  const start = new Date(today);
-  start.setDate(start.getDate() - 27);
-
-  const pad = (start.getDay() + 6) % 7;
-  for(let i=0; i<pad; i++) html += '<div></div>';
-
-  for(let i=0; i<28; i++){
-    const d = new Date(start);
-    d.setDate(d.getDate() + i);
-    const ds = getLocalDateKey(d);
-
-    let cls = 'cal-dot';
-    let txt = d.getDate();
-    const checked = (S.checkins || []).includes(ds);
-
-    if(ds === todayString && checked){
-      cls += ' checked';
-      txt = '✓';
-    } else if(ds === todayString){
-      cls += ' today';
-      txt = '•';
-    } else if(checked){
-      cls += ' checked';
-      txt = '✓';
-    } else {
-      cls += ' missed';
-    }
-
-    html += `<div class="${cls}">${txt}</div>`;
-  }
-
-  wrap.innerHTML = html;
-}
-function go(screen){
-  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-  const target = document.getElementById('screen-' + screen);
-  if(target) target.classList.add('active');
-
-  document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active'));
-  const navBtn = document.getElementById('nav-' + screen);
-  if(navBtn) navBtn.classList.add('active');
-}
-function openSettings(){ populate(); document.getElementById('modal-settings').classList.add('open'); }
-function closeSettings(){ document.getElementById('modal-settings').classList.remove('open'); }
-function saveSettings(){
-  S.name = val('s-name') || 'Friend';
-  const inputDays = parseInt(val('s-days') || '0', 10) || 0;
-  S.days = inputDays;
-  S.startDate = daysAgoToStartDate(inputDays);
-  S.substance = val('s-sub');
-  S.cycle = parseInt(val('s-cycle') || '18', 10) || 18;
-  S.contacts = [
-    {label:'Sponsor', name:val('s-c1'), phone:extractPhone(val('s-c1p'))},
-    {label:'Family', name:val('s-c2'), phone:extractPhone(val('s-c2p'))},
-    {label:'Counsellor', name:val('s-c3'), phone:extractPhone(val('s-c3p'))}
-  ];
-  S.affirmation = val('s-aff');
-  S.loss = val('s-loss');
-  S.bingeAmt = parseFloat(val('s-binge') || '0') || 0;
-  S.bingeFreq = parseInt(val('s-freq') || '4', 10) || 4;
-  S.music = val('s-music');
-  S.show = val('s-show');
-  S.clip = val('s-clip');
-  S.pod = val('s-pod');
-  handleFiles(document.getElementById('s-mem')?.files);
-  saveState();
-  populate();
-  closeSettings();
-}
-function applyTheme(theme){
-  document.documentElement.setAttribute('data-theme', theme);
-  localStorage.setItem(THEME_KEY, theme);
-  const btn = document.getElementById('theme-btn');
-  if(btn) btn.textContent = theme === 'light' ? '☀️' : '🌙';
-}
-function toggleTheme(){
-  const current = document.documentElement.getAttribute('data-theme') || 'dark';
-  applyTheme(current === 'dark' ? 'light' : 'dark');
-}
-function initTheme(){
-  const saved = localStorage.getItem(THEME_KEY) || 'dark';
-  applyTheme(saved);
-}
-function openUpdates(){
-  document.getElementById('modal-updates').classList.add('open');
-  document.getElementById('updates-badge').classList.remove('show');
-}
-function closeUpdates(){
-  document.getElementById('modal-updates').classList.remove('open');
-}
-function startBreathing(){
-  stopBreathing();
-  breathSeconds = 80;
-  updateBreathDisplay('Inhale');
-  const phases = ['Inhale','Hold','Exhale'];
-  let phaseIndex = 0;
-  let phaseTick = 0;
-  breathInterval = setInterval(() => {
-    breathSeconds--;
-    phaseTick++;
-    if(phaseTick >= 4){
-      phaseTick = 0;
-      phaseIndex = (phaseIndex + 1) % phases.length;
-    }
-    updateBreathDisplay(phases[phaseIndex]);
-    if(breathSeconds <= 0) stopBreathing(true);
-  }, 1000);
-}
-function updateBreathDisplay(state){
-  const m = String(Math.floor(breathSeconds / 60)).padStart(2,'0');
-  const s = String(breathSeconds % 60).padStart(2,'0');
-  text('breath-timer', `${m}:${s}`);
-  text('breath-state', state);
-}
-function stopBreathing(done=false){
-  if(breathInterval){ clearInterval(breathInterval); breathInterval = null; }
-  breathSeconds = 80;
-  text('breath-timer', '01:20');
-  text('breath-state', done ? 'Complete' : 'Ready');
-}
-
-function startBreathingUrgent(){
-  stopBreathingUrgent();
-  breathSecondsUrgent = 80;
-  updateBreathDisplayUrgent('Inhale');
-  const phases = ['Inhale','Hold','Exhale'];
-  let phaseIndex = 0;
-  let phaseTick = 0;
-  breathIntervalUrgent = setInterval(() => {
-    breathSecondsUrgent--;
-    phaseTick++;
-    if(phaseTick >= 4){
-      phaseTick = 0;
-      phaseIndex = (phaseIndex + 1) % phases.length;
-    }
-    updateBreathDisplayUrgent(phases[phaseIndex]);
-    if(breathSecondsUrgent <= 0) stopBreathingUrgent(true);
-  }, 1000);
-}
-function updateBreathDisplayUrgent(state){
-  const m = String(Math.floor(breathSecondsUrgent / 60)).padStart(2,'0');
-  const s = String(breathSecondsUrgent % 60).padStart(2,'0');
-  text('breath-timer-urgent', `${m}:${s}`);
-  text('breath-state-urgent', state);
-}
-function stopBreathingUrgent(done=false){
-  if(breathIntervalUrgent){ clearInterval(breathIntervalUrgent); breathIntervalUrgent = null; }
-  breathSecondsUrgent = 80;
-  text('breath-timer-urgent', '01:20');
-  text('breath-state-urgent', done ? 'Complete' : 'Ready');
-}
 function deleteMemory(index){
   if(!Array.isArray(S.memories)) return;
   S.memories.splice(index, 1);
@@ -1266,11 +1073,12 @@ function deleteMemory(index){
 function getRiskState(){
   const hour = new Date().getHours();
   const checkedToday = (S.checkins || []).includes(todayKey());
+
   if(S.redMode || S.mood === 'risk') return 'high';
   if(!checkedToday && hour >= 20) return 'rising';
-  if(!checkedToday && hour >= 16) return 'watch';
   return 'low';
 }
+
 function renderRiskBanner(){
   const el = document.getElementById('risk-banner');
   if(!el) return;
