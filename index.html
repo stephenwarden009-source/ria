@@ -999,13 +999,34 @@ function renderMemory(){
 }
 function handleFiles(files){
   if(!files || !files.length) return;
-  Array.from(files).forEach(file => {
+
+  S.memories = S.memories || [];
+
+  const fileList = Array.from(files).slice(0, 6); // cap to avoid overload
+  let loaded = 0;
+  const newImages = [];
+
+  fileList.forEach(file => {
+    if(!file.type.startsWith('image/')){
+      loaded++;
+      if(loaded === fileList.length){
+        S.memories = [...S.memories, ...newImages].slice(0, 12);
+        saveState();
+        renderMemory();
+      }
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = e => {
-      S.memories = S.memories || [];
-      S.memories.push(e.target.result);
-      saveState();
-      renderMemory();
+      newImages.push(e.target.result);
+      loaded++;
+
+      if(loaded === fileList.length){
+        S.memories = [...S.memories, ...newImages].slice(0, 12);
+        saveState();
+        renderMemory();
+      }
     };
     reader.readAsDataURL(file);
   });
