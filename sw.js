@@ -1,4 +1,4 @@
-const CACHE = 'ria-v8';
+const CACHE = 'ria-v9';
 
 const ASSETS = [
   './',
