@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-title" content="RIA" />
 <link rel="manifest" href="manifest.json" />
 <link rel="apple-touch-icon" href="icons/icon-192.png" />
-<title>RIA — Stable Rebuild</title>
+<title>RIA — Relapse Interception App</title>
 <style>
 :root{
   --bg:#0F172A; --panel:#1E293B; --panel2:#263548;
@@ -39,6 +39,7 @@ a{color:inherit}
 }
 .logo{font-weight:800; letter-spacing:2px}
 .logo span{color:var(--teal)}
+.logo-sub{font-size:9px;color:var(--muted);letter-spacing:1.6px;text-transform:uppercase;margin-top:2px}
 .icon-row{display:flex; gap:8px}
 .icon-btn{
   width:36px; height:36px; border-radius:50%;
@@ -54,6 +55,7 @@ a{color:inherit}
   position:absolute; left:0; right:0; top:56px; bottom:72px;
   overflow:auto; padding:16px;
 }
+#onboarding{bottom:0}
 .hidden{display:none !important}
 .card{
   background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:16px; margin-bottom:12px;
@@ -63,10 +65,10 @@ a{color:inherit}
 input, select, textarea{
   width:100%; border:none; outline:none; color:var(--text);
   background:var(--panel2); border:1px solid var(--border); border-radius:12px;
-  padding:12px 13px; font-size:14px; margin-bottom:6px;
+  padding:12px 13px; font-size:16px; margin-bottom:6px;
 }
 textarea{resize:vertical; min-height:76px}
-button{border:none; outline:none; cursor:pointer; font-weight:700}
+button{border:none; outline:none; cursor:pointer; font-weight:700; font-family:var(--font)}
 .btn{width:100%; padding:14px 16px; border-radius:14px; background:var(--amber); color:#111827; margin-top:12px}
 .btn2{width:100%; padding:14px 16px; border-radius:14px; background:var(--teal); color:#111827; margin-top:12px}
 .btn3{width:100%; padding:12px 14px; border-radius:12px; background:var(--panel2); color:var(--text); margin-top:8px; border:1px solid var(--border)}
@@ -124,17 +126,117 @@ button{border:none; outline:none; cursor:pointer; font-weight:700}
 .cal-dot.checked{background:var(--teal);color:#0b172a}
 .cal-dot.today{background:var(--amber);color:#111827}
 .cal-dot.missed{background:rgba(248,113,113,.14);color:var(--red)}
-.tool-card h4{margin:0 0 6px;font-size:15px}
+.tool-card h4{margin:0;font-size:15px}
 .tool-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
 .tool-actions{display:flex;gap:8px;margin-top:10px}
 .tool-actions button{flex:1}
 .timer-big{font-size:48px;font-weight:800;text-align:center;color:var(--teal);margin:12px 0}
 .breath-state{text-align:center;color:var(--muted);font-size:14px}
 .notice{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.24);color:var(--amber);padding:12px;border-radius:12px}
-.risk-banner{background:rgba(245,158,11,.14); border:1px solid rgba(245,158,11,.24); color:var(--amber); padding:12px; border-radius:12px; margin-bottom:12px}
+.risk-banner{background:rgba(245,158,11,.14); border:1px solid rgba(245,158,11,.24); color:var(--amber); padding:12px; border-radius:12px; margin-bottom:12px; font-size:13px; line-height:1.5}
+
+/* ── ONBOARDING WIZARD ─────────────────────────────────────────── */
+.ob-progress{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:4px 0 20px}
+.ob-dot{height:3px;border-radius:2px;background:var(--panel2);transition:background .3s}
+.ob-dot.done{background:var(--teal2)}
+.ob-dot.now{background:var(--teal)}
+.ob-step{display:none}
+.ob-step.active{display:block}
+.ob-h{font-size:26px;font-weight:800;margin:0 0 8px;letter-spacing:-.5px}
+.ob-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:8px}
+.ob-back{text-align:center;color:var(--muted);font-size:13px;margin-top:14px;cursor:pointer;padding:8px}
+.ob-skip{text-align:center;color:var(--muted);font-size:12px;margin-top:18px;cursor:pointer;text-decoration:underline}
+.ob-err{color:var(--red);font-size:12px;font-weight:700;margin-top:8px;min-height:16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px}
+.chip{
+  padding:9px 13px;border-radius:999px;background:var(--panel);border:1px solid var(--border);
+  font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none;transition:all .18s;
+}
+.chip.on{background:rgba(45,212,191,.14);border-color:var(--teal);color:var(--teal2)}
+.photo-zone{
+  border:2px dashed var(--border);border-radius:18px;padding:26px 16px;text-align:center;
+  cursor:pointer;background:var(--panel);position:relative;
+}
+.photo-zone-icon{font-size:30px;margin-bottom:6px}
+.photo-zone-txt{font-size:14px;font-weight:700}
+.photo-zone-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.photo-previews{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.photo-thumb{width:62px;height:62px;border-radius:12px;overflow:hidden;border:1px solid var(--border);position:relative}
+.photo-thumb img{width:100%;height:100%;object-fit:cover}
+.welcome-done{text-align:center;padding-top:18px}
+.wd-ico{font-size:52px;margin-bottom:10px}
+.setup-summary{
+  background:var(--panel);border:1px solid var(--border);border-radius:16px;
+  padding:16px;margin:18px 0;text-align:left;
+}
+.ss-label{font-size:10px;text-transform:uppercase;letter-spacing:1.4px;color:var(--muted);font-weight:700;margin-bottom:10px}
+.ss-row{font-size:13px;line-height:2;color:var(--text)}
+
+/* ── CRISIS BAR ────────────────────────────────────────────────── */
+.crisis-bar{
+  background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.22);
+  border-radius:14px;padding:12px 14px;margin-bottom:12px;
+}
+.crisis-head{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.c-pulse{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 2s infinite;flex:none}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(1.4)}}
+.crisis-title{font-size:12px;font-weight:800;color:#FCA5A5;letter-spacing:.4px}
+.crisis-line{display:flex;align-items:center;gap:8px;margin-top:8px}
+.crisis-line .cl-txt{flex:1;min-width:0}
+.crisis-line .cl-name{font-size:13px;font-weight:700;line-height:1.3}
+.crisis-line .cl-note{font-size:11px;color:var(--muted);line-height:1.4;margin-top:2px}
+.crisis-act{
+  width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:rgba(248,113,113,.16);border:1px solid rgba(248,113,113,.3);color:#FCA5A5;
+  text-decoration:none;font-size:15px;flex:none;
+}
+.crisis-foot{font-size:11px;color:var(--muted);margin-top:10px;line-height:1.5}
+
+/* ── ACCORDION TOOL CARDS ──────────────────────────────────────── */
+.tc-head{display:flex;align-items:center;gap:10px;cursor:pointer}
+.tc-head h4{flex:1}
+.tc-arr{color:var(--muted);font-size:13px;transition:transform .25s}
+.tc-arr.open{transform:rotate(180deg)}
+.tc-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.tc-body.open{max-height:900px}
+.tc-inner{padding-top:12px}
+.step-row{display:flex;gap:10px;margin-bottom:9px;align-items:flex-start}
+.s-num{
+  width:24px;height:24px;border-radius:7px;flex:none;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;background:rgba(45,212,191,.14);color:var(--teal2);
+}
+.s-txt{font-size:13px;line-height:1.55;color:var(--muted)}
+.s-txt strong{color:var(--text)}
+.script-block{background:var(--panel2);border-radius:12px;padding:11px 13px;margin-bottom:8px}
+.sb-label{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-weight:700;margin-bottom:4px}
+.sb-txt{font-size:13px;line-height:1.5}
+
+/* ── BREATHING RING ────────────────────────────────────────────── */
+.breath-stage{display:flex;align-items:center;justify-content:center;height:170px;margin:8px 0}
+.breath-ring{
+  width:88px;height:88px;border-radius:50%;
+  border:2px solid var(--teal);background:rgba(45,212,191,.10);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:var(--teal2);
+  transition:width 3.6s ease-in-out, height 3.6s ease-in-out, background 3.6s ease-in-out;
+}
+
+/* ── CHECK-IN / RE-ENTRY QUESTIONS ─────────────────────────────── */
+.cq{margin-bottom:16px}
+.cq-lbl{font-size:13px;font-weight:700;margin-bottom:8px}
+.cq-opts{display:flex;flex-wrap:wrap;gap:8px}
+.cqo{
+  padding:9px 13px;border-radius:11px;background:var(--panel2);border:1px solid var(--border);
+  font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none;
+}
+.cqo.sel{background:rgba(45,212,191,.14);border-color:var(--teal);color:var(--teal2)}
+.range-lbl{font-size:13px;font-weight:700;margin:14px 0 6px}
+input[type=range]{padding:0;background:transparent;border:none}
+
+/* ── RED MODE / BUY 10 ─────────────────────────────────────────── */
 .redmode-wrap{position:fixed; inset:0; background:rgba(8,15,28,.98); display:none; z-index:120;}
 .redmode-wrap.open{display:block}
-.redmode{position:absolute; inset:0; max-width:480px; margin:0 auto; padding:calc(16px + var(--safe-top)) 16px calc(18px + var(--safe-bot)); display:flex; flex-direction:column; gap:14px; background:linear-gradient(180deg, rgba(248,113,113,.10), rgba(245,158,11,.10) 28%, rgba(15,23,42,.98) 70%)}
+.redmode{position:absolute; inset:0; max-width:480px; margin:0 auto; padding:calc(16px + var(--safe-top)) 16px calc(18px + var(--safe-bot)); display:flex; flex-direction:column; gap:14px; overflow:auto; background:linear-gradient(180deg, rgba(248,113,113,.10), rgba(245,158,11,.10) 28%, rgba(15,23,42,.98) 70%)}
 .red-banner{border-radius:20px; padding:16px; border:1px solid rgba(255,255,255,.12); background:#7f1d1d; box-shadow:0 0 0 1px rgba(255,255,255,.04) inset}
 .red-title{font-size:22px; font-weight:800; line-height:1.15; margin:0 0 6px; color:#fff}
 .red-sub{font-size:13px; color:rgba(255,255,255,.92); line-height:1.5}
@@ -147,13 +249,28 @@ button{border:none; outline:none; cursor:pointer; font-weight:700}
 .red-link{display:inline-block; margin-top:4px; color:var(--amber); font-weight:700; cursor:pointer}
 .buy10-wrap{position:fixed; inset:0; background:rgba(8,15,28,.96); display:none; z-index:121}
 .buy10-wrap.open{display:block}
-.buy10{position:absolute; inset:0; max-width:480px; margin:0 auto; padding:calc(18px + var(--safe-top)) 16px calc(18px + var(--safe-bot)); display:flex; flex-direction:column; gap:14px}
+.buy10{position:absolute; inset:0; max-width:480px; margin:0 auto; padding:calc(18px + var(--safe-top)) 16px calc(18px + var(--safe-bot)); display:flex; flex-direction:column; gap:14px; overflow:auto}
 .buy10-hero{border-radius:20px; padding:18px; background:linear-gradient(135deg, rgba(245,158,11,.16), rgba(45,212,191,.12)); border:1px solid rgba(245,158,11,.22)}
 .buy10-prompt{min-height:68px; display:flex; align-items:center; justify-content:center; text-align:center; background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:14px; font-size:16px; font-weight:700}
 .buy10-actions{display:grid; gap:10px; margin-top:auto}
-/* Photo loading state */
+
+/* ── CHAT ──────────────────────────────────────────────────────── */
+.msg{max-width:85%;padding:11px 13px;border-radius:15px;font-size:13px;line-height:1.55;margin-bottom:9px}
+.msg.ai{background:var(--panel2);color:var(--text);border-bottom-left-radius:5px}
+.msg.user{background:var(--amber);color:#111827;margin-left:auto;border-bottom-right-radius:5px}
+.msg-crisis{background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.28);border-radius:15px;padding:12px;margin-bottom:9px}
+
+/* ── FLASH ─────────────────────────────────────────────────────── */
+.flash{
+  position:fixed;left:50%;transform:translateX(-50%) translateY(-24px);
+  top:calc(66px + var(--safe-top));z-index:200;max-width:420px;width:calc(100% - 32px);
+  background:var(--panel);border:1px solid var(--border);border-radius:14px;
+  padding:12px 14px;font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.35);
+  opacity:0;pointer-events:none;transition:all .28s;
+}
+.flash.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
 .mem-card.loading::after{content:''; position:absolute; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center}
-.mem-loading-ring{width:28px;height:28px;border:3px solid rgba(255,255,255,.2);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;position:absolute}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes redPulse{0%,100%{transform:scale(1); box-shadow:0 0 0 0 rgba(248,113,113,.18)}50%{transform:scale(1.01); box-shadow:0 0 0 10px rgba(248,113,113,0)}}
 </style>
@@ -161,7 +278,10 @@ button{border:none; outline:none; cursor:pointer; font-weight:700}
 <body>
 <div id="app">
   <div class="topbar">
-    <div class="logo">R<span>I</span>A</div>
+    <div>
+      <div class="logo">R<span>I</span>A</div>
+      <div class="logo-sub">Relapse Interception App</div>
+    </div>
     <div class="icon-row">
       <button class="icon-btn" id="updates-btn" onclick="openUpdates()">💡<span id="updates-badge" class="badge-dot show">!</span></button>
       <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
@@ -169,39 +289,115 @@ button{border:none; outline:none; cursor:pointer; font-weight:700}
     </div>
   </div>
 
+  <!-- ══════════════════ ONBOARDING (5 steps) ══════════════════ -->
   <div id="onboarding">
-    <div class="card hero">
-      <div class="h2">🔒 This is your space. Totally private.</div>
-      <div class="sub" style="margin-top:10px">Everything you enter in RIA stays on <strong>your device only</strong>.</div>
-      <div class="sub" style="margin-top:10px;color:var(--teal2)"><strong>RIA is a personal relapse intervention tool</strong> — built to help you catch it early and change what happens next.</div>
+    <div class="ob-progress">
+      <div class="ob-dot now" id="p0"></div>
+      <div class="ob-dot" id="p1"></div>
+      <div class="ob-dot" id="p2"></div>
+      <div class="ob-dot" id="p3"></div>
+      <div class="ob-dot" id="p4"></div>
     </div>
-    <div class="card"><div class="h1">Let's Build Your RIA</div><div class="sub">Customize your relapse interceptor</div></div>
-    <div class="card">
-      <div class="lbl">Your first name</div><input id="inp-name" type="text" placeholder="What should we call you?">
-      <div class="lbl">Days since last relapse</div><input id="inp-days" type="number" min="0" placeholder="e.g. 16">
+
+    <!-- STEP 0 -->
+    <div class="ob-step active" id="ob0">
+      <div class="ob-h">Let's build your RIA.</div>
+      <div class="ob-sub">Built around your patterns, your people, your reasons. A few minutes now. Could matter a lot later.</div>
+      <div class="card hero" style="margin-top:14px">
+        <div class="h3">🔒 This is your space. Totally private.</div>
+        <div class="sub" style="margin-top:6px">Everything you enter stays on <strong>your device only</strong>. No account, no server, no sync.</div>
+      </div>
+      <div class="lbl">Your first name</div>
+      <input id="inp-name" type="text" placeholder="What should we call you?" autocomplete="given-name">
+      <div class="lbl">Days since your last relapse</div>
+      <input id="inp-days" type="number" min="0" inputmode="numeric" placeholder="e.g. 16">
       <div class="lbl">Addiction or issue</div>
       <select id="inp-sub"><option value="">Select...</option><option>Alcohol</option><option>Cocaine / stimulants</option><option>Opioids</option><option>Marijuana / cannabis</option><option>Methamphetamine</option><option>Gambling</option><option>Social media / digital</option><option>Shopping / spending</option><option>Pornography / compulsive sexual behaviour</option><option>Multiple issues</option><option>Other</option><option>Prefer not to say</option></select>
-      <div class="lbl">Typical days between relapses</div><input id="inp-cycle" type="number" min="1" placeholder="e.g. 18">
+      <div class="lbl">Your typical cycle (days between relapses)</div>
+      <input id="inp-cycle" type="number" min="1" inputmode="numeric" placeholder="e.g. 18">
+      <div class="lbl">Where are you? (sets your crisis lines)</div>
+      <select id="inp-region"></select>
+      <div class="ob-err" id="err0"></div>
+      <button class="btn" onclick="nextStep(1)">Continue →</button>
+      <div class="ob-skip" onclick="quickLaunch()">Skip setup and open the app shell</div>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="ob-step" id="ob1">
+      <div class="ob-h">Your triggers.</div>
+      <div class="ob-sub">Tap everything that has started the drift before. The more honest you are here, the earlier RIA can catch it.</div>
+      <div class="lbl">Emotional</div>
+      <div class="chips" id="chips-emotional"></div>
+      <div class="lbl">Situational</div>
+      <div class="chips" id="chips-situational"></div>
+      <div class="lbl">Early warning signs — your drift signals</div>
+      <div class="chips" id="chips-signals"></div>
+      <div class="sub" style="margin-top:12px">RIA watches for these. When you go quiet or skip check-ins, it will say so — in your own words.</div>
+      <button class="btn" onclick="nextStep(2)">Continue →</button>
+      <div class="ob-back" onclick="nextStep(0)">← Back</div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="ob-step" id="ob2">
+      <div class="ob-h">Your people.</div>
+      <div class="ob-sub">The ones who will pick up. They're your first line of defence, and you already know who they are.</div>
       <div class="lbl">Sponsor / primary support</div><input id="inp-c1" type="text" placeholder="Name">
-      <div class="lbl">Sponsor phone</div><input id="inp-c1p" type="tel" placeholder="2041234567">
+      <div class="lbl">Sponsor phone</div><input id="inp-c1p" type="tel" inputmode="tel" placeholder="2041234567">
       <div class="lbl">Family contact</div><input id="inp-c2" type="text" placeholder="Name">
-      <div class="lbl">Family phone</div><input id="inp-c2p" type="tel" placeholder="2041234567">
-      <div class="lbl">Counsellor / therapist</div><input id="inp-c3" type="text" placeholder="Name">
-      <div class="lbl">Counsellor phone</div><input id="inp-c3p" type="tel" placeholder="2041234567">
-      <div class="lbl">Affirmation</div><textarea id="inp-aff" placeholder="Something your sober self wants to remember"></textarea>
-      <div class="lbl">What you lose when you relapse</div><textarea id="inp-loss" placeholder="Be honest. This is for your eyes only."></textarea>
-      <div class="lbl">Typical spend per binge ($)</div><input id="inp-binge" type="number" min="0" placeholder="e.g. 200">
-      <div class="lbl">Typical binges per month</div><input id="inp-freq" type="number" min="0" placeholder="e.g. 4">
+      <div class="lbl">Family phone</div><input id="inp-c2p" type="tel" inputmode="tel" placeholder="2041234567">
+      <div class="lbl">Counsellor / therapist (optional)</div><input id="inp-c3" type="text" placeholder="Name">
+      <div class="lbl">Counsellor phone</div><input id="inp-c3p" type="tel" inputmode="tel" placeholder="2041234567">
+      <div class="lbl">How should RIA talk to you when things get serious?</div>
+      <div class="chips" id="chips-tone"></div>
+      <div class="ob-err" id="err2"></div>
+      <button class="btn" onclick="nextStep(3)">Continue →</button>
+      <div class="ob-back" onclick="nextStep(1)">← Back</div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="ob-step" id="ob3">
+      <div class="ob-h">Your reasons.</div>
+      <div class="ob-sub">Photos of who you're fighting for, and the words your sober self wants you to read at 2am.</div>
+      <div class="photo-zone" onclick="document.getElementById('inp-mem').click()">
+        <input type="file" id="inp-mem" accept="image/*" multiple style="display:none" onchange="onboardPhotos(this)">
+        <div class="photo-zone-icon">📷</div>
+        <div class="photo-zone-txt">Tap to add photos</div>
+        <div class="photo-zone-sub">Family · Pets · Loved ones · Meaningful places</div>
+      </div>
+      <div class="photo-previews" id="photo-previews"></div>
+      <div class="lbl">Something your sober self wants to remember</div>
+      <textarea id="inp-aff" placeholder="e.g. 'I am more than this. My kids need me present.'"></textarea>
+      <div class="lbl">What you lose when you relapse</div>
+      <textarea id="inp-loss" placeholder="Be honest. This is for your eyes only."></textarea>
+      <div class="lbl">What your life looks like clean</div>
+      <textarea id="inp-clean" placeholder="The version of yourself you're fighting for..."></textarea>
       <div class="lbl">Reset track</div><input id="inp-music" type="text" placeholder="Song / artist / link">
       <div class="lbl">Comfort show or film</div><input id="inp-show" type="text" placeholder="Title / link">
       <div class="lbl">Favourite clip</div><input id="inp-clip" type="text" placeholder="YouTube URL / link">
       <div class="lbl">Podcast</div><input id="inp-pod" type="text" placeholder="Title / link">
-      <div class="lbl">Memory Wall photos</div><div class="card" style="padding:12px"><div class="sub">Add a couple of photos now or later from My People + Pets.</div><input id="inp-mem" type="file" accept="image/*" multiple></div>
-      <button class="btn" onclick="finishSetup()">Open My RIA</button>
-      <button class="btn2" onclick="quickLaunch()">Skip and open shell</button>
+      <div class="lbl">Typical spend per binge ($)</div><input id="inp-binge" type="number" min="0" inputmode="numeric" placeholder="e.g. 200">
+      <div class="lbl">Typical binges per month</div><input id="inp-freq" type="number" min="0" inputmode="numeric" placeholder="e.g. 4">
+      <button class="btn" onclick="nextStep(4)">Continue →</button>
+      <div class="ob-back" onclick="nextStep(2)">← Back</div>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="ob-step" id="ob4">
+      <div class="welcome-done">
+        <div class="wd-ico">🛡️</div>
+        <div class="ob-h">Your RIA is ready.</div>
+        <div class="ob-sub">Built around your triggers, your people, and your reasons. It's here when you need it.</div>
+        <div class="setup-summary">
+          <div class="ss-label">Your setup</div>
+          <div class="ss-row" id="ss-content">Loading...</div>
+        </div>
+        <button class="btn" onclick="finishSetup()">Open My RIA →</button>
+        <div class="ob-back" onclick="nextStep(3)">← Back</div>
+      </div>
     </div>
   </div>
 
+  <!-- ══════════════════ HOME ══════════════════ -->
   <div class="screen" id="screen-home">
     <div class="card hero">
       <div class="badge" id="badge-issue">Issue</div>
@@ -231,86 +427,216 @@ button{border:none; outline:none; cursor:pointer; font-weight:700}
       <div class="tile" onclick="go('memory')">🖼<br>My People + Pets</div>
     </div>
     <div class="card">
-      <div class="h3">Daily Check-In Calendar</div>
-      <div class="sub">Tap the button to mark today and keep the pattern visible.</div>
-      <button class="btn2" onclick="logCheckin()">✓ Check in today</button>
+      <div class="h3">Daily Check-In</div>
+      <div class="sub">Four questions. Honest answers keep you ahead of the drift.</div>
+      <button class="btn2" onclick="openCheckin()">✓ Check in today</button>
       <div style="height:12px"></div>
       <div class="cal-grid" id="calendar-grid"></div>
     </div>
+    <div id="crisis-home"></div>
   </div>
 
+  <!-- ══════════════════ HIGH RISK ══════════════════ -->
   <div class="screen" id="screen-urgent">
     <div class="card hero"><div class="h2">Good move. You caught it.</div><div class="sub">What is your next step?</div></div>
+    <div id="crisis-urgent"></div>
     <div id="urgent-primary"></div>
-    <div class="tool-card"><h4>🌊 Urge Surfing</h4><p>Ride out the craving in a safe, structured way. The urge rises, peaks, then falls.</p><button class="btn3" onclick="go('tools')">Open full tools</button></div>
+    <div class="tool-card"><h4>🌊 Urge Surfing</h4><p>Ride out the craving in a safe, structured way. The urge rises, peaks, then falls.</p><button class="btn3" onclick="openBuy10()">Open Stop the Slide</button></div>
     <div class="meeting-item"><div class="h3">Find a meeting</div><div class="sub">Tap straight into recovery rooms right now.</div><a class="meeting-link" href="https://ca-online.org" target="_blank" rel="noopener">Cocaine Anonymous online ↗</a><a class="meeting-link" href="https://www.aa.org/meeting-guide-app" target="_blank" rel="noopener">Alcoholics Anonymous meeting guide ↗</a><a class="meeting-link" href="https://na.org/meetingsearch/" target="_blank" rel="noopener">Narcotics Anonymous meeting search ↗</a><a class="meeting-link" href="https://www.intherooms.com" target="_blank" rel="noopener">In The Rooms ↗</a></div>
-    <div class="tool-card"><h4>🫁 Breathing exercise</h4><p>Use the timer to bring the nervous system down fast.</p><div class="timer-big" id="breath-timer-urgent">01:20</div><div class="breath-state" id="breath-state-urgent">Ready</div><div class="tool-actions"><button class="btn2" onclick="startBreathingUrgent()">Start</button><button class="btn3" onclick="stopBreathingUrgent()">Stop</button></div></div>
+    <div class="tool-card"><h4>🫁 Breathing exercise</h4><p>Bring the nervous system down fast.</p>
+      <div class="breath-stage"><div class="breath-ring" id="breath-ring-urgent">Ready</div></div>
+      <div class="breath-state" id="breath-state-urgent">5 rounds · 4-4-6</div>
+      <div class="tool-actions"><button class="btn2" onclick="startBreath('urgent')">Start</button><button class="btn3" onclick="stopBreath('urgent')">Stop</button></div>
+    </div>
   </div>
 
+  <!-- ══════════════════ RESET ══════════════════ -->
   <div class="screen" id="screen-media"><div class="card"><div class="h2">Reset</div><div class="sub">Tap links to open them. Your saved music box is below.</div></div><div id="music-box" class="card"></div><div id="media-list"></div></div>
 
+  <!-- ══════════════════ MY PEOPLE + PETS ══════════════════ -->
   <div class="screen" id="screen-memory">
     <div class="card hero"><div class="h2">My People + Pets</div><div class="sub">The people and animals you're fighting for.</div></div>
-    <div class="card"><div class="pill">Affirmation</div><div class="sub" id="aff-text">You are fighting for something real.</div></div>
+    <div class="card"><div class="pill">Affirmation</div><div class="sub" id="aff-text" style="margin-top:8px">You are fighting for something real.</div>
+      <div class="tool-actions"><button class="btn3" onclick="prevAff()">‹ Prev</button><button class="btn3" onclick="nextAff()">Next ›</button></div>
+      <div class="small" id="aff-auth" style="margin-top:8px"></div>
+    </div>
+    <div class="card"><div class="pill" style="background:rgba(132,169,140,.14);color:var(--sage)">Clean life</div><div class="sub" id="clean-text" style="margin-top:8px">—</div></div>
     <div id="memory-grid" class="mem-grid"></div>
   </div>
 
+  <!-- ══════════════════ SUPPORT ══════════════════ -->
   <div class="screen" id="screen-support">
     <div class="card"><div class="h2">Support</div><div class="sub">Reach a real person or join a meeting right now.</div></div>
+    <div id="crisis-support"></div>
     <div id="contacts-list"></div>
     <div class="meeting-item"><div class="h3">Meetings & online rooms</div><a class="meeting-link" href="https://ca-online.org" target="_blank" rel="noopener">Cocaine Anonymous online ↗</a><a class="meeting-link" href="https://www.aa.org/meeting-guide-app" target="_blank" rel="noopener">Alcoholics Anonymous meeting guide ↗</a><a class="meeting-link" href="https://na.org/meetingsearch/" target="_blank" rel="noopener">Narcotics Anonymous meeting search ↗</a><a class="meeting-link" href="https://www.intherooms.com" target="_blank" rel="noopener">In The Rooms ↗</a></div>
+    <div class="tool-card"><h4>🔄 Re-entry after a relapse</h4><p>You're not starting over. Map what happened so next time we catch it earlier.</p><button class="btn3" onclick="openRelapse()">Open re-entry</button></div>
+    <div id="relapse-history"></div>
   </div>
 
+  <!-- ══════════════════ TOOLS ══════════════════ -->
   <div class="screen" id="screen-tools">
     <div class="card hero"><div class="h2">Tools</div><div class="sub">Immediate actions for cravings, drift, and destabilization.</div></div>
-    <div class="tool-card"><h4>🫁 Breathing reset</h4><p>4-4-6 breathing with a countdown clock to bring the nervous system down fast.</p><div class="timer-big" id="breath-timer">01:20</div><div class="breath-state" id="breath-state">Ready</div><div class="tool-actions"><button class="btn2" onclick="startBreathing()">Start</button><button class="btn3" onclick="stopBreathing()">Stop</button></div></div>
-    <div class="tool-card"><h4>💡 HALT</h4><p>Ask what is really driving the urge: Hungry, Angry, Lonely, or Tired.</p></div>
-    <div class="tool-card"><h4>🌊 Urge surfing</h4><p>The urge is a wave. It rises, peaks, then falls. Delay the next action by ten minutes and keep breathing.</p><button class="btn3" onclick="openBuy10()">Open Stop the Slide</button></div>
-    <div class="tool-card"><h4>🧠 SOBER space</h4><p>Stop. Observe. Breathe. Expand. Respond. One right move is enough to change the next hour.</p></div>
-    <div class="tool-card"><h4>🔁 If you already used</h4><p>You are not starting over. Get safe, tell someone, and reconnect immediately.</p><div class="notice">Coming back is part of recovery. Returning to the app counts.</div></div>
+
+    <div class="tool-card">
+      <div class="tc-head" onclick="toggleTool(this)"><h4>🫁 Breathing reset</h4><span class="tc-arr">▾</span></div>
+      <div class="tc-body"><div class="tc-inner">
+        <p>4-4-6 breathing, five rounds. Follow the ring.</p>
+        <div class="breath-stage"><div class="breath-ring" id="breath-ring">Ready</div></div>
+        <div class="breath-state" id="breath-state">5 rounds · 4-4-6</div>
+        <div class="tool-actions"><button class="btn2" onclick="startBreath('main')">Start</button><button class="btn3" onclick="stopBreath('main')">Stop</button></div>
+      </div></div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tc-head" onclick="toggleTool(this)"><h4>💡 HALT</h4><span class="tc-arr">▾</span></div>
+      <div class="tc-body"><div class="tc-inner">
+        <p>Ask what is really driving the urge. Usually it is one of four things, and three of them have a simple fix.</p>
+        <div class="step-row"><div class="s-num">H</div><div class="s-txt"><strong>Hungry.</strong> Eat something now. Low blood sugar reads as craving.</div></div>
+        <div class="step-row"><div class="s-num">A</div><div class="s-txt"><strong>Angry.</strong> Name it out loud. Do not make a decision while it is running.</div></div>
+        <div class="step-row"><div class="s-num">L</div><div class="s-txt"><strong>Lonely.</strong> This is the dangerous one. Contact a person, not a screen.</div></div>
+        <div class="step-row"><div class="s-num">T</div><div class="s-txt"><strong>Tired.</strong> Sleep is not avoidance. It is maintenance.</div></div>
+      </div></div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tc-head" onclick="toggleTool(this)"><h4>🌊 Urge surfing</h4><span class="tc-arr">▾</span></div>
+      <div class="tc-body"><div class="tc-inner">
+        <p>The urge is a wave. It rises, peaks, then falls — every time. You do not have to fight it. You have to outlast it.</p>
+        <button class="btn3" onclick="openBuy10()">Open Stop the Slide (10 min)</button>
+      </div></div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tc-head" onclick="toggleTool(this)"><h4>🧠 SOBER space</h4><span class="tc-arr">▾</span></div>
+      <div class="tc-body"><div class="tc-inner">
+        <p>A three-minute pause for high-risk moments.</p>
+        <div class="step-row"><div class="s-num">S</div><div class="s-txt"><strong>Stop.</strong> Whatever you were about to do, pause it.</div></div>
+        <div class="step-row"><div class="s-num">O</div><div class="s-txt"><strong>Observe.</strong> What is happening in your body right now?</div></div>
+        <div class="step-row"><div class="s-num">B</div><div class="s-txt"><strong>Breathe.</strong> Ten slow breaths. Nothing else.</div></div>
+        <div class="step-row"><div class="s-num">E</div><div class="s-txt"><strong>Expand.</strong> Widen your awareness. You are more than this moment.</div></div>
+        <div class="step-row"><div class="s-num">R</div><div class="s-txt"><strong>Respond.</strong> Choose the next move deliberately, not automatically.</div></div>
+      </div></div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tc-head" onclick="toggleTool(this)"><h4>🗣 Scripts for real situations</h4><span class="tc-arr">▾</span></div>
+      <div class="tc-body"><div class="tc-inner">
+        <p style="margin-bottom:10px">You don't need to explain yourself. You just need the words.</p>
+        <div class="script-block"><div class="sb-label">When someone offers</div><div class="sb-txt">"No thanks, I'm good." Full stop. No explanation needed.</div></div>
+        <div class="script-block"><div class="sb-label">When they push</div><div class="sb-txt">"I said I'm good. Let's talk about something else."</div></div>
+        <div class="script-block"><div class="sb-label">When you need to leave</div><div class="sb-txt">"I've got an early start. I'm heading out." Then leave. Don't negotiate.</div></div>
+        <div class="script-block"><div class="sb-label">When you need someone</div><div class="sb-txt">"I'm struggling. I need you to stay on the phone with me."</div></div>
+      </div></div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tc-head" onclick="toggleTool(this)"><h4>🔁 If you already used</h4><span class="tc-arr">▾</span></div>
+      <div class="tc-body"><div class="tc-inner">
+        <p>You are not starting over. Get safe, tell someone, and reconnect immediately.</p>
+        <div class="notice" style="margin:10px 0">Coming back is part of recovery. Returning to the app counts.</div>
+        <button class="btn3" onclick="openRelapse()">Open re-entry</button>
+      </div></div>
+    </div>
   </div>
 
-  <div class="screen" id="screen-ai"><div class="card hero"><div class="h2">AI Support</div><div class="sub">Simple reassurance and recommendation chat based on how you're feeling.</div></div><div class="card" style="padding:0;overflow:hidden"><div id="chat-log" style="max-height:320px;overflow:auto;padding:14px"></div><div style="border-top:1px solid var(--border);padding:12px"><div style="display:flex;gap:8px"><input id="chat-input" type="text" placeholder="Type what's going on..."><button class="btn2" style="width:auto;margin-top:0;padding:12px 14px" onclick="sendChat()">Send</button></div><div class="tool-actions" style="margin-top:8px"><button class="btn3" onclick="quickChat('I am feeling an urge')">Urge</button><button class="btn3" onclick="quickChat('I feel lonely')">Lonely</button><button class="btn3" onclick="quickChat('I already used')">I used</button></div></div></div></div>
+  <!-- ══════════════════ IN THE MOMENT ══════════════════ -->
+  <div class="screen" id="screen-ai">
+    <div class="card hero"><div class="h2">In the moment</div><div class="sub">Fixed, pre-written prompts — not a live counsellor and not an AI. If you need a person, use the crisis lines or your contacts.</div></div>
+    <div id="crisis-ai"></div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div id="chat-log" style="max-height:340px;overflow:auto;padding:14px"></div>
+      <div style="border-top:1px solid var(--border);padding:12px">
+        <div style="display:flex;gap:8px"><input id="chat-input" type="text" placeholder="Type what's going on..."><button class="btn2" style="width:auto;margin-top:0;padding:12px 14px" onclick="sendChat()">Send</button></div>
+        <div class="tool-actions" style="margin-top:8px;flex-wrap:wrap"><button class="btn3" onclick="quickChat('I am feeling an urge')">Urge</button><button class="btn3" onclick="quickChat('I feel lonely')">Lonely</button><button class="btn3" onclick="quickChat('I am going dark')">Going dark</button><button class="btn3" onclick="quickChat('I already used')">I used</button></div>
+      </div>
+    </div>
+  </div>
 
   <nav id="nav" class="nav hidden">
     <button id="nav-home" class="active" onclick="go('home')">🏠<span>Home</span></button>
     <button id="nav-urgent" onclick="go('urgent')">⚠️<span>Urgent</span></button>
     <button id="nav-media" onclick="go('media')">🎧<span>Reset</span></button>
     <button id="nav-memory" onclick="go('memory')">🖼<span>People</span></button>
-    <button id="nav-ai" onclick="go('ai')">🤖<span>AI</span></button>
+    <button id="nav-ai" onclick="go('ai')">💬<span>Moment</span></button>
     <button id="nav-support" onclick="go('support')">🤝<span>Support</span></button>
     <button id="nav-tools" onclick="go('tools')">🧰<span>Tools</span></button>
   </nav>
 
+  <!-- ══════════════════ SETTINGS ══════════════════ -->
   <div class="modal-wrap" id="modal-settings"><div class="modal"><div class="h2">Profile & Settings</div><div class="sub">Review and update your plan any time.</div>
     <div class="lbl">Your name</div><input id="s-name" type="text">
-    <div class="lbl">Days since last relapse</div><input id="s-days" type="number" min="0">
+    <div class="lbl">Date of last relapse</div><input id="s-date" type="date">
+    <div class="small" id="s-days-readout">—</div>
     <div class="lbl">Addiction or issue</div><select id="s-sub"><option value="">Select...</option><option>Alcohol</option><option>Cocaine / stimulants</option><option>Opioids</option><option>Marijuana / cannabis</option><option>Methamphetamine</option><option>Gambling</option><option>Social media / digital</option><option>Shopping / spending</option><option>Pornography / compulsive sexual behaviour</option><option>Multiple issues</option><option>Other</option><option>Prefer not to say</option></select>
-    <div class="lbl">Typical days between relapses</div><input id="s-cycle" type="number" min="1">
-    <div class="lbl">Sponsor / primary support</div><input id="s-c1" type="text"><div class="lbl">Sponsor phone</div><input id="s-c1p" type="tel">
-    <div class="lbl">Family contact</div><input id="s-c2" type="text"><div class="lbl">Family phone</div><input id="s-c2p" type="tel">
-    <div class="lbl">Counsellor / therapist</div><input id="s-c3" type="text"><div class="lbl">Counsellor phone</div><input id="s-c3p" type="tel">
+    <div class="lbl">Typical days between relapses</div><input id="s-cycle" type="number" min="1" inputmode="numeric">
+    <div class="lbl">Region (sets your crisis lines)</div><select id="s-region"></select>
+    <div id="s-custom-wrap" class="hidden">
+      <div class="lbl">Your local crisis line — name</div><input id="s-cc-name" type="text" placeholder="e.g. Lifeline">
+      <div class="lbl">Your local crisis line — number</div><input id="s-cc-tel" type="tel" inputmode="tel" placeholder="Digits only">
+    </div>
+    <div class="lbl">How should RIA talk to you when things get serious?</div>
+    <div class="chips" id="s-chips-tone"></div>
+    <div class="lbl">Sponsor / primary support</div><input id="s-c1" type="text"><div class="lbl">Sponsor phone</div><input id="s-c1p" type="tel" inputmode="tel">
+    <div class="lbl">Family contact</div><input id="s-c2" type="text"><div class="lbl">Family phone</div><input id="s-c2p" type="tel" inputmode="tel">
+    <div class="lbl">Counsellor / therapist</div><input id="s-c3" type="text"><div class="lbl">Counsellor phone</div><input id="s-c3p" type="tel" inputmode="tel">
+    <div class="lbl">Your triggers</div>
+    <div class="small" style="margin-bottom:8px">Emotional</div><div class="chips" id="s-chips-emotional"></div>
+    <div class="small" style="margin:10px 0 8px">Situational</div><div class="chips" id="s-chips-situational"></div>
+    <div class="small" style="margin:10px 0 8px">Early warning signs</div><div class="chips" id="s-chips-signals"></div>
     <div class="lbl">Affirmation</div><textarea id="s-aff"></textarea>
     <div class="lbl">What you lose when you relapse</div><textarea id="s-loss"></textarea>
-    <div class="lbl">Typical spend per binge ($)</div><input id="s-binge" type="number" min="0">
-    <div class="lbl">Typical binges per month</div><input id="s-freq" type="number" min="0">
+    <div class="lbl">What your life looks like clean</div><textarea id="s-clean"></textarea>
+    <div class="lbl">Typical spend per binge ($)</div><input id="s-binge" type="number" min="0" inputmode="numeric">
+    <div class="lbl">Typical binges per month</div><input id="s-freq" type="number" min="0" inputmode="numeric">
     <div class="lbl">Reset track</div><input id="s-music" type="text"><div class="lbl">Comfort show or film</div><input id="s-show" type="text"><div class="lbl">Favourite clip</div><input id="s-clip" type="text"><div class="lbl">Podcast</div><input id="s-pod" type="text"><div class="lbl">Add memory wall photos</div><input id="s-mem" type="file" accept="image/*" multiple>
     <button class="btn2" onclick="saveSettings()">Save Changes</button><div class="close" onclick="closeSettings()">Close</div>
   </div></div>
 
-  <div class="modal-wrap" id="modal-updates"><div class="modal"><div class="h2">Messages & Updates</div><div class="sub">A place for app notes, encouragement, and future updates.</div><div class="card"><div class="h3">Current build</div><div class="sub">Stable rebuild with high-risk path, stop-the-slide flow, support actions, and My People + Pets.</div></div><div class="close" onclick="closeUpdates()">Close</div></div></div>
+  <div class="modal-wrap" id="modal-updates"><div class="modal"><div class="h2">Messages & Updates</div><div class="sub">A place for app notes, encouragement, and future updates.</div><div class="card"><div class="h3">Current build</div><div class="sub">Five-step setup, saved triggers, region-aware crisis lines, drift-weighted risk, re-entry module, and My People + Pets.</div></div><div class="close" onclick="closeUpdates()">Close</div></div></div>
 
+  <!-- ══════════════════ DAILY CHECK-IN ══════════════════ -->
+  <div class="modal-wrap" id="modal-checkin"><div class="modal">
+    <div class="h2">Daily Check-In</div>
+    <div class="sub" style="margin-bottom:16px">Honest answers keep you ahead of the drift.</div>
+    <div class="cq" data-q="urges"><div class="cq-lbl">Urges today?</div><div class="cq-opts"><div class="cqo" onclick="sel(this)">None</div><div class="cqo" onclick="sel(this)">Some</div><div class="cqo" onclick="sel(this)">Strong</div></div></div>
+    <div class="cq" data-q="reachedOut"><div class="cq-lbl">Reached out to anyone?</div><div class="cq-opts"><div class="cqo" onclick="sel(this)">Yes</div><div class="cqo" onclick="sel(this)">No</div></div></div>
+    <div class="cq" data-q="isolation"><div class="cq-lbl">Isolation level?</div><div class="cq-opts"><div class="cqo" onclick="sel(this)">Connected</div><div class="cqo" onclick="sel(this)">Pulling back</div><div class="cqo" onclick="sel(this)">Gone dark</div></div></div>
+    <div id="checkin-signals"></div>
+    <div class="range-lbl">Urge intensity: <span id="int-v">5</span>/10</div>
+    <input type="range" id="checkin-intensity" min="1" max="10" value="5" step="1" oninput="document.getElementById('int-v').textContent=this.value">
+    <button class="btn2" onclick="submitCheckin()">Log today</button>
+    <div class="close" onclick="closeModal('modal-checkin')">Skip today</div>
+  </div></div>
+
+  <!-- ══════════════════ POST-RELAPSE RE-ENTRY ══════════════════ -->
+  <div class="modal-wrap" id="modal-relapse"><div class="modal">
+    <div style="font-size:40px;text-align:center;margin:4px 0 12px">🔄</div>
+    <div class="h2" style="color:var(--sage);text-align:center">You're back. That matters.</div>
+    <div class="sub" style="text-align:center;margin-bottom:18px">No shame. No restart from nothing. Let's map it, so next time we catch it earlier.</div>
+    <div class="cq" data-q="firstPull"><div class="cq-lbl">When did you first feel the pull?</div><div class="cq-opts"><div class="cqo" onclick="sel(this)">Days ago</div><div class="cqo" onclick="sel(this)">About a week ago</div><div class="cqo" onclick="sel(this)">It was sudden</div></div></div>
+    <div class="cq" data-q="missedSignal"><div class="cq-lbl">What signal did you miss?</div><div class="cq-opts" id="relapse-signal-opts"></div></div>
+    <div class="cq" data-q="need"><div class="cq-lbl">What do you need right now?</div><div class="cq-opts"><div class="cqo" onclick="sel(this)">Call someone</div><div class="cqo" onclick="sel(this)">Just breathe</div><div class="cqo" onclick="sel(this)">Professional help</div></div></div>
+    <div class="cq" data-q="reset"><div class="cq-lbl">Reset your day count to today?</div><div class="cq-opts"><div class="cqo" onclick="sel(this)">Yes, reset</div><div class="cqo" onclick="sel(this)">Not yet</div></div></div>
+    <div class="small">Your total interruptions and everything on your Memory Wall stay exactly where they are.</div>
+    <button class="btn2" onclick="submitRelapse()">Update my pattern</button>
+    <div class="close" onclick="closeModal('modal-relapse')">Do this later</div>
+  </div></div>
+
+  <!-- ══════════════════ RED MODE ══════════════════ -->
   <div class="redmode-wrap" id="redmode-wrap"><div class="redmode">
-    <div class="red-banner"><div class="red-title">⚠️ HIGH RISK MOMENT</div><div class="red-sub">Do not isolate. Take one action now.</div></div>
+    <div class="red-banner"><div class="red-title" id="red-title">⚠️ HIGH RISK MOMENT</div><div class="red-sub" id="red-sub">Do not isolate. Take one action now.</div></div>
     <div class="red-stack">
       <button class="red-btn primary" onclick="alertMyPeople()"><span class="ttl">🚨 ALERT MY PEOPLE</span><span class="subtxt">Send a support message now</span></button>
       <button class="red-btn" onclick="callPrimarySupport()"><span class="ttl">📞 CALL SUPPORT</span><span class="subtxt">Talk to someone immediately</span></button>
       <button class="red-btn" onclick="textPrimarySupport()"><span class="ttl">💬 TEXT SUPPORT</span><span class="subtxt">Send a quick message</span></button>
       <button class="red-btn" onclick="openBuy10()"><span class="ttl">⏱ BUY 10 MINUTES</span><span class="subtxt">Delay the urge. Break the sequence.</span></button>
     </div>
+    <div id="crisis-red"></div>
     <div class="red-foot">If you already used, come back fast. One good move still counts.<div class="red-link" onclick="exitRedMode()">Close</div></div>
   </div></div>
 
+  <!-- ══════════════════ BUY 10 ══════════════════ -->
   <div class="buy10-wrap" id="buy10-wrap"><div class="buy10">
     <div class="buy10-hero"><div class="h2">Stop the Slide</div><div class="sub">Do not decide anything for 10 minutes. Just follow this.</div></div>
     <div class="timer-big" id="buy10-timer">10:00</div>
@@ -322,27 +648,70 @@ button{border:none; outline:none; cursor:pointer; font-weight:700}
       <button class="btn3" onclick="closeBuy10()">Close</button>
     </div>
   </div></div>
+
+  <div class="flash" id="flash"><span id="flash-txt"></span></div>
 </div>
 
 <script>
+// ═══════════════════════════════════════════════════════════════════
+//  RIA — application logic. On-device only. No network calls, ever.
+// ═══════════════════════════════════════════════════════════════════
+
 const STORAGE_KEY = 'ria3';
 const THEME_KEY = 'ria3_theme';
+
+// ─── REGIONS ──────────────────────────────────────────────────────
+// Crisis resources are region-scoped so RIA can ship outside Canada
+// without a code change. Add a territory by adding a key here.
+// Every number below was verified against the operator's own site.
+const REGIONS = {
+  CA: { label:'Canada', lines:[
+    { name:'9-8-8 Suicide Crisis Helpline', tel:'988', sms:'988', note:'24/7 · free · English & French' },
+    { name:'NORS — National Overdose Response Service', tel:'18886886677', note:'Never use alone. Virtual overdose monitoring, Canada-wide.' }
+  ]},
+  US: { label:'United States', lines:[
+    { name:'988 Suicide & Crisis Lifeline', tel:'988', sms:'988', note:'24/7 · free · confidential' },
+    { name:'SAMHSA National Helpline', tel:'18006624357', note:'24/7 treatment referral and information.' }
+  ]},
+  OTHER: { label:'Other / not listed', custom:true, lines:[] }
+};
+const EMERGENCY = { CA:'911', US:'911', OTHER:'' };
+
+const TRIGGER_SETS = {
+  emotional:['Loneliness','Boredom','Anxiety','Anger','Depression','Stress / pressure','Shame','Grief / loss','Feeling invisible'],
+  situational:['Home alone','Payday','Late nights','Conflict with someone','Old friends / places','Celebrations / parties','Work stress','Financial pressure'],
+  signals:['Avoiding calls / texts','Sleeping irregularly','Cancelling plans','Going quiet','Lying or minimising','Skipping check-ins','Increased screen time','Irritability']
+};
+const TONES = [
+  {id:'gentle',  label:'Gentle — I need support'},
+  {id:'direct',  label:'Direct — no sugarcoating'},
+  {id:'hardline',label:'Hardline — tell it straight'}
+];
+
 const DEFAULT_STATE = {
-  name:'', days:0, startDate:'', cycle:18, substance:'',
+  name:'', days:0, startDate:'', cycle:18, substance:'', region:'CA', tone:'gentle',
+  customCrisis:{name:'',tel:''},
   contacts:[{label:'Sponsor',name:'',phone:''},{label:'Family',name:'',phone:''},{label:'Counsellor',name:'',phone:''}],
-  affirmation:'', loss:'', bingeAmt:0, bingeFreq:4, music:'', show:'', clip:'', pod:'', memories:[], checkins:[], mood:'', chatHistory:[], redMode:false
+  triggers:{emotional:[],situational:[],signals:[]},
+  affirmation:'', loss:'', clean:'', bingeAmt:0, bingeFreq:4,
+  music:'', show:'', clip:'', pod:'',
+  memories:[], checkins:[], checkinLog:[], relapses:[],
+  mood:'', chatHistory:[], redMode:false
 };
 let S = JSON.parse(JSON.stringify(DEFAULT_STATE));
-let breathInterval = null, breathSeconds = 80, breathIntervalUrgent = null, breathSecondsUrgent = 80;
+
 let buy10Interval = null, buy10Seconds = 600;
 const buy10Prompts = [
   'Drink water.', 'Stand up.', 'Change rooms.', 'Step outside if you can.', 'Text someone.',
   'You are riding the peak.', 'This will pass.', 'Delay is progress.', 'Stay here.', 'Choose one good move.'
 ];
 
-function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); }
+// ─── PERSISTENCE ──────────────────────────────────────────────────
+function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); }catch(e){ console.error('saveState failed', e); showFlash('Storage full — remove a few photos in My People + Pets.'); } }
 function loadState(){ try{ const raw = localStorage.getItem(STORAGE_KEY); if(!raw) return false; S = deepMerge(JSON.parse(JSON.stringify(DEFAULT_STATE)), JSON.parse(raw) || {}); return true; } catch(e){ console.error('loadState failed', e); return false; } }
 function deepMerge(base, incoming){ if(Array.isArray(base)) return Array.isArray(incoming) ? incoming : base; const out = {...base}; for(const k in incoming){ if(base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])) out[k] = deepMerge(base[k], incoming[k] || {}); else out[k] = incoming[k]; } return out; }
+
+// ─── HELPERS ──────────────────────────────────────────────────────
 function extractPhone(v){ return String(v || '').replace(/\D/g,''); }
 function val(id){ const el = document.getElementById(id); return el ? el.value.trim() : ''; }
 function setVal(id, v){ const el = document.getElementById(id); if(el) el.value = v ?? ''; }
@@ -357,10 +726,197 @@ function calcSaved(){ return Math.round(((Number(S.bingeAmt)||0) * (Number(S.bin
 function migrateStartDate(){ if(!S.startDate && Number.isFinite(Number(S.days))){ S.startDate = daysAgoToStartDate(Number(S.days)||0); saveState(); } }
 function escapeHtml(str){ return String(str || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
 
-// ─── PHOTO COMPRESSION ────────────────────────────────────────────────────────
+let flashTimer = null;
+function showFlash(msg){
+  if(flashTimer) clearTimeout(flashTimer);
+  text('flash-txt', msg || '✓');
+  const f = document.getElementById('flash');
+  if(!f) return;
+  f.classList.add('show');
+  flashTimer = setTimeout(() => f.classList.remove('show'), 2800);
+}
+
+// ─── CRISIS RESOURCES ─────────────────────────────────────────────
+function activeCrisisLines(){
+  const region = REGIONS[S.region] || REGIONS.CA;
+  const lines = [...(region.lines || [])];
+  if(S.customCrisis && S.customCrisis.tel){
+    lines.push({ name: S.customCrisis.name || 'Your crisis line', tel: extractPhone(S.customCrisis.tel), note:'Added by you in Settings.' });
+  }
+  return lines;
+}
+function crisisHtml(){
+  const lines = activeCrisisLines();
+  const emerg = EMERGENCY[S.region] || '';
+  if(!lines.length){
+    return `<div class="crisis-bar"><div class="crisis-head"><div class="c-pulse"></div><div class="crisis-title">CRISIS SUPPORT</div></div>
+      <div class="crisis-foot">No crisis line set for your region yet. Add one in Settings so it's here when you need it.</div></div>`;
+  }
+  const rows = lines.map(l => {
+    const tel = extractPhone(l.tel);
+    return `<div class="crisis-line">
+      <div class="cl-txt"><div class="cl-name">${escapeHtml(l.name)}</div><div class="cl-note">${escapeHtml(l.note || '')}</div></div>
+      ${tel ? `<a class="crisis-act" href="tel:${tel}" aria-label="Call ${escapeHtml(l.name)}">📞</a>` : ''}
+      ${l.sms ? `<a class="crisis-act" href="sms:${extractPhone(l.sms)}" aria-label="Text ${escapeHtml(l.name)}">💬</a>` : ''}
+    </div>`;
+  }).join('');
+  return `<div class="crisis-bar">
+    <div class="crisis-head"><div class="c-pulse"></div><div class="crisis-title">CRISIS SUPPORT · 24/7</div></div>
+    ${rows}
+    ${emerg ? `<div class="crisis-foot">If you or someone else is in immediate danger, call <strong>${emerg}</strong>.</div>` : ''}
+  </div>`;
+}
+function renderCrisis(){
+  const html = crisisHtml();
+  ['crisis-home','crisis-urgent','crisis-support','crisis-ai','crisis-red'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = html;
+  });
+}
+
+// ─── ONBOARDING ───────────────────────────────────────────────────
+let obCurrent = 0;
+function buildChips(containerId, list, selected, onToggle){
+  const wrap = document.getElementById(containerId);
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  list.forEach(item => {
+    const label = typeof item === 'string' ? item : item.label;
+    const id = typeof item === 'string' ? item : item.id;
+    const div = document.createElement('div');
+    div.className = 'chip' + (selected.includes(id) ? ' on' : '');
+    div.textContent = label;
+    div.setAttribute('data-val', id);
+    div.addEventListener('click', () => onToggle(id, div, wrap));
+    wrap.appendChild(div);
+  });
+}
+function buildTriggerChips(prefix){
+  Object.keys(TRIGGER_SETS).forEach(group => {
+    buildChips(prefix + group, TRIGGER_SETS[group], S.triggers[group] || [], (v, el) => {
+      const arr = S.triggers[group] || (S.triggers[group] = []);
+      const i = arr.indexOf(v);
+      if(i === -1){ arr.push(v); el.classList.add('on'); }
+      else { arr.splice(i,1); el.classList.remove('on'); }
+      saveState();
+    });
+  });
+}
+function buildToneChips(containerId){
+  buildChips(containerId, TONES, [S.tone], (v, el, wrap) => {
+    S.tone = v;
+    wrap.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+    el.classList.add('on');
+    saveState();
+    renderRedCopy();
+  });
+}
+function buildRegionSelects(){
+  ['inp-region','s-region'].forEach(id => {
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    sel.innerHTML = Object.keys(REGIONS).map(k => `<option value="${k}">${escapeHtml(REGIONS[k].label)}</option>`).join('');
+    sel.value = S.region || 'CA';
+  });
+  const s = document.getElementById('s-region');
+  if(s) s.addEventListener('change', () => {
+    S.region = s.value;
+    document.getElementById('s-custom-wrap').classList.toggle('hidden', S.region !== 'OTHER');
+    renderCrisis();
+  });
+}
+
+function nextStep(n){
+  if(n > obCurrent && !validateStep(obCurrent)) return;
+  if(obCurrent === 0) captureStep0();
+  if(obCurrent === 2) captureStep2();
+  if(obCurrent === 3) captureStep3();
+  document.getElementById('ob' + obCurrent).classList.remove('active');
+  obCurrent = n;
+  document.getElementById('ob' + n).classList.add('active');
+  for(let i=0;i<5;i++){
+    const d = document.getElementById('p'+i);
+    if(!d) continue;
+    d.classList.remove('done','now');
+    if(i < n) d.classList.add('done'); else if(i === n) d.classList.add('now');
+  }
+  if(n === 4) buildSummary();
+  document.getElementById('onboarding').scrollTop = 0;
+}
+function validateStep(step){
+  if(step === 0){
+    if(!val('inp-name')){ text('err0','Give RIA a name to call you — anything works.'); return false; }
+    text('err0','');
+  }
+  if(step === 2){
+    const anyPhone = [val('inp-c1p'), val('inp-c2p'), val('inp-c3p')].some(p => extractPhone(p).length >= 7);
+    if(!anyPhone){ text('err2','Add at least one phone number. The call and text buttons are the whole point.'); return false; }
+    text('err2','');
+  }
+  return true;
+}
+function captureStep0(){
+  S.name = val('inp-name') || S.name;
+  const inputDays = parseInt(val('inp-days') || '0', 10) || 0;
+  S.days = inputDays; S.startDate = daysAgoToStartDate(inputDays);
+  S.substance = val('inp-sub'); S.cycle = parseInt(val('inp-cycle') || '18', 10) || 18;
+  S.region = val('inp-region') || 'CA';
+  saveState(); renderCrisis();
+}
+function captureStep2(){
+  S.contacts = [
+    {label:'Sponsor',   name:val('inp-c1'), phone:extractPhone(val('inp-c1p'))},
+    {label:'Family',    name:val('inp-c2'), phone:extractPhone(val('inp-c2p'))},
+    {label:'Counsellor',name:val('inp-c3'), phone:extractPhone(val('inp-c3p'))}
+  ];
+  saveState();
+}
+function captureStep3(){
+  S.affirmation = val('inp-aff'); S.loss = val('inp-loss'); S.clean = val('inp-clean');
+  S.music = val('inp-music'); S.show = val('inp-show'); S.clip = val('inp-clip'); S.pod = val('inp-pod');
+  S.bingeAmt = parseFloat(val('inp-binge') || '0') || 0;
+  S.bingeFreq = parseInt(val('inp-freq') || '4', 10) || 4;
+  saveState();
+}
+function onboardPhotos(input){
+  handleFiles(input.files, renderPhotoPreviews);
+  input.value = '';
+}
+function renderPhotoPreviews(){
+  const grid = document.getElementById('photo-previews');
+  if(!grid) return;
+  grid.innerHTML = (S.memories || []).map(m => `<div class="photo-thumb"><img src="${m.src || m}" alt="Memory photo"></div>`).join('');
+}
+function buildSummary(){
+  const el = document.getElementById('ss-content');
+  if(!el) return;
+  const trg = (S.triggers.emotional.length + S.triggers.situational.length + S.triggers.signals.length);
+  const contacts = S.contacts.filter(c => c && c.phone).length;
+  const tone = (TONES.find(t => t.id === S.tone) || TONES[0]).label.split('—')[0].trim();
+  const region = (REGIONS[S.region] || REGIONS.CA).label;
+  el.innerHTML = `
+    👤 <strong>${escapeHtml(S.name || 'Friend')}</strong> · day ${getDaysClean()}<br>
+    🔁 Cycle: <strong>${escapeHtml(String(S.cycle))} days</strong><br>
+    🎯 Triggers mapped: <strong>${trg}</strong><br>
+    🤝 Contacts reachable: <strong>${contacts}</strong><br>
+    🖼 Memory Wall photos: <strong>${(S.memories||[]).length}</strong><br>
+    💬 Tone: <strong>${escapeHtml(tone)}</strong><br>
+    🆘 Crisis lines: <strong>${escapeHtml(region)}</strong>
+  `;
+}
+function finishSetup(){ captureStep3(); saveState(); launchApp(); }
+function quickLaunch(){ if(!S.name) S.name = val('inp-name') || 'Friend'; saveState(); launchApp(); }
+function launchApp(){
+  migrateStartDate();
+  document.getElementById('onboarding').classList.add('hidden');
+  document.getElementById('nav').classList.remove('hidden');
+  populate(); go('home');
+}
+
+// ─── PHOTO COMPRESSION ────────────────────────────────────────────
 // Resizes to max 800px and encodes at 72% JPEG quality.
-// Reduces a typical iPhone photo from ~2-4MB base64 to ~80-120KB,
-// keeping all photos well within localStorage's 5MB cap.
+// Keeps a typical iPhone photo around 80-120KB so a full wall of 12
+// stays well inside localStorage's ~5MB cap.
 function compressImage(file, callback){
   const reader = new FileReader();
   reader.onerror = () => { console.warn('FileReader error on', file.name); callback(null); };
@@ -381,107 +937,59 @@ function compressImage(file, callback){
   };
   reader.readAsDataURL(file);
 }
-
-// ─── HANDLE FILES ─────────────────────────────────────────────────────────────
-// Compresses each image before storing. Only commits to state once ALL files
-// in the batch are ready, preventing partial renders and index mismatches.
-function handleFiles(files){
+function handleFiles(files, done){
   if(!files || !files.length) return;
   if(!Array.isArray(S.memories)) S.memories = [];
-
   const fileList = Array.from(files).filter(f => f.type.startsWith('image/')).slice(0, 6);
   if(!fileList.length) return;
-
-  // Show a loading indicator on the add button
-  const wrap = document.getElementById('memory-grid');
-  const addCard = wrap ? wrap.querySelector('.mem-add') : null;
-  if(addCard){ addCard.style.opacity = '0.4'; addCard.style.pointerEvents = 'none'; }
-
   let completed = 0;
   const incoming = new Array(fileList.length).fill(null);
-
   fileList.forEach((file, idx) => {
     compressImage(file, (dataUrl) => {
-      if(dataUrl) incoming[idx] = dataUrl;
+      if(dataUrl) incoming[idx] = { id: Date.now() + idx, src: dataUrl };
       completed++;
       if(completed === fileList.length){
-        // All done — commit valid results in original order
-        const valid = incoming.filter(Boolean);
-        S.memories = [...S.memories, ...valid].slice(0, 12);
+        S.memories = [...S.memories, ...incoming.filter(Boolean)].slice(0, 12);
         saveState();
         renderMemory();
+        if(typeof done === 'function') done();
       }
     });
   });
 }
-
-// ─── DELETE MEMORY ────────────────────────────────────────────────────────────
-// Uses a stable unique ID (timestamp-based) instead of array index,
-// so deletions are always correct even if photos were added or removed
-// between renders. Falls back to index-based deletion for legacy entries.
 function deleteMemory(id){
   if(!Array.isArray(S.memories)) return;
-  // Try ID-based removal first (new format: objects with .id and .src)
   const byId = S.memories.findIndex(m => m && typeof m === 'object' && String(m.id) === String(id));
-  if(byId !== -1){
-    S.memories.splice(byId, 1);
-  } else {
-    // Legacy: memories stored as raw base64 strings — fall back to index
-    const idx = parseInt(id, 10);
-    if(!isNaN(idx) && idx >= 0 && idx < S.memories.length) S.memories.splice(idx, 1);
-  }
-  saveState();
-  renderMemory();
+  if(byId !== -1){ S.memories.splice(byId, 1); }
+  else { const idx = parseInt(id, 10); if(!isNaN(idx) && idx >= 0 && idx < S.memories.length) S.memories.splice(idx, 1); }
+  saveState(); renderMemory(); renderPhotoPreviews();
 }
-
-// ─── RENDER MEMORY ────────────────────────────────────────────────────────────
-// Uses event delegation on the grid container (not inline onclick per button)
-// so delete handlers survive innerHTML resets without stale closures.
-// Assigns a stable ID to each memory on first render.
 function renderMemory(){
   const wrap = document.getElementById('memory-grid');
   if(!wrap) return;
-
-  // Migrate any legacy plain-string entries to {id, src} objects
-  S.memories = (S.memories || []).map((m, i) => {
-    if(typeof m === 'string') return { id: Date.now() + i, src: m };
-    return m;
-  });
-
+  S.memories = (S.memories || []).map((m, i) => (typeof m === 'string') ? { id: Date.now() + i, src: m } : m);
   wrap.innerHTML = '';
-
   S.memories.forEach((mem) => {
     const div = document.createElement('div');
     div.className = 'mem-card';
     const img = document.createElement('img');
-    img.alt = 'Memory photo';
-    img.src = mem.src;
+    img.alt = 'Memory photo'; img.src = mem.src;
     const caption = document.createElement('div');
-    caption.className = 'mem-caption';
-    caption.textContent = 'Your reason';
+    caption.className = 'mem-caption'; caption.textContent = 'Your reason';
     const del = document.createElement('button');
     del.className = 'mem-del';
     del.setAttribute('data-mem-id', String(mem.id));
     del.setAttribute('aria-label', 'Delete photo');
     del.textContent = '✕';
-    div.appendChild(img);
-    div.appendChild(caption);
-    div.appendChild(del);
+    div.append(img, caption, del);
     wrap.appendChild(div);
   });
-
-  // Add-photo tile
   const add = document.createElement('div');
   add.className = 'mem-card mem-add';
   add.innerHTML = '<span class="small">Add photo</span><input type="file" accept="image/*" multiple>';
-  add.querySelector('input').addEventListener('change', e => {
-    handleFiles(e.target.files);
-    e.target.value = '';
-  });
+  add.querySelector('input').addEventListener('change', e => { handleFiles(e.target.files); e.target.value = ''; });
   wrap.appendChild(add);
 }
-
-// Single delegated listener on the memory grid — set up once at DOMContentLoaded
 function initMemoryGrid(){
   const wrap = document.getElementById('memory-grid');
   if(!wrap) return;
@@ -493,72 +1001,513 @@ function initMemoryGrid(){
   });
 }
 
-function finishSetup(){
-  S.name = val('inp-name') || 'Friend';
-  const inputDays = parseInt(val('inp-days') || '0', 10) || 0;
-  S.startDate = daysAgoToStartDate(inputDays); S.days = inputDays;
-  S.substance = val('inp-sub'); S.cycle = parseInt(val('inp-cycle') || '18', 10) || 18;
-  S.contacts = [{label:'Sponsor',name:val('inp-c1'),phone:extractPhone(val('inp-c1p'))},{label:'Family',name:val('inp-c2'),phone:extractPhone(val('inp-c2p'))},{label:'Counsellor',name:val('inp-c3'),phone:extractPhone(val('inp-c3p'))}];
-  S.affirmation = val('inp-aff'); S.loss = val('inp-loss'); S.bingeAmt = parseFloat(val('inp-binge') || '0') || 0; S.bingeFreq = parseInt(val('inp-freq') || '4', 10) || 4;
-  S.music = val('inp-music'); S.show = val('inp-show'); S.clip = val('inp-clip'); S.pod = val('inp-pod');
-  // Initialize memories array before handleFiles runs
-  if(!Array.isArray(S.memories)) S.memories = [];
-  handleFiles(document.getElementById('inp-mem')?.files);
-  saveState(); launchApp();
+// ─── AFFIRMATIONS ─────────────────────────────────────────────────
+let affirmations = [], affIdx = 0;
+function buildAffirmations(){
+  affirmations = [
+    S.affirmation || 'You are more than this.',
+    'Every day you stay clean is a vote for who you are becoming.',
+    'The urge always passes. You have ridden this wave before.',
+    'Your people need the real you, not the version that disappears.',
+    'Recovery is not a straight line. Coming back is the whole point.'
+  ].filter(Boolean);
 }
-function quickLaunch(){ if(!S.name) S.name = val('inp-name') || 'Friend'; saveState(); launchApp(); }
-function launchApp(){ migrateStartDate(); document.getElementById('onboarding').classList.add('hidden'); document.getElementById('nav').classList.remove('hidden'); populate(); go('home'); }
+function updateAff(){
+  const a = affirmations[affIdx] || 'You are fighting for something real.';
+  text('aff-text', `"${a}"`);
+  text('aff-auth', (affIdx === 0 && S.affirmation) ? '— Written by you, sober' : '— Recovery truth');
+}
+function nextAff(){ affIdx = (affIdx + 1) % affirmations.length; updateAff(); }
+function prevAff(){ affIdx = (affIdx - 1 + affirmations.length) % affirmations.length; updateAff(); }
+
+// ─── POPULATE ─────────────────────────────────────────────────────
 function populate(){
   const daysClean = getDaysClean();
-  text('uname', S.name || '—'); text('udays', String(daysClean)); text('stat-days', String(daysClean)); text('stat-cycle', S.cycle || '—'); text('stat-saved', fmtMoney(calcSaved()));
-  text('loss-text', S.loss || 'Complete setup to see your words here.'); text('aff-text', S.affirmation || 'You are fighting for something real.'); text('badge-issue', S.substance || 'Issue');
-  setVal('s-name', S.name); setVal('s-days', daysClean); setVal('s-sub', S.substance); setVal('s-cycle', S.cycle); setVal('s-c1', S.contacts[0]?.name); setVal('s-c1p', S.contacts[0]?.phone); setVal('s-c2', S.contacts[1]?.name); setVal('s-c2p', S.contacts[1]?.phone); setVal('s-c3', S.contacts[2]?.name); setVal('s-c3p', S.contacts[2]?.phone); setVal('s-aff', S.affirmation); setVal('s-loss', S.loss); setVal('s-binge', S.bingeAmt); setVal('s-freq', S.bingeFreq); setVal('s-music', S.music); setVal('s-show', S.show); setVal('s-clip', S.clip); setVal('s-pod', S.pod);
-  renderContacts(); renderUrgent(); renderMedia(); renderMemory(); renderCalendar(); renderRiskBanner(); renderChat();
-  const feedback = document.getElementById('mood-feedback'); if(feedback){ if(S.mood === 'ok') feedback.textContent = 'You marked yourself as feeling OK.'; else if(S.mood === 'risk') feedback.textContent = 'You marked yourself as needing help now.'; else feedback.textContent = ''; }
+  text('uname', S.name || '—'); text('udays', String(daysClean));
+  text('stat-days', String(daysClean)); text('stat-cycle', S.cycle || '—'); text('stat-saved', fmtMoney(calcSaved()));
+  text('loss-text', S.loss || 'Complete setup to see your words here.');
+  text('clean-text', S.clean || 'Add this in Settings — it is what you are walking toward.');
+  text('badge-issue', S.substance || 'Issue');
+  buildAffirmations(); updateAff();
+
+  // Settings binds the DATE directly, never a derived day count. Writing
+  // getDaysClean() into a "days since" field and reading it back as days-since
+  // added a day on every save — see daycount test.
+  setVal('s-name', S.name); setVal('s-date', S.startDate); setVal('s-sub', S.substance); setVal('s-cycle', S.cycle);
+  text('s-days-readout', S.startDate ? `That puts you on day ${daysClean}.` : 'Not set — day count will fall back to your setup number.');
+  setVal('s-c1', S.contacts[0]?.name); setVal('s-c1p', S.contacts[0]?.phone);
+  setVal('s-c2', S.contacts[1]?.name); setVal('s-c2p', S.contacts[1]?.phone);
+  setVal('s-c3', S.contacts[2]?.name); setVal('s-c3p', S.contacts[2]?.phone);
+  setVal('s-aff', S.affirmation); setVal('s-loss', S.loss); setVal('s-clean', S.clean);
+  setVal('s-binge', S.bingeAmt); setVal('s-freq', S.bingeFreq);
+  setVal('s-music', S.music); setVal('s-show', S.show); setVal('s-clip', S.clip); setVal('s-pod', S.pod);
+  setVal('s-region', S.region); setVal('s-cc-name', S.customCrisis?.name); setVal('s-cc-tel', S.customCrisis?.tel);
+  const cw = document.getElementById('s-custom-wrap');
+  if(cw) cw.classList.toggle('hidden', S.region !== 'OTHER');
+
+  buildTriggerChips('s-chips-'); buildToneChips('s-chips-tone');
+  renderContacts(); renderUrgent(); renderMedia(); renderMemory(); renderCalendar();
+  renderRiskBanner(); renderChat(); renderCrisis(); renderRedCopy(); renderRelapseHistory();
+
+  const feedback = document.getElementById('mood-feedback');
+  if(feedback){
+    if(S.mood === 'ok') feedback.textContent = 'You marked yourself as feeling OK.';
+    else if(S.mood === 'risk') feedback.textContent = 'You marked yourself as needing help now.';
+    else feedback.textContent = '';
+  }
 }
+
+// ─── THEME / NAV ──────────────────────────────────────────────────
 function applyTheme(theme){ document.documentElement.setAttribute('data-theme', theme); localStorage.setItem(THEME_KEY, theme); const btn = document.getElementById('theme-btn'); if(btn) btn.textContent = theme === 'light' ? '☀️' : '🌙'; }
 function toggleTheme(){ const current = document.documentElement.getAttribute('data-theme') || 'dark'; applyTheme(current === 'dark' ? 'light' : 'dark'); }
-function initTheme(){ const saved = localStorage.getItem(THEME_KEY) || 'dark'; applyTheme(saved); }
-function go(screen){ document.querySelectorAll('.screen').forEach(el => el.classList.remove('active')); const target = document.getElementById('screen-' + screen); if(target) target.classList.add('active'); document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active')); const navBtn = document.getElementById('nav-' + screen); if(navBtn) navBtn.classList.add('active'); }
+function initTheme(){ applyTheme(localStorage.getItem(THEME_KEY) || 'dark'); }
+function go(screen){
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById('screen-' + screen);
+  if(target){ target.classList.add('active'); target.scrollTop = 0; }
+  document.querySelectorAll('.nav button').forEach(el => el.classList.remove('active'));
+  const navBtn = document.getElementById('nav-' + screen);
+  if(navBtn) navBtn.classList.add('active');
+}
+
+// ─── SETTINGS ─────────────────────────────────────────────────────
 function openSettings(){ populate(); document.getElementById('modal-settings').classList.add('open'); }
 function closeSettings(){ document.getElementById('modal-settings').classList.remove('open'); }
-function saveSettings(){ S.name = val('s-name') || 'Friend'; const inputDays = parseInt(val('s-days') || '0', 10) || 0; S.days = inputDays; S.startDate = daysAgoToStartDate(inputDays); S.substance = val('s-sub'); S.cycle = parseInt(val('s-cycle') || '18', 10) || 18; S.contacts = [{label:'Sponsor',name:val('s-c1'),phone:extractPhone(val('s-c1p'))},{label:'Family',name:val('s-c2'),phone:extractPhone(val('s-c2p'))},{label:'Counsellor',name:val('s-c3'),phone:extractPhone(val('s-c3p'))}]; S.affirmation = val('s-aff'); S.loss = val('s-loss'); S.bingeAmt = parseFloat(val('s-binge') || '0') || 0; S.bingeFreq = parseInt(val('s-freq') || '4', 10) || 4; S.music = val('s-music'); S.show = val('s-show'); S.clip = val('s-clip'); S.pod = val('s-pod'); handleFiles(document.getElementById('s-mem')?.files); saveState(); populate(); closeSettings(); }
+function saveSettings(){
+  S.name = val('s-name') || 'Friend';
+  // Date in, date out — lossless. A future date would make the count
+  // negative, so clamp it to today.
+  const picked = val('s-date');
+  if(picked){
+    S.startDate = picked > todayKey() ? todayKey() : picked;
+    S.days = daysBetweenLocal(S.startDate);
+  }
+  S.substance = val('s-sub'); S.cycle = parseInt(val('s-cycle') || '18', 10) || 18;
+  S.region = val('s-region') || 'CA';
+  S.customCrisis = { name: val('s-cc-name'), tel: extractPhone(val('s-cc-tel')) };
+  S.contacts = [
+    {label:'Sponsor',   name:val('s-c1'), phone:extractPhone(val('s-c1p'))},
+    {label:'Family',    name:val('s-c2'), phone:extractPhone(val('s-c2p'))},
+    {label:'Counsellor',name:val('s-c3'), phone:extractPhone(val('s-c3p'))}
+  ];
+  S.affirmation = val('s-aff'); S.loss = val('s-loss'); S.clean = val('s-clean');
+  S.bingeAmt = parseFloat(val('s-binge') || '0') || 0;
+  S.bingeFreq = parseInt(val('s-freq') || '4', 10) || 4;
+  S.music = val('s-music'); S.show = val('s-show'); S.clip = val('s-clip'); S.pod = val('s-pod');
+  handleFiles(document.getElementById('s-mem')?.files);
+  saveState(); populate(); closeSettings(); showFlash('Settings saved ✓');
+}
 function openUpdates(){ document.getElementById('modal-updates').classList.add('open'); document.getElementById('updates-badge').classList.remove('show'); }
 function closeUpdates(){ document.getElementById('modal-updates').classList.remove('open'); }
-function renderContacts(){ const wrap = document.getElementById('contacts-list'); wrap.innerHTML = ''; const items = S.contacts.filter(c => c && (c.name || c.phone)); if(!items.length){ wrap.innerHTML = '<div class="card"><div class="sub">No contacts added yet. Use the gear icon to add them.</div></div>'; return; } items.forEach(c => { const phone = extractPhone(c.phone); const div = document.createElement('div'); div.className = 'contact'; div.innerHTML = `<div class="grow"><div class="h3">${escapeHtml(c.name || c.label)}</div><div class="small">${escapeHtml(c.label)}${phone ? ' · ' + escapeHtml(phone) : ''}</div></div>${phone ? `<a href="tel:${phone}" aria-label="Call">📞</a>` : ''}${phone ? `<a href="sms:${phone}?body=${encodeURIComponent('I need a check-in.')}` + `" aria-label="Text">💬</a>` : ''}`; wrap.appendChild(div); }); }
-function renderUrgent(){ const wrap = document.getElementById('urgent-primary'); wrap.innerHTML = ''; const primary = S.contacts.find(c => c && c.name && c.phone) || S.contacts.find(c => c && c.phone); if(primary){ const phone = extractPhone(primary.phone); wrap.innerHTML = `<div class="contact"><div class="grow"><div class="h3">Primary support: ${escapeHtml(primary.name || primary.label)}</div><div class="small">${escapeHtml(primary.label)} · ${escapeHtml(phone)}</div></div><a href="tel:${phone}" aria-label="Call">📞</a><a href="sms:${phone}?body=${encodeURIComponent('I need a check-in.')}` + `" aria-label="Text">💬</a></div>`; } else { wrap.innerHTML = '<div class="card"><div class="sub">Add at least one support contact in settings.</div></div>'; } }
-function renderMedia(){ const musicBox = document.getElementById('music-box'); musicBox.innerHTML = `<div class="h3">Saved music / song box</div><div class="sub">${escapeHtml(S.music || 'No reset track saved yet.')}</div>${/^https?:\/\//i.test(S.music || '') ? `<a class="media-link" href="${escapeHtml(S.music)}" target="_blank" rel="noopener">Open track ↗</a>` : ''}`; const wrap = document.getElementById('media-list'); wrap.innerHTML = ''; const items = [{label:'Comfort show or film',value:S.show},{label:'Favourite clip',value:S.clip},{label:'Podcast',value:S.pod}].filter(x=>x.value); if(!items.length){ wrap.innerHTML = '<div class="card"><div class="sub">No other media saved yet. Use the gear icon to add links.</div></div>'; return; } items.forEach(item => { const div = document.createElement('div'); div.className = 'media-item'; const safe = escapeHtml(item.value); const isUrl = /^https?:\/\//i.test(item.value); div.innerHTML = `<div class="h3">${escapeHtml(item.label)}</div><div class="small">${safe}</div>${isUrl ? `<a class="media-link" href="${safe}" target="_blank" rel="noopener">Open link ↗</a>` : ''}`; wrap.appendChild(div); }); }
-function renderCalendar(){ const wrap = document.getElementById('calendar-grid'); if(!wrap) return; const labels = ['M','T','W','T','F','S','S']; let html = labels.map(l => `<div class="cal-lbl">${l}</div>`).join(''); const today = new Date(); const todayString = getLocalDateKey(today); const start = new Date(today); start.setDate(start.getDate() - 27); const pad = (start.getDay() + 6) % 7; for(let i=0;i<pad;i++) html += '<div></div>'; for(let i=0;i<28;i++){ const d = new Date(start); d.setDate(d.getDate()+i); const ds = getLocalDateKey(d); let cls='cal-dot'; let txt=d.getDate(); const checked=(S.checkins||[]).includes(ds); if(ds===todayString && checked){ cls+=' checked'; txt='✓'; } else if(ds===todayString){ cls+=' today'; txt='•'; } else if(checked){ cls+=' checked'; txt='✓'; } else { cls+=' missed'; } html += `<div class="${cls}">${txt}</div>`; } wrap.innerHTML = html; }
-function logCheckin(){ S.checkins = S.checkins || []; const today = todayKey(); if(!S.checkins.includes(today)) S.checkins.push(today); S.mood='ok'; saveState(); renderCalendar(); renderRiskBanner(); }
-function getRiskState(){ const hour = new Date().getHours(); const checkedToday = (S.checkins || []).includes(todayKey()); if(S.redMode || S.mood === 'risk') return 'high'; if(!checkedToday && hour >= 20) return 'rising'; return 'low'; }
-function renderRiskBanner(){ const el = document.getElementById('risk-banner'); if(!el) return; const risk = getRiskState(); const checkedToday = (S.checkins || []).includes(todayKey()); const hour = new Date().getHours(); if(risk === 'high'){ el.classList.remove('hidden'); el.textContent = 'High risk detected. Go straight to High Risk now.'; } else if(risk === 'rising' && hour >= 20 && !checkedToday){ el.classList.remove('hidden'); el.textContent = 'No check-in tonight usually means drift. Catch it now.'; } else { el.classList.add('hidden'); el.textContent = ''; } }
-function setMood(mood){ S.mood = mood; saveState(); const feedback = document.getElementById('mood-feedback'); if(mood === 'ok'){ if(feedback) feedback.textContent = 'Good. Keep it going. You caught yourself in a solid moment — today is worth protecting.'; logCheckin(); go('home'); exitRedMode(); } else { if(feedback) feedback.textContent = 'Good catch. Go straight to High Risk and take one action now.'; go('urgent'); enterRedMode(); } }
-function enterRedMode(){ S.redMode = true; saveState(); document.getElementById('redmode-wrap').classList.add('open'); }
+function closeModal(id){ const el = document.getElementById(id); if(el) el.classList.remove('open'); }
+
+// ─── CONTACTS / MEDIA ─────────────────────────────────────────────
+function renderContacts(){
+  const wrap = document.getElementById('contacts-list');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  const items = S.contacts.filter(c => c && (c.name || c.phone));
+  if(!items.length){ wrap.innerHTML = '<div class="card"><div class="sub">No contacts added yet. Use the gear icon to add them.</div></div>'; return; }
+  items.forEach(c => {
+    const phone = extractPhone(c.phone);
+    const div = document.createElement('div');
+    div.className = 'contact';
+    div.innerHTML = `<div class="grow"><div class="h3">${escapeHtml(c.name || c.label)}</div><div class="small">${escapeHtml(c.label)}${phone ? ' · ' + escapeHtml(phone) : ''}</div></div>` +
+      (phone ? `<a href="tel:${phone}" aria-label="Call">📞</a><a href="sms:${phone}?body=${encodeURIComponent('I need a check-in.')}" aria-label="Text">💬</a>` : '');
+    wrap.appendChild(div);
+  });
+}
+function renderUrgent(){
+  const wrap = document.getElementById('urgent-primary');
+  if(!wrap) return;
+  const primary = S.contacts.find(c => c && c.name && c.phone) || S.contacts.find(c => c && c.phone);
+  if(primary){
+    const phone = extractPhone(primary.phone);
+    wrap.innerHTML = `<div class="contact"><div class="grow"><div class="h3">Primary support: ${escapeHtml(primary.name || primary.label)}</div><div class="small">${escapeHtml(primary.label)} · ${escapeHtml(phone)}</div></div><a href="tel:${phone}" aria-label="Call">📞</a><a href="sms:${phone}?body=${encodeURIComponent('I need a check-in.')}" aria-label="Text">💬</a></div>`;
+  } else {
+    wrap.innerHTML = '<div class="card"><div class="sub">Add at least one support contact in settings.</div></div>';
+  }
+}
+function renderMedia(){
+  const musicBox = document.getElementById('music-box');
+  if(musicBox) musicBox.innerHTML = `<div class="h3">Saved music / song box</div><div class="sub">${escapeHtml(S.music || 'No reset track saved yet.')}</div>${/^https?:\/\//i.test(S.music || '') ? `<a class="media-link" href="${escapeHtml(S.music)}" target="_blank" rel="noopener">Open track ↗</a>` : ''}`;
+  const wrap = document.getElementById('media-list');
+  if(!wrap) return;
+  wrap.innerHTML = '';
+  const items = [{label:'Comfort show or film',value:S.show},{label:'Favourite clip',value:S.clip},{label:'Podcast',value:S.pod}].filter(x => x.value);
+  if(!items.length){ wrap.innerHTML = '<div class="card"><div class="sub">No other media saved yet. Use the gear icon to add links.</div></div>'; return; }
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'media-item';
+    const safe = escapeHtml(item.value);
+    const isUrl = /^https?:\/\//i.test(item.value);
+    div.innerHTML = `<div class="h3">${escapeHtml(item.label)}</div><div class="small">${safe}</div>${isUrl ? `<a class="media-link" href="${safe}" target="_blank" rel="noopener">Open link ↗</a>` : ''}`;
+    wrap.appendChild(div);
+  });
+}
+
+// ─── CALENDAR ─────────────────────────────────────────────────────
+function renderCalendar(){
+  const wrap = document.getElementById('calendar-grid');
+  if(!wrap) return;
+  const labels = ['M','T','W','T','F','S','S'];
+  let html = labels.map(l => `<div class="cal-lbl">${l}</div>`).join('');
+  const today = new Date();
+  const todayString = getLocalDateKey(today);
+  const start = new Date(today); start.setDate(start.getDate() - 27);
+  const pad = (start.getDay() + 6) % 7;
+  for(let i=0;i<pad;i++) html += '<div></div>';
+  for(let i=0;i<28;i++){
+    const d = new Date(start); d.setDate(d.getDate()+i);
+    const ds = getLocalDateKey(d);
+    let cls = 'cal-dot', txt = d.getDate();
+    const checked = (S.checkins || []).includes(ds);
+    if(ds === todayString && checked){ cls += ' checked'; txt = '✓'; }
+    else if(ds === todayString){ cls += ' today'; txt = '•'; }
+    else if(checked){ cls += ' checked'; txt = '✓'; }
+    else { cls += ' missed'; }
+    html += `<div class="${cls}">${txt}</div>`;
+  }
+  wrap.innerHTML = html;
+}
+
+// ─── CHECK-IN ─────────────────────────────────────────────────────
+function sel(el){
+  el.closest('.cq-opts').querySelectorAll('.cqo').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function readAnswers(modalId){
+  const out = {};
+  document.querySelectorAll(`#${modalId} .cq`).forEach(cq => {
+    const key = cq.getAttribute('data-q');
+    const picked = cq.querySelector('.cqo.sel');
+    if(key) out[key] = picked ? picked.textContent.trim() : '';
+  });
+  return out;
+}
+function openCheckin(){
+  // Surface the user's own drift signals as the check-in's last question
+  const wrap = document.getElementById('checkin-signals');
+  const signals = S.triggers?.signals || [];
+  if(wrap){
+    wrap.innerHTML = signals.length
+      ? `<div class="cq" data-q="signalToday"><div class="cq-lbl">Any of your own warning signs today?</div><div class="cq-opts">${
+          signals.map(s => `<div class="cqo" onclick="sel(this)">${escapeHtml(s)}</div>`).join('')
+        }<div class="cqo" onclick="sel(this)">None of these</div></div></div>`
+      : '';
+  }
+  document.querySelectorAll('#modal-checkin .cqo').forEach(o => o.classList.remove('sel'));
+  const range = document.getElementById('checkin-intensity');
+  if(range){ range.value = 5; text('int-v','5'); }
+  document.getElementById('modal-checkin').classList.add('open');
+}
+function submitCheckin(){
+  const a = readAnswers('modal-checkin');
+  a.date = todayKey();
+  a.intensity = parseInt(document.getElementById('checkin-intensity')?.value || '5', 10);
+  S.checkinLog = (S.checkinLog || []).filter(x => x.date !== a.date);
+  S.checkinLog.push(a);
+  S.checkins = S.checkins || [];
+  if(!S.checkins.includes(a.date)) S.checkins.push(a.date);
+  S.mood = 'ok';
+  saveState();
+  closeModal('modal-checkin');
+  renderCalendar(); renderRiskBanner();
+  showFlash('Check-in logged ✓');
+}
+function lastCheckin(){ return (S.checkinLog || []).slice().sort((x,y) => x.date < y.date ? 1 : -1)[0] || null; }
+
+// ─── RISK / DRIFT ─────────────────────────────────────────────────
+// First-pass drift score built only from data the user actually
+// entered. Not the full Blueprint §3.2 engine — no predictive model,
+// no background execution. Every input here is observable on-device.
+function getDriftScore(){
+  let score = 0;
+  const reasons = [];
+  const days = getDaysClean();
+  const hour = new Date().getHours();
+  const checkedToday = (S.checkins || []).includes(todayKey());
+
+  // Missed check-ins over the last 3 days
+  let missed = 0;
+  for(let i=1;i<=3;i++){
+    const d = new Date(); d.setDate(d.getDate() - i);
+    if(!(S.checkins || []).includes(getLocalDateKey(d))) missed++;
+  }
+  if(missed >= 2){ score += 2; reasons.push(`${missed} missed check-ins in the last 3 days`); }
+  else if(missed === 1){ score += 1; }
+
+  if(!checkedToday && hour >= 20){ score += 1; reasons.push('no check-in tonight'); }
+
+  // Approaching the user's own stated cycle length
+  const cycle = Number(S.cycle) || 0;
+  if(cycle > 0 && days > 0){
+    const left = cycle - days;
+    if(left <= 3 && left >= -2){ score += 2; reasons.push(`day ${days} of your ${cycle}-day cycle — your historical risk zone`); }
+  }
+
+  // Last check-in said they were pulling back or gone dark
+  const last = lastCheckin();
+  if(last){
+    if(last.isolation === 'Gone dark'){ score += 3; reasons.push('you logged "gone dark"'); }
+    else if(last.isolation === 'Pulling back'){ score += 2; reasons.push('you logged "pulling back"'); }
+    if(last.urges === 'Strong'){ score += 2; reasons.push('you logged strong urges'); }
+    if(last.signalToday && last.signalToday !== 'None of these'){ score += 2; reasons.push(`you flagged "${last.signalToday}" — one of your own drift signals`); }
+    if(Number(last.intensity) >= 8){ score += 1; }
+  }
+  return { score, reasons };
+}
+function getRiskState(){
+  if(S.redMode || S.mood === 'risk') return 'high';
+  const { score } = getDriftScore();
+  if(score >= 5) return 'high';
+  if(score >= 2) return 'rising';
+  return 'low';
+}
+function renderRiskBanner(){
+  const el = document.getElementById('risk-banner');
+  if(!el) return;
+  const risk = getRiskState();
+  const { reasons } = getDriftScore();
+  if(risk === 'low'){ el.classList.add('hidden'); el.innerHTML = ''; return; }
+  el.classList.remove('hidden');
+  const why = reasons.length ? `<div class="small" style="margin-top:6px;color:inherit;opacity:.85">Because: ${escapeHtml(reasons.slice(0,3).join(' · '))}.</div>` : '';
+  el.innerHTML = risk === 'high'
+    ? `<strong>Drift detected.</strong> This is the pattern you described. Take one action now.${why}`
+    : `<strong>Something is shifting.</strong> Catch it early — that is the whole point of this app.${why}`;
+}
+
+// ─── MOOD / RED MODE ──────────────────────────────────────────────
+function setMood(mood){
+  S.mood = mood; saveState();
+  const feedback = document.getElementById('mood-feedback');
+  if(mood === 'ok'){
+    if(feedback) feedback.textContent = 'Good. Keep it going. You caught yourself in a solid moment — today is worth protecting.';
+    exitRedMode();
+    openCheckin();
+  } else {
+    if(feedback) feedback.textContent = 'Good catch. Go straight to High Risk and take one action now.';
+    go('urgent'); enterRedMode();
+  }
+}
+const RED_COPY = {
+  gentle:  { title:'⚠️ THIS IS A HARD MOMENT', sub:"You don't have to do this alone. Take one small action — that's all this needs to be." },
+  direct:  { title:'⚠️ HIGH RISK MOMENT',      sub:'Do not isolate. Take one action now.' },
+  hardline:{ title:'⚠️ STOP. THIS IS THE MOMENT.', sub:"You know exactly where this goes. You wrote it down yourself. Pick up the phone." }
+};
+function renderRedCopy(){
+  const c = RED_COPY[S.tone] || RED_COPY.direct;
+  text('red-title', c.title); text('red-sub', c.sub);
+}
+function enterRedMode(){ S.redMode = true; saveState(); renderRedCopy(); renderCrisis(); document.getElementById('redmode-wrap').classList.add('open'); }
 function exitRedMode(){ S.redMode = false; saveState(); document.getElementById('redmode-wrap').classList.remove('open'); renderRiskBanner(); }
-function alertMyPeople(){ const primary = S.contacts.find(c => c && c.phone); if(!primary || !primary.phone){ alert('No support contact set. Add one in settings.'); return; } const phone = extractPhone(primary.phone); const msg = "I'm at risk and need support right now. Please call or text me."; window.location.href = `sms:${phone}?body=${encodeURIComponent(msg)}`; }
-function callPrimarySupport(){ const primary = S.contacts.find(c => c && c.phone); if(!primary || !primary.phone){ alert('No support contact set. Add one in settings.'); return; } window.location.href = `tel:${extractPhone(primary.phone)}`; }
-function textPrimarySupport(){ const primary = S.contacts.find(c => c && c.phone); if(!primary || !primary.phone){ alert('No support contact set. Add one in settings.'); return; } window.location.href = `sms:${extractPhone(primary.phone)}?body=${encodeURIComponent('I need a check-in.')}`; }
+
+function alertMyPeople(){
+  const primary = S.contacts.find(c => c && c.phone);
+  if(!primary || !primary.phone){ showFlash('No support contact set. Add one in Settings.'); return; }
+  const msg = "I'm at risk and need support right now. Please call or text me.";
+  window.location.href = `sms:${extractPhone(primary.phone)}?body=${encodeURIComponent(msg)}`;
+}
+function callPrimarySupport(){
+  const primary = S.contacts.find(c => c && c.phone);
+  if(!primary || !primary.phone){ showFlash('No support contact set. Add one in Settings.'); return; }
+  window.location.href = `tel:${extractPhone(primary.phone)}`;
+}
+function textPrimarySupport(){
+  const primary = S.contacts.find(c => c && c.phone);
+  if(!primary || !primary.phone){ showFlash('No support contact set. Add one in Settings.'); return; }
+  window.location.href = `sms:${extractPhone(primary.phone)}?body=${encodeURIComponent('I need a check-in.')}`;
+}
+
+// ─── POST-RELAPSE RE-ENTRY ────────────────────────────────────────
+function openRelapse(){
+  const wrap = document.getElementById('relapse-signal-opts');
+  const signals = (S.triggers?.signals || []);
+  if(wrap){
+    const opts = signals.length ? signals.slice(0,6) : ['Isolation','Stress event','Stopped check-ins'];
+    wrap.innerHTML = opts.map(s => `<div class="cqo" onclick="sel(this)">${escapeHtml(s)}</div>`).join('') +
+      '<div class="cqo" onclick="sel(this)">Not sure</div>';
+  }
+  document.querySelectorAll('#modal-relapse .cqo').forEach(o => o.classList.remove('sel'));
+  document.getElementById('modal-relapse').classList.add('open');
+}
+function submitRelapse(){
+  const a = readAnswers('modal-relapse');
+  a.date = todayKey();
+  S.relapses = S.relapses || [];
+  S.relapses.push(a);
+  if(a.reset === 'Yes, reset'){ S.startDate = todayKey(); S.days = 0; }
+  saveState();
+  closeModal('modal-relapse');
+  populate();
+  showFlash('Pattern updated. Welcome back. ✓');
+}
+function renderRelapseHistory(){
+  const wrap = document.getElementById('relapse-history');
+  if(!wrap) return;
+  const items = (S.relapses || []).slice().reverse().slice(0, 5);
+  if(!items.length){ wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `<div class="card"><div class="h3">What you've learned</div><div class="sub" style="margin-bottom:8px">Your own notes from previous re-entries. This is the data, not a scoreboard.</div>` +
+    items.map(r => `<div class="script-block"><div class="sb-label">${escapeHtml(r.date)}</div><div class="sb-txt">Missed signal: <strong>${escapeHtml(r.missedSignal || '—')}</strong> · First pull: ${escapeHtml(r.firstPull || '—')}</div></div>`).join('') +
+    `</div>`;
+}
+
+// ─── BUY 10 ───────────────────────────────────────────────────────
 function openBuy10(){ document.getElementById('buy10-wrap').classList.add('open'); updateBuy10Display(); }
 function closeBuy10(){ stopBuy10(); document.getElementById('buy10-wrap').classList.remove('open'); }
 function startBuy10(){ stopBuy10(); buy10Seconds = 600; updateBuy10Display(); buy10Interval = setInterval(() => { buy10Seconds--; updateBuy10Display(); if(buy10Seconds <= 0) stopBuy10(true); }, 1000); }
-function updateBuy10Display(){ const m = String(Math.floor(buy10Seconds/60)).padStart(2,'0'); const s = String(buy10Seconds%60).padStart(2,'0'); text('buy10-timer', `${m}:${s}`); const idx = Math.min(9, Math.floor((600-buy10Seconds)/60)); text('buy10-prompt', buy10Prompts[idx] || buy10Prompts[0]); }
-function stopBuy10(done=false){ if(buy10Interval){ clearInterval(buy10Interval); buy10Interval = null; } if(done){ text('buy10-prompt', 'You bought time. Choose the next right move.'); } else { buy10Seconds = 600; text('buy10-timer', '10:00'); text('buy10-prompt', 'Water. Stand up. Stay here.'); } }
-function startBreathing(){ stopBreathing(); breathSeconds = 80; updateBreathDisplay('Inhale'); const phases=['Inhale','Hold','Exhale']; let phaseIndex=0, phaseTick=0; breathInterval = setInterval(()=>{ breathSeconds--; phaseTick++; if(phaseTick>=4){ phaseTick=0; phaseIndex=(phaseIndex+1)%phases.length; } updateBreathDisplay(phases[phaseIndex]); if(breathSeconds<=0) stopBreathing(true); },1000); }
-function updateBreathDisplay(state){ const m=String(Math.floor(breathSeconds/60)).padStart(2,'0'); const s=String(breathSeconds%60).padStart(2,'0'); text('breath-timer', `${m}:${s}`); text('breath-state', state); }
-function stopBreathing(done=false){ if(breathInterval){ clearInterval(breathInterval); breathInterval=null; } breathSeconds=80; text('breath-timer','01:20'); text('breath-state', done ? 'Complete' : 'Ready'); }
-function startBreathingUrgent(){ stopBreathingUrgent(); breathSecondsUrgent=80; updateBreathDisplayUrgent('Inhale'); const phases=['Inhale','Hold','Exhale']; let phaseIndex=0, phaseTick=0; breathIntervalUrgent = setInterval(()=>{ breathSecondsUrgent--; phaseTick++; if(phaseTick>=4){ phaseTick=0; phaseIndex=(phaseIndex+1)%phases.length; } updateBreathDisplayUrgent(phases[phaseIndex]); if(breathSecondsUrgent<=0) stopBreathingUrgent(true); },1000); }
-function updateBreathDisplayUrgent(state){ const m=String(Math.floor(breathSecondsUrgent/60)).padStart(2,'0'); const s=String(breathSecondsUrgent%60).padStart(2,'0'); text('breath-timer-urgent', `${m}:${s}`); text('breath-state-urgent', state); }
-function stopBreathingUrgent(done=false){ if(breathIntervalUrgent){ clearInterval(breathIntervalUrgent); breathIntervalUrgent=null; } breathSecondsUrgent=80; text('breath-timer-urgent','01:20'); text('breath-state-urgent', done ? 'Complete' : 'Ready'); }
-function renderChat(){ const log = document.getElementById('chat-log'); if(!log) return; const history = S.chatHistory || []; if(!history.length){ log.innerHTML = '<div class="sub">AI: Hey — I am here. Tell me what is happening right now.</div>'; return; } log.innerHTML = history.map(item => { const align = item.role === 'user' ? 'right' : 'left'; const bg = item.role === 'user' ? 'var(--amber)' : 'var(--panel2)'; const color = item.role === 'user' ? '#111827' : 'var(--text)'; return `<div style="text-align:${align};margin-bottom:8px"><div style="display:inline-block;max-width:85%;padding:10px 12px;border-radius:14px;background:${bg};color:${color};font-size:13px;line-height:1.5">${escapeHtml(item.text)}</div></div>`; }).join(''); log.scrollTop = log.scrollHeight; }
-function aiReply(message){ const msg = (message || '').toLowerCase(); if(msg.includes('used')) return 'You came back here, which matters. Get safe first, then call or text support and use the meeting links in Support.'; if(msg.includes('urge') || msg.includes('craving') || msg.includes('at risk')) return 'No debate. Open High Risk now. Call or text one person before you leave this screen.'; if(msg.includes('lonely') || msg.includes('alone')) return 'Being alone is the trigger, not the comfort. Open Support now.'; if(msg.includes('angry') || msg.includes('stress')) return 'Strong emotion narrows the decision window. Try HALT and breathing for two minutes before deciding anything.'; if(msg.includes('ok')) return 'Good. Protect the momentum: do your check-in, keep structure, and stay close to your plan.'; return 'Choose one stabilizing move now: breathe, contact support, or join a meeting.'; }
-function quickChat(message){ const input = document.getElementById('chat-input'); if(input) input.value = message; sendChat(); }
-function sendChat(){ const input = document.getElementById('chat-input'); if(!input) return; const message = input.value.trim(); if(!message) return; S.chatHistory = S.chatHistory || []; S.chatHistory.push({role:'user', text:message}); S.chatHistory.push({role:'ai', text:aiReply(message)}); input.value=''; saveState(); renderChat(); }
+function updateBuy10Display(){
+  const m = String(Math.floor(buy10Seconds/60)).padStart(2,'0');
+  const s = String(buy10Seconds%60).padStart(2,'0');
+  text('buy10-timer', `${m}:${s}`);
+  const idx = Math.min(9, Math.floor((600-buy10Seconds)/60));
+  text('buy10-prompt', buy10Prompts[idx] || buy10Prompts[0]);
+}
+function stopBuy10(done=false){
+  if(buy10Interval){ clearInterval(buy10Interval); buy10Interval = null; }
+  if(done){ text('buy10-prompt', 'You bought time. Choose the next right move.'); }
+  else { buy10Seconds = 600; text('buy10-timer', '10:00'); text('buy10-prompt', 'Water. Stand up. Stay here.'); }
+}
 
+// ─── BREATHING (animated ring, 4-4-6 × 5 rounds) ──────────────────
+const BREATH_PHASES = [
+  { t:'Inhale', d:4000, size:132 },
+  { t:'Hold',   d:4000, size:132 },
+  { t:'Exhale', d:6000, size:84  }
+];
+const breathers = {
+  main:   { ring:'breath-ring',        state:'breath-state',        timer:null, phase:0, round:0 },
+  urgent: { ring:'breath-ring-urgent', state:'breath-state-urgent', timer:null, phase:0, round:0 }
+};
+function startBreath(which){
+  const b = breathers[which];
+  if(!b || b.timer) return;
+  b.phase = 0; b.round = 0;
+  runBreath(which);
+}
+function runBreath(which){
+  const b = breathers[which];
+  const ring = document.getElementById(b.ring);
+  if(!ring) return;
+  if(b.round >= 5){
+    b.timer = null;
+    ring.textContent = 'Done'; ring.style.width = '88px'; ring.style.height = '88px';
+    text(b.state, 'Complete — your nervous system thanks you.');
+    return;
+  }
+  const p = BREATH_PHASES[b.phase];
+  ring.textContent = p.t;
+  ring.style.transitionDuration = (p.d / 1000) + 's';
+  ring.style.width = p.size + 'px';
+  ring.style.height = p.size + 'px';
+  text(b.state, `Round ${b.round + 1} of 5`);
+  b.timer = setTimeout(() => {
+    b.phase++;
+    if(b.phase >= BREATH_PHASES.length){ b.phase = 0; b.round++; }
+    runBreath(which);
+  }, p.d);
+}
+function stopBreath(which){
+  const b = breathers[which];
+  if(!b) return;
+  if(b.timer){ clearTimeout(b.timer); b.timer = null; }
+  b.phase = 0; b.round = 0;
+  const ring = document.getElementById(b.ring);
+  if(ring){ ring.textContent = 'Ready'; ring.style.width = '88px'; ring.style.height = '88px'; }
+  text(b.state, '5 rounds · 4-4-6');
+}
+
+// ─── TOOL ACCORDION ───────────────────────────────────────────────
+function toggleTool(head){
+  const card = head.closest('.tool-card');
+  const body = card.querySelector('.tc-body');
+  const arr = card.querySelector('.tc-arr');
+  const isOpen = body.classList.contains('open');
+  document.querySelectorAll('#screen-tools .tc-body').forEach(b => {
+    b.classList.remove('open');
+    const a = b.closest('.tool-card').querySelector('.tc-arr');
+    if(a) a.classList.remove('open');
+  });
+  if(!isOpen){ body.classList.add('open'); arr.classList.add('open'); }
+}
+
+// ─── IN THE MOMENT (fixed responses — never an LLM) ───────────────
+// HARD RULE: this is a keyword matcher over pre-approved copy. It must
+// never be wired to a model API. Crisis patterns are checked FIRST and
+// always hand off to a human line rather than trying to help.
+const CRISIS_RE = /(kill (myself|me)|killing myself|end (my life|it all|things)|suicid|don'?t want to (be here|live|wake up|go on)|want to die|no reason to live|better off (dead|without me)|hurt myself|harm myself|self.?harm)/i;
+const OD_RE = /(overdose|od'?d|took too much|too many pills|can'?t wake|not breathing|unresponsive|naloxone|narcan)/i;
+
+function crisisBlockHtml(kind){
+  const lines = activeCrisisLines();
+  const emerg = EMERGENCY[S.region] || '';
+  const primary = S.contacts.find(c => c && c.phone);
+  const acts = lines.map(l => {
+    const tel = extractPhone(l.tel);
+    return `<div class="crisis-line"><div class="cl-txt"><div class="cl-name">${escapeHtml(l.name)}</div></div>${tel ? `<a class="crisis-act" href="tel:${tel}">📞</a>` : ''}${l.sms ? `<a class="crisis-act" href="sms:${extractPhone(l.sms)}">💬</a>` : ''}</div>`;
+  }).join('');
+  const head = kind === 'od'
+    ? `<div class="cl-name" style="margin-bottom:6px">If anyone is unresponsive or barely breathing, call <strong>${emerg || 'emergency services'}</strong> now. Stay with them. Use naloxone if you have it.</div>`
+    : `<div class="cl-name" style="margin-bottom:6px">I'm not a person, and this is a moment that needs one. Please reach one of these right now.</div>`;
+  return `<div class="msg-crisis">${head}${acts}${primary ? `<div class="crisis-line"><div class="cl-txt"><div class="cl-name">${escapeHtml(primary.name || primary.label)}</div><div class="cl-note">Your ${escapeHtml(primary.label.toLowerCase())}</div></div><a class="crisis-act" href="tel:${extractPhone(primary.phone)}">📞</a></div>` : ''}</div>`;
+}
+
+const TONE_PREFIX = { gentle:'', direct:'', hardline:'' };
+function aiReply(message){
+  const msg = (message || '').toLowerCase();
+  if(CRISIS_RE.test(msg)) return { text:"I'm stopping here, because this is bigger than anything a screen can do. You deserve a real person right now.", crisis:'suicide' };
+  if(OD_RE.test(msg))     return { text:'Safety first — before anything else.', crisis:'od' };
+  if(msg.includes('used')) return { text:'You came back here, and that counts. Get safe first, then call or text support. When you are ready, open the re-entry module in Support so we can map where the drift started.' };
+  if(msg.includes('going dark') || msg.includes('gone dark')) return { text:'Going quiet is one of the signals you flagged yourself. The fact you opened this means part of you is fighting back. One text is enough: "I am struggling. I need you."' };
+  if(msg.includes('urge') || msg.includes('craving') || msg.includes('at risk')) return { text: S.tone === 'hardline' ? 'No debate. Open High Risk and call one person before you leave this screen.' : 'The urge peaks and then falls — every time. Open High Risk, start the 10-minute timer, or call one person. Any of the three works.' };
+  if(msg.includes('lonely') || msg.includes('alone')) return { text:'Being alone is the trigger, not the comfort. Open Support and contact a person, not a screen.' };
+  if(msg.includes('angry') || msg.includes('stress')) return { text:'Strong emotion narrows the decision window. Try HALT and two minutes of breathing before you decide anything.' };
+  if(msg.includes('ok')) return { text:'Good. Protect the momentum: do your check-in, keep the structure, stay close to the plan.' };
+  return { text:'Choose one stabilizing move now: breathe, contact support, or join a meeting.' };
+}
+function renderChat(){
+  const log = document.getElementById('chat-log');
+  if(!log) return;
+  const history = S.chatHistory || [];
+  if(!history.length){
+    log.innerHTML = `<div class="msg ai">Hey${S.name ? ' ' + escapeHtml(S.name) : ''} — these are fixed prompts, not a conversation with a person. Tap one below or type what is happening.</div>`;
+    return;
+  }
+  log.innerHTML = history.map(item => {
+    const cls = item.role === 'user' ? 'msg user' : 'msg ai';
+    return `<div class="${cls}">${escapeHtml(item.text)}</div>` + (item.crisis ? crisisBlockHtml(item.crisis) : '');
+  }).join('');
+  log.scrollTop = log.scrollHeight;
+}
+function quickChat(message){ const input = document.getElementById('chat-input'); if(input) input.value = message; sendChat(); }
+function sendChat(){
+  const input = document.getElementById('chat-input');
+  if(!input) return;
+  const message = input.value.trim();
+  if(!message) return;
+  const reply = aiReply(message);
+  S.chatHistory = S.chatHistory || [];
+  S.chatHistory.push({role:'user', text:message});
+  S.chatHistory.push({role:'ai', text:reply.text, crisis:reply.crisis || null});
+  input.value = '';
+  saveState(); renderChat();
+}
+document.addEventListener('keydown', e => {
+  if(e.key === 'Enter' && document.activeElement && document.activeElement.id === 'chat-input') sendChat();
+});
+
+// ─── BOOT ─────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   initTheme();
-  initMemoryGrid();   // Set up delegated delete listener once
+  initMemoryGrid();
   stopBuy10();
-  if(loadState() && S.name) launchApp(); else renderCalendar();
+  const had = loadState();
+  buildRegionSelects();
+  buildTriggerChips('chips-');
+  buildToneChips('chips-tone');
+  renderCrisis();
+  if(had && S.name){ launchApp(); }
+  else { renderCalendar(); renderPhotoPreviews(); }
 });
 </script>
 <script>
