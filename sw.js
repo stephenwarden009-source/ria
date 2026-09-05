@@ -1,7 +1,7 @@
 // RIA service worker.
 // Offline reliability IS the product: this app has to open at 2am with no signal.
 // Bump CACHE on every deploy so clients pick up the new shell.
-const CACHE = 'ria-v10';
+const CACHE = 'ria-v11';
 
 const ASSETS = [
   './',

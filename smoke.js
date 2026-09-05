@@ -177,6 +177,96 @@ function check(name, cond, extra){ results.push({name, pass: !!cond, extra: extr
   await page.waitForTimeout(150);
   check('future date clamps to day 1', (await page.textContent('#stat-days')) === '1', await page.textContent('#stat-days'));
 
+  // ══ Phase 1-3: storage, pattern view, ledger, backup ══════════════
+
+  // ── Photos live in IndexedDB, not localStorage
+  await page.evaluate(async () => {
+    const c = document.createElement('canvas'); c.width = 12; c.height = 12;
+    const ctx = c.getContext('2d'); ctx.fillStyle = '#888'; ctx.fillRect(0,0,12,12);
+    const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+    const file = new File([blob], 'test.png', { type:'image/png' });
+    await new Promise(res => handleFiles([file], res));
+  });
+  await page.waitForTimeout(300);
+  const memShape = await page.evaluate(() => JSON.stringify((S.memories||[]).slice(-1)[0] || {}));
+  check('photo stored by IndexedDB key, not base64', memShape.includes('"k"') && !memShape.includes('data:image'), memShape.slice(0,120));
+  const lsClean = await page.evaluate(() => !(localStorage.getItem('ria3') || '').includes('data:image'));
+  check('localStorage carries no image payload', lsClean);
+  const idbHas = await page.evaluate(async () => {
+    const m = (S.memories||[]).slice(-1)[0];
+    if(!m || !m.k) return false;
+    const b = await idbGet(m.k);
+    return !!(b && b.size > 0);
+  });
+  check('photo blob readable back from IndexedDB', idbHas);
+  const imgSrc = await page.evaluate(() => { renderMemory(); const i = document.querySelector('#memory-grid img'); return i ? i.getAttribute('src') : ''; });
+  check('memory grid renders from object URL', imgSrc.startsWith('blob:'), imgSrc.slice(0,40));
+
+  // ── Your pattern: the user can actually see their check-ins
+  await page.evaluate(() => {
+    S.checkinLog = [
+      { date:'2026-08-20', urges:'Some', reachedOut:'Yes', isolation:'Connected', intensity:3 },
+      { date:'2026-08-24', urges:'Strong', reachedOut:'No', isolation:'Pulling back', intensity:7, signalToday:'Going quiet' },
+      { date:'2026-08-27', urges:'Strong', reachedOut:'No', isolation:'Isolated', intensity:9 }
+    ];
+    S.relapses = [{ date:'2026-08-27', note:'x' }];
+    saveState(); renderPattern();
+  });
+  await page.waitForTimeout(150);
+  const patRows = await page.locator('#pattern-view .pat-row').count();
+  check('pattern view lists every check-in', patRows === 3, 'rows=' + patRows);
+  const patText = await page.textContent('#pattern-view');
+  check('pattern view shows the answers, not just dots', patText.includes('Pulling back') && patText.includes('Going quiet'));
+  check('pattern view shows intensity values', patText.includes('9/10'));
+  const svgPts = await page.getAttribute('#pattern-view polyline', 'points');
+  check('intensity plotted as a line', (svgPts || '').split(' ').length === 3, svgPts);
+  const relLine = await page.locator('#pattern-view line[stroke-dasharray]').count();
+  check('re-entry days marked on the chart', relLine === 1, 'marks=' + relLine);
+
+  // ── Usage ledger counts events, never content
+  await page.evaluate(() => { S.usage = { firstOpen:'', days:[], redMode:0, timerStarts:0, timerDone:0, breathDone:0, tools:{}, contactTaps:0, crisisTaps:0, checkins:0, relapses:0, exports:0 }; saveState(); });
+  await page.evaluate(() => { startBuy10(); stopBuy10(); });
+  await page.evaluate(() => enterRedMode());
+  await page.evaluate(() => exitRedMode());
+  await page.evaluate(() => { const h = document.querySelector('#screen-tools .tc-head'); if(h) toggleTool(h); });
+  await page.evaluate(() => {
+    const a = document.querySelector('#crisis-home a.crisis-act');
+    if(a){ a.addEventListener('click', e => e.preventDefault()); a.click(); }
+  });
+  await page.waitForTimeout(150);
+  const u = await page.evaluate(() => JSON.parse(JSON.stringify(S.usage)));
+  check('ledger counts timer starts', u.timerStarts === 1, JSON.stringify(u.timerStarts));
+  check('ledger counts red mode entries', u.redMode === 1, JSON.stringify(u.redMode));
+  check('ledger counts tool opens by name', Object.keys(u.tools || {}).length === 1, JSON.stringify(u.tools));
+  check('ledger counts crisis-bar taps', u.crisisTaps === 1, JSON.stringify(u.crisisTaps));
+  const ledgerClean = JSON.stringify(u);
+  check('ledger holds no free text from the user', !ledgerClean.includes('Steve') && !ledgerClean.includes('Going quiet'), ledgerClean.slice(0,150));
+
+  // ── Backup round-trip through the real file input
+  const backup = await page.evaluate(async () => JSON.stringify(await buildBackup()));
+  check('backup includes check-in history', backup.includes('2026-08-24'));
+  check('backup carries photos as data URLs', backup.includes('data:image'));
+  await page.evaluate(() => { S.name = 'WIPED'; S.checkinLog = []; S.memories = []; saveState(); populate(); renderPattern(); });
+  await page.waitForTimeout(100);
+  check('state wiped before restore', (await page.evaluate(() => S.checkinLog.length)) === 0);
+  await page.evaluate(() => openSettings());
+  await page.setInputFiles('#s-restore', { name:'ria-backup.json', mimeType:'application/json', buffer: Buffer.from(backup) });
+  await page.waitForTimeout(500);
+  const restored = await page.evaluate(() => ({ name: S.name, logs: (S.checkinLog||[]).length, mems: (S.memories||[]).length }));
+  check('restore brings back the name', restored.name === 'Steve', restored.name);
+  check('restore brings back check-in history', restored.logs === 3, 'logs=' + restored.logs);
+  check('restore brings back photos', restored.mems === 1, 'mems=' + restored.mems);
+  const restoredImg = await page.evaluate(async () => { await loadPhotos(); renderMemory(); const i = document.querySelector('#memory-grid img'); return i ? i.getAttribute('src') : ''; });
+  check('restored photo renders', restoredImg.startsWith('blob:'), restoredImg.slice(0,40));
+  await page.evaluate(() => closeSettings());
+
+  // ── The on-device guarantee, asserted rather than assumed
+  const fs = require('fs');
+  const source = fs.readFileSync(TARGET, 'utf8');
+  const net = (source.match(/\bfetch\s*\(|XMLHttpRequest|new WebSocket|navigator\.sendBeacon/g) || []);
+  check('no network calls anywhere in the app', net.length === 0, net.join(','));
+  check('no geolocation access', !/navigator\.geolocation/.test(source));
+
   check('no page errors', errors.length === 0, errors.slice(0,3).join(' | '));
 
   await browser.close();

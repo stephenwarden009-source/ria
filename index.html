@@ -273,6 +273,13 @@ input[type=range]{padding:0;background:transparent;border:none}
 .mem-card.loading::after{content:''; position:absolute; inset:0; background:rgba(0,0,0,.4); display:flex; align-items:center; justify-content:center}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes redPulse{0%,100%{transform:scale(1); box-shadow:0 0 0 0 rgba(248,113,113,.18)}50%{transform:scale(1.01); box-shadow:0 0 0 10px rgba(248,113,113,0)}}
+.pat-chart{width:100%;height:auto;margin:12px 0 6px;display:block}
+.pat-list{margin-top:8px;max-height:340px;overflow-y:auto}
+.pat-row{display:grid;grid-template-columns:auto auto 1fr;gap:8px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line)}
+.pat-date{font-size:12px;opacity:.75;white-space:nowrap}
+.pat-int{font-size:12px;font-weight:600;white-space:nowrap}
+.pat-bits{font-size:12px;opacity:.85}
+.pat-flag{font-size:10px;color:var(--amber);white-space:nowrap}
 </style>
 </head>
 <body>
@@ -471,6 +478,7 @@ input[type=range]{padding:0;background:transparent;border:none}
     <div id="contacts-list"></div>
     <div class="meeting-item"><div class="h3">Meetings & online rooms</div><a class="meeting-link" href="https://ca-online.org" target="_blank" rel="noopener">Cocaine Anonymous online ↗</a><a class="meeting-link" href="https://www.aa.org/meeting-guide-app" target="_blank" rel="noopener">Alcoholics Anonymous meeting guide ↗</a><a class="meeting-link" href="https://na.org/meetingsearch/" target="_blank" rel="noopener">Narcotics Anonymous meeting search ↗</a><a class="meeting-link" href="https://www.intherooms.com" target="_blank" rel="noopener">In The Rooms ↗</a></div>
     <div class="tool-card"><h4>🔄 Re-entry after a relapse</h4><p>You're not starting over. Map what happened so next time we catch it earlier.</p><button class="btn3" onclick="openRelapse()">Open re-entry</button></div>
+    <div id="pattern-view"></div>
     <div id="relapse-history"></div>
   </div>
 
@@ -590,6 +598,14 @@ input[type=range]{padding:0;background:transparent;border:none}
     <div class="lbl">Typical spend per binge ($)</div><input id="s-binge" type="number" min="0" inputmode="numeric">
     <div class="lbl">Typical binges per month</div><input id="s-freq" type="number" min="0" inputmode="numeric">
     <div class="lbl">Reset track</div><input id="s-music" type="text"><div class="lbl">Comfort show or film</div><input id="s-show" type="text"><div class="lbl">Favourite clip</div><input id="s-clip" type="text"><div class="lbl">Podcast</div><input id="s-pod" type="text"><div class="lbl">Add memory wall photos</div><input id="s-mem" type="file" accept="image/*" multiple>
+    <div class="lbl">Your data</div>
+    <div class="small" id="s-storage">—</div>
+    <div class="small" style="margin-top:8px">Everything you have entered lives on this device only. If you clear your browser data or lose this phone, it is gone — there is no copy anywhere else. A backup file is the only way to keep it.</div>
+    <div class="tool-actions" style="margin-top:10px">
+      <button class="btn3" onclick="exportBackup()">Save a backup file</button>
+      <label class="btn3" style="text-align:center;cursor:pointer">Restore from backup<input id="s-restore" type="file" accept="application/json,.json" style="display:none" onchange="importBackup(this)"></label>
+    </div>
+    <div class="small" style="margin-top:8px">The backup is unencrypted and contains your photos and everything you have written. Keep it somewhere you trust.</div>
     <button class="btn2" onclick="saveSettings()">Save Changes</button><div class="close" onclick="closeSettings()">Close</div>
   </div></div>
 
@@ -696,7 +712,13 @@ const DEFAULT_STATE = {
   affirmation:'', loss:'', clean:'', bingeAmt:0, bingeFreq:4,
   music:'', show:'', clip:'', pod:'',
   memories:[], checkins:[], checkinLog:[], relapses:[],
-  mood:'', chatHistory:[], redMode:false
+  mood:'', chatHistory:[], redMode:false,
+  schemaVersion: 2,
+  // Usage ledger. Counts and dates only — never content, never text the user
+  // wrote. Lives on this device. Leaves only if the user exports it themselves.
+  usage:{ firstOpen:'', days:[], redMode:0, timerStarts:0, timerDone:0,
+          breathDone:0, tools:{}, contactTaps:0, crisisTaps:0,
+          checkins:0, relapses:0, exports:0 }
 };
 let S = JSON.parse(JSON.stringify(DEFAULT_STATE));
 
@@ -710,6 +732,210 @@ const buy10Prompts = [
 function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); }catch(e){ console.error('saveState failed', e); showFlash('Storage full — remove a few photos in My People + Pets.'); } }
 function loadState(){ try{ const raw = localStorage.getItem(STORAGE_KEY); if(!raw) return false; S = deepMerge(JSON.parse(JSON.stringify(DEFAULT_STATE)), JSON.parse(raw) || {}); return true; } catch(e){ console.error('loadState failed', e); return false; } }
 function deepMerge(base, incoming){ if(Array.isArray(base)) return Array.isArray(incoming) ? incoming : base; const out = {...base}; for(const k in incoming){ if(base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])) out[k] = deepMerge(base[k], incoming[k] || {}); else out[k] = incoming[k]; } return out; }
+
+// ─── PHOTO STORE (IndexedDB) ──────────────────────────────────────
+// Photos moved out of localStorage in schema v2. Base64 in localStorage
+// carried ~33% overhead against a ~5MB cap; blobs in IndexedDB do not.
+// Still entirely on-device — IndexedDB is local storage, not a server.
+const IDB_NAME = 'ria-photos', IDB_STORE = 'photos';
+let _idb = null;
+const photoUrls = {};
+
+function idbOpen(){
+  if(_idb) return Promise.resolve(_idb);
+  return new Promise((res, rej) => {
+    let req;
+    try { req = indexedDB.open(IDB_NAME, 1); } catch(e){ return rej(e); }
+    req.onupgradeneeded = () => { const db = req.result; if(!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE); };
+    req.onsuccess = () => { _idb = req.result; res(_idb); };
+    req.onerror = () => rej(req.error);
+  });
+}
+function idbStore(mode){ return idbOpen().then(db => db.transaction(IDB_STORE, mode).objectStore(IDB_STORE)); }
+function idbPut(key, blob){ return idbStore('readwrite').then(st => new Promise((res, rej) => { const r = st.put(blob, key); r.onsuccess = () => res(key); r.onerror = () => rej(r.error); })); }
+function idbGet(key){ return idbStore('readonly').then(st => new Promise((res, rej) => { const r = st.get(key); r.onsuccess = () => res(r.result || null); r.onerror = () => rej(r.error); })); }
+function idbDel(key){ return idbStore('readwrite').then(st => new Promise((res) => { const r = st.delete(key); r.onsuccess = () => res(true); r.onerror = () => res(false); })).catch(() => false); }
+
+// No network APIs anywhere in this app, including on data: URLs — the zero-network
+// guarantee is asserted in the test suite, so base64 is decoded by hand.
+function dataUrlToBlob(d){
+  const parts = String(d || '').split(',');
+  const mime = (parts[0].match(/:(.*?);/) || [])[1] || 'image/jpeg';
+  const bin = atob(parts[1] || '');
+  const arr = new Uint8Array(bin.length);
+  for(let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+function blobToDataUrl(blob){
+  return new Promise((res) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => res(null); fr.readAsDataURL(blob); });
+}
+function memSrc(m){
+  if(!m) return '';
+  if(typeof m === 'string') return m;
+  if(m.k) return photoUrls[m.k] || '';
+  return m.src || '';
+}
+// v1 -> v2: lift any base64 photo still sitting in state into IndexedDB.
+async function migratePhotos(){
+  const mems = S.memories || [];
+  let changed = false;
+  for(let i = 0; i < mems.length; i++){
+    let m = mems[i];
+    if(typeof m === 'string') m = mems[i] = { id: Date.now() + i, src: m };
+    if(m && m.src && !m.k){
+      try {
+        const key = 'p' + Date.now() + '-' + i + '-' + Math.random().toString(36).slice(2, 8);
+        const blob = dataUrlToBlob(m.src);
+        await idbPut(key, blob);
+        photoUrls[key] = URL.createObjectURL(blob);
+        mems[i] = { id: m.id, k: key };
+        changed = true;
+      } catch(e){ console.warn('photo migration skipped one', e); }
+    }
+  }
+  if(changed){ S.schemaVersion = 2; saveState(); }
+}
+async function loadPhotos(){
+  for(const m of (S.memories || [])){
+    if(m && m.k && !photoUrls[m.k]){
+      try { const b = await idbGet(m.k); if(b) photoUrls[m.k] = URL.createObjectURL(b); } catch(e){ /* leave blank */ }
+    }
+  }
+}
+async function storageReadout(){
+  const el = document.getElementById('s-storage');
+  if(!el) return;
+  let line = (S.memories || []).length + ' photo(s) · ' + (S.checkinLog || []).length + ' check-in(s) · ' + (S.relapses || []).length + ' re-entry record(s)';
+  try {
+    if(navigator.storage && navigator.storage.estimate){
+      const est = await navigator.storage.estimate();
+      if(est && est.usage) line += ' · about ' + Math.round(est.usage / 1024) + ' KB used on this device';
+    }
+  } catch(e){ /* estimate unavailable */ }
+  el.textContent = line;
+}
+
+// ─── USAGE LEDGER ─────────────────────────────────────────────────
+// Counters only. No content, no free text, no timestamps finer than a date.
+// Nothing here is transmitted; it exists so the user can see and export
+// their own history if they ever choose to.
+function ledger(){ if(!S.usage) S.usage = JSON.parse(JSON.stringify(DEFAULT_STATE.usage)); return S.usage; }
+function bump(key, n){
+  const u = ledger();
+  if(typeof u[key] !== 'number') u[key] = 0;
+  u[key] += (n || 1);
+  saveState();
+}
+function bumpTool(name){
+  const u = ledger();
+  if(!u.tools || typeof u.tools !== 'object') u.tools = {};
+  const k = String(name || '').slice(0, 40);
+  u.tools[k] = (u.tools[k] || 0) + 1;
+  saveState();
+}
+function noteSession(){
+  const u = ledger();
+  const d = todayKey();
+  if(!u.firstOpen) u.firstOpen = d;
+  if(!Array.isArray(u.days)) u.days = [];
+  if(!u.days.includes(d)) u.days.push(d);
+  if(u.days.length > 400) u.days = u.days.slice(-400);
+  saveState();
+}
+
+// ─── YOUR PATTERN (the user's own data, shown back to them) ───────
+// Observation, not evaluation. No scores, no grades, no streak language.
+function renderPattern(){
+  const wrap = document.getElementById('pattern-view');
+  if(!wrap) return;
+  const log = (S.checkinLog || []).slice().sort((a, b) => a.date < b.date ? -1 : 1);
+  if(!log.length){
+    wrap.innerHTML = '<div class="card"><div class="h3">Your pattern</div><div class="sub">Once you have a few check-ins, they show up here — what you said, and how the intensity moved over time.</div></div>';
+    return;
+  }
+  const relapseDates = (S.relapses || []).map(r => r && r.date).filter(Boolean);
+  const W = 320, H = 90, PAD = 6;
+  const recent = log.slice(-90);
+  const n = recent.length;
+  const x = i => n <= 1 ? PAD : PAD + i * (W - PAD * 2) / (n - 1);
+  const y = v => H - PAD - (Math.max(0, Math.min(10, Number(v) || 0)) / 10) * (H - PAD * 2);
+  const pts = recent.map((e, i) => x(i).toFixed(1) + ',' + y(e.intensity).toFixed(1)).join(' ');
+  const marks = recent.map((e, i) => relapseDates.includes(e.date)
+    ? '<line x1="' + x(i).toFixed(1) + '" y1="' + PAD + '" x2="' + x(i).toFixed(1) + '" y2="' + (H - PAD) + '" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="3 3"/>'
+    : '').join('');
+  const dots = recent.map((e, i) => '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(e.intensity).toFixed(1) + '" r="2"/>').join('');
+  const rows = log.slice().reverse().slice(0, 60).map(e => {
+    const bits = [];
+    if(e.urges) bits.push('Urges: ' + escapeHtml(e.urges));
+    if(e.reachedOut) bits.push('Reached out: ' + escapeHtml(e.reachedOut));
+    if(e.isolation) bits.push(escapeHtml(e.isolation));
+    if(e.signalToday && e.signalToday !== 'None of these') bits.push('Signal: ' + escapeHtml(e.signalToday));
+    const flag = relapseDates.includes(e.date) ? ' <span class="pat-flag">re-entry logged</span>' : '';
+    return '<div class="pat-row"><div class="pat-date">' + escapeHtml(e.date) + flag + '</div>'
+      + '<div class="pat-int">' + (Number(e.intensity) || 0) + '/10</div>'
+      + '<div class="pat-bits">' + (bits.join(' · ') || '—') + '</div></div>';
+  }).join('');
+  wrap.innerHTML = '<div class="card"><div class="h3">Your pattern</div>'
+    + '<div class="sub">Your own check-ins. Urge intensity over your last ' + n + ' entr' + (n === 1 ? 'y' : 'ies') + '; dashed lines mark days you logged a re-entry.</div>'
+    + '<svg class="pat-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Urge intensity over time">'
+    + '<line x1="' + PAD + '" y1="' + (H - PAD) + '" x2="' + (W - PAD) + '" y2="' + (H - PAD) + '" stroke="var(--line)" stroke-width="1"/>'
+    + marks
+    + '<polyline points="' + pts + '" fill="none" stroke="var(--sage)" stroke-width="2" stroke-linejoin="round"/>'
+    + '<g fill="var(--sage)">' + dots + '</g></svg>'
+    + '<div class="pat-list">' + rows + '</div></div>';
+}
+
+// ─── BACKUP / RESTORE (user-initiated, never automatic) ───────────
+async function buildBackup(){
+  const out = { kind:'ria-backup', schemaVersion: 2, exportedAt: todayKey(), state: JSON.parse(JSON.stringify(S)), photos: {} };
+  for(const m of (S.memories || [])){
+    if(m && m.k){
+      try { const b = await idbGet(m.k); if(b) out.photos[m.k] = await blobToDataUrl(b); } catch(e){ /* skip */ }
+    }
+  }
+  return out;
+}
+async function exportBackup(){
+  try {
+    const data = await buildBackup();
+    bump('exports');
+    const blob = new Blob([JSON.stringify(data)], { type:'application/json' });
+    const name = 'ria-backup-' + todayKey() + '.json';
+    if(navigator.canShare && navigator.share){
+      try {
+        const file = new File([blob], name, { type:'application/json' });
+        if(navigator.canShare({ files:[file] })){ await navigator.share({ files:[file], title:'RIA backup' }); showFlash('Backup shared ✓'); return; }
+      } catch(e){ /* fall through to download */ }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    showFlash('Backup saved ✓');
+  } catch(e){ console.error('export failed', e); showFlash('Backup failed — try again.'); }
+}
+function importBackup(input){
+  const file = input && input.files && input.files[0];
+  input.value = '';
+  if(!file) return;
+  const fr = new FileReader();
+  fr.onload = async () => {
+    try {
+      const data = JSON.parse(fr.result);
+      if(!data || data.kind !== 'ria-backup' || !data.state) throw new Error('not a RIA backup');
+      S = deepMerge(JSON.parse(JSON.stringify(DEFAULT_STATE)), data.state);
+      for(const k in (data.photos || {})){
+        try { const blob = dataUrlToBlob(data.photos[k]); await idbPut(k, blob); photoUrls[k] = URL.createObjectURL(blob); } catch(e){ /* skip */ }
+      }
+      saveState();
+      populate(); renderMemory(); renderCalendar(); renderPattern(); renderRelapseHistory(); renderRiskBanner(); renderCrisis();
+      showFlash('Backup restored ✓');
+    } catch(e){ console.error('import failed', e); showFlash('That file was not a RIA backup.'); }
+  };
+  fr.onerror = () => showFlash('Could not read that file.');
+  fr.readAsText(file);
+}
 
 // ─── HELPERS ──────────────────────────────────────────────────────
 function extractPhone(v){ return String(v || '').replace(/\D/g,''); }
@@ -885,7 +1111,7 @@ function onboardPhotos(input){
 function renderPhotoPreviews(){
   const grid = document.getElementById('photo-previews');
   if(!grid) return;
-  grid.innerHTML = (S.memories || []).map(m => `<div class="photo-thumb"><img src="${m.src || m}" alt="Memory photo"></div>`).join('');
+  grid.innerHTML = (S.memories || []).map(m => `<div class="photo-thumb"><img src="${memSrc(m)}" alt="Memory photo"></div>`).join('');
 }
 function buildSummary(){
   const el = document.getElementById('ss-content');
@@ -910,7 +1136,7 @@ function launchApp(){
   migrateStartDate();
   document.getElementById('onboarding').classList.add('hidden');
   document.getElementById('nav').classList.remove('hidden');
-  populate(); go('home');
+  populate(); renderPattern(); go('home');
 }
 
 // ─── PHOTO COMPRESSION ────────────────────────────────────────────
@@ -931,7 +1157,7 @@ function compressImage(file, callback){
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      callback(canvas.toDataURL('image/jpeg', 0.72));
+      canvas.toBlob(b => callback(b), 'image/jpeg', 0.72);
     };
     img.src = e.target.result;
   };
@@ -944,21 +1170,34 @@ function handleFiles(files, done){
   if(!fileList.length) return;
   let completed = 0;
   const incoming = new Array(fileList.length).fill(null);
+  function tick(){
+    completed++;
+    if(completed === fileList.length){
+      S.memories = [...S.memories, ...incoming.filter(Boolean)].slice(0, 12);
+      saveState();
+      renderMemory();
+      renderPhotoPreviews();
+      if(typeof done === 'function') done();
+    }
+  }
   fileList.forEach((file, idx) => {
-    compressImage(file, (dataUrl) => {
-      if(dataUrl) incoming[idx] = { id: Date.now() + idx, src: dataUrl };
-      completed++;
-      if(completed === fileList.length){
-        S.memories = [...S.memories, ...incoming.filter(Boolean)].slice(0, 12);
-        saveState();
-        renderMemory();
-        if(typeof done === 'function') done();
-      }
+    compressImage(file, (blob) => {
+      if(!blob){ tick(); return; }
+      const key = 'p' + Date.now() + '-' + idx + '-' + Math.random().toString(36).slice(2, 8);
+      idbPut(key, blob).then(() => {
+        photoUrls[key] = URL.createObjectURL(blob);
+        incoming[idx] = { id: Date.now() + idx, k: key };
+      }).catch(e => console.warn('photo store failed', e)).then(tick);
     });
   });
 }
 function deleteMemory(id){
   if(!Array.isArray(S.memories)) return;
+  const gone = S.memories.find(m => m && typeof m === 'object' && String(m.id) === String(id));
+  if(gone && gone.k){
+    if(photoUrls[gone.k]){ try { URL.revokeObjectURL(photoUrls[gone.k]); } catch(e){} delete photoUrls[gone.k]; }
+    idbDel(gone.k);
+  }
   const byId = S.memories.findIndex(m => m && typeof m === 'object' && String(m.id) === String(id));
   if(byId !== -1){ S.memories.splice(byId, 1); }
   else { const idx = parseInt(id, 10); if(!isNaN(idx) && idx >= 0 && idx < S.memories.length) S.memories.splice(idx, 1); }
@@ -973,7 +1212,7 @@ function renderMemory(){
     const div = document.createElement('div');
     div.className = 'mem-card';
     const img = document.createElement('img');
-    img.alt = 'Memory photo'; img.src = mem.src;
+    img.alt = 'Memory photo'; img.src = memSrc(mem);
     const caption = document.createElement('div');
     caption.className = 'mem-caption'; caption.textContent = 'Your reason';
     const del = document.createElement('button');
@@ -1071,7 +1310,7 @@ function go(screen){
 }
 
 // ─── SETTINGS ─────────────────────────────────────────────────────
-function openSettings(){ populate(); document.getElementById('modal-settings').classList.add('open'); }
+function openSettings(){ populate(); storageReadout(); document.getElementById('modal-settings').classList.add('open'); }
 function closeSettings(){ document.getElementById('modal-settings').classList.remove('open'); }
 function saveSettings(){
   S.name = val('s-name') || 'Friend';
@@ -1210,9 +1449,10 @@ function submitCheckin(){
   S.checkins = S.checkins || [];
   if(!S.checkins.includes(a.date)) S.checkins.push(a.date);
   S.mood = 'ok';
+  bump('checkins');
   saveState();
   closeModal('modal-checkin');
-  renderCalendar(); renderRiskBanner();
+  renderCalendar(); renderRiskBanner(); renderPattern();
   showFlash('Check-in logged ✓');
 }
 function lastCheckin(){ return (S.checkinLog || []).slice().sort((x,y) => x.date < y.date ? 1 : -1)[0] || null; }
@@ -1299,21 +1539,24 @@ function renderRedCopy(){
   const c = RED_COPY[S.tone] || RED_COPY.direct;
   text('red-title', c.title); text('red-sub', c.sub);
 }
-function enterRedMode(){ S.redMode = true; saveState(); renderRedCopy(); renderCrisis(); document.getElementById('redmode-wrap').classList.add('open'); }
+function enterRedMode(){ S.redMode = true; bump('redMode'); renderRedCopy(); renderCrisis(); document.getElementById('redmode-wrap').classList.add('open'); }
 function exitRedMode(){ S.redMode = false; saveState(); document.getElementById('redmode-wrap').classList.remove('open'); renderRiskBanner(); }
 
 function alertMyPeople(){
+  bump('contactTaps');
   const primary = S.contacts.find(c => c && c.phone);
   if(!primary || !primary.phone){ showFlash('No support contact set. Add one in Settings.'); return; }
   const msg = "I'm at risk and need support right now. Please call or text me.";
   window.location.href = `sms:${extractPhone(primary.phone)}?body=${encodeURIComponent(msg)}`;
 }
 function callPrimarySupport(){
+  bump('contactTaps');
   const primary = S.contacts.find(c => c && c.phone);
   if(!primary || !primary.phone){ showFlash('No support contact set. Add one in Settings.'); return; }
   window.location.href = `tel:${extractPhone(primary.phone)}`;
 }
 function textPrimarySupport(){
+  bump('contactTaps');
   const primary = S.contacts.find(c => c && c.phone);
   if(!primary || !primary.phone){ showFlash('No support contact set. Add one in Settings.'); return; }
   window.location.href = `sms:${extractPhone(primary.phone)}?body=${encodeURIComponent('I need a check-in.')}`;
@@ -1332,6 +1575,7 @@ function openRelapse(){
   document.getElementById('modal-relapse').classList.add('open');
 }
 function submitRelapse(){
+  bump('relapses');
   const a = readAnswers('modal-relapse');
   a.date = todayKey();
   S.relapses = S.relapses || [];
@@ -1343,6 +1587,7 @@ function submitRelapse(){
   showFlash('Pattern updated. Welcome back. ✓');
 }
 function renderRelapseHistory(){
+  renderPattern();
   const wrap = document.getElementById('relapse-history');
   if(!wrap) return;
   const items = (S.relapses || []).slice().reverse().slice(0, 5);
@@ -1355,7 +1600,7 @@ function renderRelapseHistory(){
 // ─── BUY 10 ───────────────────────────────────────────────────────
 function openBuy10(){ document.getElementById('buy10-wrap').classList.add('open'); updateBuy10Display(); }
 function closeBuy10(){ stopBuy10(); document.getElementById('buy10-wrap').classList.remove('open'); }
-function startBuy10(){ stopBuy10(); buy10Seconds = 600; updateBuy10Display(); buy10Interval = setInterval(() => { buy10Seconds--; updateBuy10Display(); if(buy10Seconds <= 0) stopBuy10(true); }, 1000); }
+function startBuy10(){ stopBuy10(); bump('timerStarts'); buy10Seconds = 600; updateBuy10Display(); buy10Interval = setInterval(() => { buy10Seconds--; updateBuy10Display(); if(buy10Seconds <= 0){ bump('timerDone'); stopBuy10(true); } }, 1000); }
 function updateBuy10Display(){
   const m = String(Math.floor(buy10Seconds/60)).padStart(2,'0');
   const s = String(buy10Seconds%60).padStart(2,'0');
@@ -1419,6 +1664,7 @@ function stopBreath(which){
 
 // ─── TOOL ACCORDION ───────────────────────────────────────────────
 function toggleTool(head){
+  try { bumpTool((head.querySelector('h4') || {}).textContent || ''); } catch(e){}
   const card = head.closest('.tool-card');
   const body = card.querySelector('.tc-body');
   const arr = card.querySelector('.tc-arr');
@@ -1502,6 +1748,14 @@ window.addEventListener('DOMContentLoaded', () => {
   initMemoryGrid();
   stopBuy10();
   const had = loadState();
+  noteSession();
+  migratePhotos().then(loadPhotos).then(() => { renderMemory(); renderPhotoPreviews(); }).catch(e => console.warn('photo init', e));
+  // Crisis-bar taps are counted, never their outcome. This is the only
+  // signal that says the app routed someone to a human being.
+  document.addEventListener('click', (e) => {
+    const a = e.target && e.target.closest ? e.target.closest('a.crisis-act') : null;
+    if(a) bump('crisisTaps');
+  }, true);
   buildRegionSelects();
   buildTriggerChips('chips-');
   buildToneChips('chips-tone');
