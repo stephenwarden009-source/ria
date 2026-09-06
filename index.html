@@ -319,7 +319,7 @@ input[type=range]{padding:0;background:transparent;border:none}
       <div class="lbl">Days since your last relapse</div>
       <input id="inp-days" type="number" min="0" inputmode="numeric" placeholder="e.g. 16">
       <div class="lbl">Addiction or issue</div>
-      <select id="inp-sub"><option value="">Select...</option><option>Alcohol</option><option>Cocaine / stimulants</option><option>Opioids</option><option>Marijuana / cannabis</option><option>Methamphetamine</option><option>Gambling</option><option>Social media / digital</option><option>Shopping / spending</option><option>Pornography / compulsive sexual behaviour</option><option>Multiple issues</option><option>Other</option><option>Prefer not to say</option></select>
+      <select id="inp-sub"><!-- populated from ISSUES by buildIssueSelects() --></select>
       <div class="lbl">Your typical cycle (days between relapses)</div>
       <input id="inp-cycle" type="number" min="1" inputmode="numeric" placeholder="e.g. 18">
       <div class="lbl">Where are you? (sets your crisis lines)</div>
@@ -576,7 +576,7 @@ input[type=range]{padding:0;background:transparent;border:none}
     <div class="lbl">Your name</div><input id="s-name" type="text">
     <div class="lbl">Date of last relapse</div><input id="s-date" type="date">
     <div class="small" id="s-days-readout">—</div>
-    <div class="lbl">Addiction or issue</div><select id="s-sub"><option value="">Select...</option><option>Alcohol</option><option>Cocaine / stimulants</option><option>Opioids</option><option>Marijuana / cannabis</option><option>Methamphetamine</option><option>Gambling</option><option>Social media / digital</option><option>Shopping / spending</option><option>Pornography / compulsive sexual behaviour</option><option>Multiple issues</option><option>Other</option><option>Prefer not to say</option></select>
+    <div class="lbl">Addiction or issue</div><select id="s-sub"><!-- populated from ISSUES by buildIssueSelects() --></select>
     <div class="lbl">Typical days between relapses</div><input id="s-cycle" type="number" min="1" inputmode="numeric">
     <div class="lbl">Region (sets your crisis lines)</div><select id="s-region"></select>
     <div id="s-custom-wrap" class="hidden">
@@ -895,24 +895,62 @@ async function buildBackup(){
   }
   return out;
 }
+function isStandalonePWA(){
+  if(window.navigator.standalone === true) return true;
+  return !!(window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+}
+function isIOS(){
+  const ua = navigator.userAgent || '';
+  if(/iPad|iPhone|iPod/.test(ua)) return true;
+  return navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+}
+// Never claim a backup succeeded unless something confirmed it. The share sheet
+// resolving is a real confirmation; a.click() is not. On an installed iOS PWA
+// the download path can silently do nothing, so it is not attempted there —
+// a user who believes they have a backup and does not is worse off than a user
+// who knows they need to try again in Safari.
 async function exportBackup(){
+  let blob, name;
   try {
     const data = await buildBackup();
-    bump('exports');
-    const blob = new Blob([JSON.stringify(data)], { type:'application/json' });
-    const name = 'ria-backup-' + todayKey() + '.json';
-    if(navigator.canShare && navigator.share){
+    blob = new Blob([JSON.stringify(data)], { type:'application/json' });
+    name = 'ria-backup-' + todayKey() + '.json';
+  } catch(e){
+    console.error('backup build failed', e);
+    showFlash('Could not build the backup — try again.');
+    return;
+  }
+
+  // Path 1 — OS share sheet. The user picks the destination.
+  if(navigator.canShare && navigator.share){
+    let file = null;
+    try { file = new File([blob], name, { type:'application/json' }); } catch(e){ file = null; }
+    if(file && navigator.canShare({ files:[file] })){
       try {
-        const file = new File([blob], name, { type:'application/json' });
-        if(navigator.canShare({ files:[file] })){ await navigator.share({ files:[file], title:'RIA backup' }); showFlash('Backup shared ✓'); return; }
-      } catch(e){ /* fall through to download */ }
+        await navigator.share({ files:[file], title:'RIA backup' });
+        bump('exports');
+        showFlash('Backup saved where you chose ✓');
+        return;
+      } catch(e){
+        if(e && e.name === 'AbortError'){ showFlash('Cancelled — nothing was saved.'); return; }
+        console.warn('share failed, falling back to download', e);
+      }
     }
+  }
+
+  // Path 2 — browser download. No success signal exists.
+  if(isIOS() && isStandalonePWA()){
+    showFlash('Could not save from the installed app. Open RIA in Safari to save a backup.');
+    return;
+  }
+  try {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = name;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 4000);
-    showFlash('Backup saved ✓');
+    bump('exports');
+    showFlash('Saved to your downloads as ' + name);
   } catch(e){ console.error('export failed', e); showFlash('Backup failed — try again.'); }
 }
 function importBackup(input){
@@ -1035,6 +1073,40 @@ function buildToneChips(containerId){
     el.classList.add('on');
     saveState();
     renderRedCopy();
+  });
+}
+// The issue list is the single source of truth for both the onboarding select
+// and the Settings select. APPEND ONLY — S.substance stores the option's literal
+// string, so relabelling an existing entry orphans it and renders blank for any
+// user who picked it.
+const ISSUES = [
+  'Alcohol',
+  'Cocaine / stimulants',
+  'Opioids',
+  'Marijuana / cannabis',
+  'Methamphetamine',
+  'Nicotine / vaping',
+  'Gambling',
+  'Gaming',
+  'Social media / digital',
+  'Shopping / spending',
+  'Pornography / compulsive sexual behaviour',
+  'Multiple issues',
+  'Other',
+  'Prefer not to say'
+];
+function buildIssueSelects(){
+  // A saved value from an older build that is no longer in ISSUES gets carried
+  // through so it still shows, rather than silently reverting to "Select...".
+  const list = ISSUES.slice();
+  if(S.substance && list.indexOf(S.substance) === -1) list.push(S.substance);
+  const html = '<option value="">Select...</option>' +
+    list.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+  ['inp-sub','s-sub'].forEach(id => {
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    sel.innerHTML = html;
+    sel.value = S.substance || '';
   });
 }
 function buildRegionSelects(){
@@ -1756,6 +1828,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const a = e.target && e.target.closest ? e.target.closest('a.crisis-act') : null;
     if(a) bump('crisisTaps');
   }, true);
+  buildIssueSelects();
   buildRegionSelects();
   buildTriggerChips('chips-');
   buildToneChips('chips-tone');

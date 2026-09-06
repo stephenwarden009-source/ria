@@ -26,6 +26,18 @@ function check(name, cond, extra){ results.push({name, pass: !!cond, extra: extr
 
   await page.fill('#inp-name','Steve');
   await page.fill('#inp-days','16');
+  // Both issue selects are built from one ISSUES list; a desync between them
+  // is the failure mode this guards.
+  const issues = await page.evaluate(() => ({
+    ob: Array.from(document.querySelectorAll('#inp-sub option')).map(o => o.value),
+    st: Array.from(document.querySelectorAll('#s-sub option')).map(o => o.value)
+  }));
+  check('onboarding and settings issue lists match', JSON.stringify(issues.ob) === JSON.stringify(issues.st),
+    issues.ob.length + ' vs ' + issues.st.length);
+  check('issue list has nicotine', issues.ob.includes('Nicotine / vaping'));
+  check('issue list has gaming', issues.ob.includes('Gaming'));
+  check('issue list keeps legacy values', issues.ob.includes('Alcohol') && issues.ob.includes('Prefer not to say'));
+  await page.selectOption('#inp-sub','Nicotine / vaping');
   await page.selectOption('#inp-sub','Alcohol');
   await page.fill('#inp-cycle','18');
   check('region default CA', await page.inputValue('#inp-region') === 'CA');
