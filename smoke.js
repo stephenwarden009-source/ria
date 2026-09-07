@@ -235,6 +235,125 @@ function check(name, cond, extra){ results.push({name, pass: !!cond, extra: extr
   const relLine = await page.locator('#pattern-view line[stroke-dasharray]').count();
   check('re-entry days marked on the chart', relLine === 1, 'marks=' + relLine);
 
+  // ── Check-in UI, driven for real.
+  // Every check-in assertion above injects checkinLog straight into state. That
+  // is exactly how the phantom 5/10 slider default survived 66 green
+  // assertions: no test had ever opened the modal and pressed the buttons.
+  // These do.
+  const snapshot = await page.evaluate(() => JSON.stringify({ startDate:S.startDate, days:S.days, cycle:S.cycle }));
+
+  await page.evaluate(() => { S.checkinLog = []; S.checkins = []; S.relapses = []; saveState(); });
+  await page.evaluate(() => openCheckin());
+  await page.waitForTimeout(80);
+  const startLbl = (await page.textContent('#int-v') || '').trim();
+  check('intensity starts unset, not 5', startLbl === 'not set', startLbl);
+  await page.click('#modal-checkin .cq[data-q="urges"] .cqo:text-is("None")');
+  await page.waitForTimeout(50);
+  check('slider hidden when urges are None', await page.isHidden('#intensity-wrap'));
+  await page.click('#modal-checkin .cq[data-q="isolation"] .cqo:text-is("Connected")');
+  await page.click('#modal-checkin .btn2');
+  await page.waitForTimeout(120);
+  const noneEntry = await page.evaluate(() => S.checkinLog[S.checkinLog.length - 1]);
+  check('urges None records 0, not a phantom 5', noneEntry && noneEntry.intensity === 0, JSON.stringify(noneEntry));
+
+  await page.evaluate(() => { S.checkinLog = []; S.checkins = []; saveState(); });
+  await page.evaluate(() => openCheckin());
+  await page.waitForTimeout(80);
+  await page.click('#modal-checkin .cq[data-q="urges"] .cqo:text-is("Some")');
+  await page.waitForTimeout(50);
+  check('slider shown when urges are not None', await page.isVisible('#intensity-wrap'));
+  await page.click('#modal-checkin .btn2');
+  await page.waitForTimeout(120);
+  const untouched = await page.evaluate(() => S.checkinLog[S.checkinLog.length - 1]);
+  check('untouched slider records null, not 5', untouched && untouched.intensity === null, JSON.stringify(untouched));
+  const patInt = (await page.textContent('#pattern-view .pat-int') || '').trim();
+  check('unrated check-in shows a dash, not 0/10', patInt === '—', patInt);
+
+  await page.evaluate(() => { S.checkinLog = []; S.checkins = []; saveState(); });
+  await page.evaluate(() => openCheckin());
+  await page.waitForTimeout(80);
+  await page.click('#modal-checkin .cq[data-q="urges"] .cqo:text-is("Strong")');
+  await page.evaluate(() => { const r = document.getElementById('checkin-intensity'); r.value = 8; r.dispatchEvent(new Event('input')); });
+  await page.click('#modal-checkin .btn2');
+  await page.waitForTimeout(120);
+  const moved = await page.evaluate(() => S.checkinLog[S.checkinLog.length - 1]);
+  check('moved slider records the value the user set', moved && moved.intensity === 8, JSON.stringify(moved));
+
+  // An unrated entry is a gap in the line, never a plotted zero.
+  await page.evaluate(() => {
+    S.checkinLog = [
+      { date:'2026-09-01', urges:'Some', intensity:3 },
+      { date:'2026-09-02', urges:'Some', intensity:4 },
+      { date:'2026-09-03', urges:'Some', intensity:null },
+      { date:'2026-09-04', urges:'Some', intensity:6 },
+      { date:'2026-09-05', urges:'Some', intensity:7 }
+    ];
+    saveState(); renderPattern();
+  });
+  await page.waitForTimeout(120);
+  const polys = await page.locator('#pattern-view polyline').count();
+  check('line breaks across an unrated gap', polys === 2, 'polylines=' + polys);
+  const dots = await page.locator('#pattern-view circle').count();
+  check('no dot plotted for an unrated entry', dots === 4, 'dots=' + dots);
+  check('unrated entries are named in the caption', (await page.textContent('#pattern-view')).includes('unrated'));
+
+  // ── Drift score ignores stale check-ins.
+  // Before this, lastCheckin() scored regardless of age: log "gone dark" once,
+  // stop checking in, and the app sat in permanent red forever.
+  const drift = await page.evaluate(() => {
+    const key = d => { const x = new Date(); x.setDate(x.getDate() - d); return getLocalDateKey(x); };
+    S.checkins = []; S.relapses = []; S.startDate = ''; S.days = 0; S.cycle = 0; S.redMode = false; S.mood = '';
+    S.checkinLog = [{ date: key(30), urges:'Strong', isolation:'Gone dark', intensity:9 }];
+    const stale = getDriftScore().score;
+    S.checkinLog = [{ date: key(0), urges:'Strong', isolation:'Gone dark', intensity:9 }];
+    const fresh = getDriftScore().score;
+    return { stale, fresh };
+  });
+  check('a 30-day-old "gone dark" stops scoring', drift.stale < drift.fresh, JSON.stringify(drift));
+  check('a fresh "gone dark" still scores high', drift.fresh >= 5, JSON.stringify(drift));
+
+  // ── v2→v3 migration clears unverifiable 5s
+  const mig = await page.evaluate(() => {
+    S.schemaVersion = 2;
+    S.checkinLog = [
+      { date:'2026-08-01', urges:'None',   intensity:5 },
+      { date:'2026-08-02', urges:'Strong', intensity:9 },
+      { date:'2026-09-30', urges:'Some',   intensity:5 }
+    ];
+    migrateIntensity();
+    return { v: S.schemaVersion, vals: S.checkinLog.map(e => e.intensity) };
+  });
+  check('migration clears pre-fix phantom 5s', mig.vals[0] === null, JSON.stringify(mig.vals));
+  check('migration keeps real non-5 values', mig.vals[1] === 9, JSON.stringify(mig.vals));
+  check('migration leaves post-fix entries alone', mig.vals[2] === 5, JSON.stringify(mig.vals));
+  check('migration stamps schemaVersion 3', mig.v === 3, String(mig.v));
+
+  // ── The score is a mirror, never a verdict (rule 4.10)
+  const floorTxt = await page.textContent('#risk-floor');
+  check('home carries the floor statement', /safety check/i.test(floorTxt || ''), floorTxt);
+  const bannerHtml = await page.evaluate(() => {
+    const key = d => { const x = new Date(); x.setDate(x.getDate() - d); return getLocalDateKey(x); };
+    S.checkinLog = [{ date: key(0), urges:'Strong', isolation:'Gone dark', intensity:9 }];
+    renderRiskBanner();
+    return document.getElementById('risk-banner').innerHTML;
+  });
+  check('risk banner shows the reasons, not a number', /gone dark/.test(bannerHtml) && !/score/i.test(bannerHtml), bannerHtml.slice(0, 90));
+
+  // Hand the rest of the suite back the state it expects: the three-entry log
+  // from the pattern section, and the onboarding values these drift tests cleared.
+  await page.evaluate(snap => {
+    const o = JSON.parse(snap);
+    S.startDate = o.startDate; S.days = o.days; S.cycle = o.cycle;
+    S.checkinLog = [
+      { date:'2026-08-20', urges:'Some', reachedOut:'Yes', isolation:'Connected', intensity:3 },
+      { date:'2026-08-24', urges:'Strong', reachedOut:'No', isolation:'Pulling back', intensity:7, signalToday:'Going quiet' },
+      { date:'2026-08-27', urges:'Strong', reachedOut:'No', isolation:'Isolated', intensity:9 }
+    ];
+    S.relapses = [{ date:'2026-08-27', note:'x' }];
+    S.checkins = [];
+    saveState(); renderPattern();
+  }, snapshot);
+
   // ── Usage ledger counts events, never content
   await page.evaluate(() => { S.usage = { firstOpen:'', days:[], redMode:0, timerStarts:0, timerDone:0, breathDone:0, tools:{}, contactTaps:0, crisisTaps:0, checkins:0, relapses:0, exports:0 }; saveState(); });
   await page.evaluate(() => { startBuy10(); stopBuy10(); });

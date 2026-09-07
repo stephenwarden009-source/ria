@@ -280,6 +280,7 @@ input[type=range]{padding:0;background:transparent;border:none}
 .pat-int{font-size:12px;font-weight:600;white-space:nowrap}
 .pat-bits{font-size:12px;opacity:.85}
 .pat-flag{font-size:10px;color:var(--amber);white-space:nowrap}
+#risk-floor{margin:-2px 0 12px;opacity:.62;line-height:1.45}
 </style>
 </head>
 <body>
@@ -412,6 +413,10 @@ input[type=range]{padding:0;background:transparent;border:none}
       <div class="sub">Day <strong id="udays">—</strong> of your recovery journey.</div>
     </div>
     <div id="risk-banner" class="risk-banner hidden"></div>
+    <!-- Floor statement. A quiet app must never read as a safety clearance:
+         the false negative (no banner, user about to use) is this design's
+         most plausible harm. See rule §4.10 — mirror, never verdict. -->
+    <div class="small" id="risk-floor">RIA only sees what you tell it. A quiet screen isn't a safety check — you know things it doesn't.</div>
     <div class="statgrid">
       <div class="stat"><div class="n" id="stat-days">—</div><div class="small">Days Clean</div></div>
       <div class="stat"><div class="n" id="stat-saved">$0</div><div class="small">Saved</div></div>
@@ -619,8 +624,11 @@ input[type=range]{padding:0;background:transparent;border:none}
     <div class="cq" data-q="reachedOut"><div class="cq-lbl">Reached out to anyone?</div><div class="cq-opts"><div class="cqo" onclick="sel(this)">Yes</div><div class="cqo" onclick="sel(this)">No</div></div></div>
     <div class="cq" data-q="isolation"><div class="cq-lbl">Isolation level?</div><div class="cq-opts"><div class="cqo" onclick="sel(this)">Connected</div><div class="cqo" onclick="sel(this)">Pulling back</div><div class="cqo" onclick="sel(this)">Gone dark</div></div></div>
     <div id="checkin-signals"></div>
-    <div class="range-lbl">Urge intensity: <span id="int-v">5</span>/10</div>
-    <input type="range" id="checkin-intensity" min="1" max="10" value="5" step="1" oninput="document.getElementById('int-v').textContent=this.value">
+    <div id="intensity-wrap">
+      <div class="range-lbl">Urge intensity: <span id="int-v">not set</span></div>
+      <input type="range" id="checkin-intensity" min="1" max="10" value="5" step="1" oninput="markIntensity(this.value)">
+      <div class="small" id="int-hint">Drag to rate it. Leave it alone if you'd rather not — a blank is honest, a guess isn't.</div>
+    </div>
     <button class="btn2" onclick="submitCheckin()">Log today</button>
     <div class="close" onclick="closeModal('modal-checkin')">Skip today</div>
   </div></div>
@@ -713,7 +721,7 @@ const DEFAULT_STATE = {
   music:'', show:'', clip:'', pod:'',
   memories:[], checkins:[], checkinLog:[], relapses:[],
   mood:'', chatHistory:[], redMode:false,
-  schemaVersion: 2,
+  schemaVersion: 3,
   // Usage ledger. Counts and dates only — never content, never text the user
   // wrote. Lives on this device. Leaves only if the user exports it themselves.
   usage:{ firstOpen:'', days:[], redMode:0, timerStarts:0, timerDone:0,
@@ -793,7 +801,7 @@ async function migratePhotos(){
       } catch(e){ console.warn('photo migration skipped one', e); }
     }
   }
-  if(changed){ S.schemaVersion = 2; saveState(); }
+  if(changed){ if(Number(S.schemaVersion || 0) < 2) S.schemaVersion = 2; saveState(); }
 }
 async function loadPhotos(){
   for(const m of (S.memories || [])){
@@ -859,11 +867,21 @@ function renderPattern(){
   const n = recent.length;
   const x = i => n <= 1 ? PAD : PAD + i * (W - PAD * 2) / (n - 1);
   const y = v => H - PAD - (Math.max(0, Math.min(10, Number(v) || 0)) / 10) * (H - PAD * 2);
-  const pts = recent.map((e, i) => x(i).toFixed(1) + ',' + y(e.intensity).toFixed(1)).join(' ');
+  // An unrated check-in (intensity null) is a gap, not a zero. The line breaks
+  // across it rather than inventing a point — see rule §4.9.
+  const rated = recent.map((e, i) => ({ i, v: isRated(e) ? Number(e.intensity) : null }));
+  const segs = []; let run = [];
+  rated.forEach(p => { if(p.v === null){ if(run.length) segs.push(run); run = []; } else run.push(p); });
+  if(run.length) segs.push(run);
+  const lines = segs.filter(s => s.length > 1).map(s =>
+    '<polyline points="' + s.map(p => x(p.i).toFixed(1) + ',' + y(p.v).toFixed(1)).join(' ')
+    + '" fill="none" stroke="var(--sage)" stroke-width="2" stroke-linejoin="round"/>').join('');
   const marks = recent.map((e, i) => relapseDates.includes(e.date)
     ? '<line x1="' + x(i).toFixed(1) + '" y1="' + PAD + '" x2="' + x(i).toFixed(1) + '" y2="' + (H - PAD) + '" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="3 3"/>'
     : '').join('');
-  const dots = recent.map((e, i) => '<circle cx="' + x(i).toFixed(1) + '" cy="' + y(e.intensity).toFixed(1) + '" r="2"/>').join('');
+  const dots = rated.filter(p => p.v !== null).map(p =>
+    '<circle cx="' + x(p.i).toFixed(1) + '" cy="' + y(p.v).toFixed(1) + '" r="2"/>').join('');
+  const unrated = rated.filter(p => p.v === null).length;
   const rows = log.slice().reverse().slice(0, 60).map(e => {
     const bits = [];
     if(e.urges) bits.push('Urges: ' + escapeHtml(e.urges));
@@ -872,22 +890,23 @@ function renderPattern(){
     if(e.signalToday && e.signalToday !== 'None of these') bits.push('Signal: ' + escapeHtml(e.signalToday));
     const flag = relapseDates.includes(e.date) ? ' <span class="pat-flag">re-entry logged</span>' : '';
     return '<div class="pat-row"><div class="pat-date">' + escapeHtml(e.date) + flag + '</div>'
-      + '<div class="pat-int">' + (Number(e.intensity) || 0) + '/10</div>'
+      + '<div class="pat-int">' + (isRated(e) ? (Number(e.intensity) + '/10') : '—') + '</div>'
       + '<div class="pat-bits">' + (bits.join(' · ') || '—') + '</div></div>';
   }).join('');
   wrap.innerHTML = '<div class="card"><div class="h3">Your pattern</div>'
-    + '<div class="sub">Your own check-ins. Urge intensity over your last ' + n + ' entr' + (n === 1 ? 'y' : 'ies') + '; dashed lines mark days you logged a re-entry.</div>'
+    + '<div class="sub">Your own check-ins. Urge intensity over your last ' + n + ' entr' + (n === 1 ? 'y' : 'ies') + '; dashed lines mark days you logged a re-entry.'
+    + (unrated ? ' ' + unrated + ' entr' + (unrated === 1 ? 'y is' : 'ies are') + ' unrated — the line breaks there rather than guessing.' : '')
+    + '</div>'
     + '<svg class="pat-chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Urge intensity over time">'
     + '<line x1="' + PAD + '" y1="' + (H - PAD) + '" x2="' + (W - PAD) + '" y2="' + (H - PAD) + '" stroke="var(--line)" stroke-width="1"/>'
-    + marks
-    + '<polyline points="' + pts + '" fill="none" stroke="var(--sage)" stroke-width="2" stroke-linejoin="round"/>'
+    + marks + lines
     + '<g fill="var(--sage)">' + dots + '</g></svg>'
     + '<div class="pat-list">' + rows + '</div></div>';
 }
 
 // ─── BACKUP / RESTORE (user-initiated, never automatic) ───────────
 async function buildBackup(){
-  const out = { kind:'ria-backup', schemaVersion: 2, exportedAt: todayKey(), state: JSON.parse(JSON.stringify(S)), photos: {} };
+  const out = { kind:'ria-backup', schemaVersion: 3, exportedAt: todayKey(), state: JSON.parse(JSON.stringify(S)), photos: {} };
   for(const m of (S.memories || [])){
     if(m && m.k){
       try { const b = await idbGet(m.k); if(b) out.photos[m.k] = await blobToDataUrl(b); } catch(e){ /* skip */ }
@@ -986,6 +1005,25 @@ function todayKey(){ return getLocalDateKey(); }
 function daysAgoToStartDate(daysAgo){ const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - Number(daysAgo || 0)); return getLocalDateKey(d); }
 function daysBetweenLocal(startDateStr){ if(!startDateStr) return 0; const parts = startDateStr.split('-').map(Number); if(parts.length !== 3) return 0; const [y,m,d] = parts; const start = new Date(y,m-1,d); const today = new Date(); start.setHours(0,0,0,0); today.setHours(0,0,0,0); return Math.max(0, Math.floor((today-start)/86400000)); }
 function getDaysClean(){ if(S.startDate) return daysBetweenLocal(S.startDate) + 1; return Number(S.days) || 0; }
+// A check-in carries a real intensity only if the user set one. null/undefined
+// means unrated and must never be coerced to 0 for display or plotting.
+function isRated(e){ return e && e.intensity !== null && e.intensity !== undefined && Number.isFinite(Number(e.intensity)); }
+// v2→v3: before this date the slider defaulted to 5 and wrote that value whether
+// or not it was touched. A stored 5 from that era cannot be distinguished from a
+// real 5, so all of them are cleared rather than left to misreport the chart.
+// Entries recorded after the fix are untouched. Destructive by design — the
+// alternative is a chart that lies.
+const INTENSITY_FIX_DATE = '2026-09-07';
+function migrateIntensity(){
+  if(Number(S.schemaVersion || 0) >= 3) return;
+  let cleared = 0;
+  (S.checkinLog || []).forEach(e => {
+    if(e && typeof e.date === 'string' && e.date < INTENSITY_FIX_DATE && Number(e.intensity) === 5){ e.intensity = null; cleared++; }
+  });
+  S.schemaVersion = 3;
+  saveState();
+  if(cleared) console.info('RIA: cleared ' + cleared + ' unverifiable intensity value(s) from before ' + INTENSITY_FIX_DATE);
+}
 function calcSaved(){ return Math.round(((Number(S.bingeAmt)||0) * (Number(S.bingeFreq)||0) / 30) * getDaysClean()); }
 function migrateStartDate(){ if(!S.startDate && Number.isFinite(Number(S.days))){ S.startDate = daysAgoToStartDate(Number(S.days)||0); saveState(); } }
 function escapeHtml(str){ return String(str || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
@@ -1206,6 +1244,7 @@ function finishSetup(){ captureStep3(); saveState(); launchApp(); }
 function quickLaunch(){ if(!S.name) S.name = val('inp-name') || 'Friend'; saveState(); launchApp(); }
 function launchApp(){
   migrateStartDate();
+  migrateIntensity();
   document.getElementById('onboarding').classList.add('hidden');
   document.getElementById('nav').classList.remove('hidden');
   populate(); renderPattern(); go('home');
@@ -1486,6 +1525,34 @@ function renderCalendar(){
 function sel(el){
   el.closest('.cq-opts').querySelectorAll('.cqo').forEach(o => o.classList.remove('sel'));
   el.classList.add('sel');
+  const q = el.closest('.cq') ? el.closest('.cq').getAttribute('data-q') : '';
+  if(q === 'urges') syncIntensityVisibility(el.textContent.trim());
+}
+
+// ─── URGE INTENSITY ───────────────────────────────────────────────
+// Rule §4.9: never record a number the user did not enter. Until 2026-09-07
+// this slider shipped at value="5" and wrote that number whether or not it was
+// touched, so every check-in read 5/10 and the pattern chart was a flat line at
+// a widget default. Now: "None" hides the slider and records 0 (nothing to
+// rate); otherwise the value is recorded only if the user actually moved it,
+// and stays null if they didn't.
+let intensityTouched = false;
+function syncIntensityVisibility(urges){
+  const wrap = document.getElementById('intensity-wrap');
+  if(wrap) wrap.classList.toggle('hidden', urges === 'None');
+}
+function markIntensity(v){
+  intensityTouched = true;
+  text('int-v', v + '/10');
+  const hint = document.getElementById('int-hint');
+  if(hint) hint.textContent = '';
+}
+function readIntensity(urges){
+  if(urges === 'None') return 0;
+  if(!intensityTouched) return null;
+  const raw = document.getElementById('checkin-intensity');
+  const n = parseInt(raw ? raw.value : '', 10);
+  return Number.isFinite(n) ? n : null;
 }
 function readAnswers(modalId){
   const out = {};
@@ -1509,13 +1576,18 @@ function openCheckin(){
   }
   document.querySelectorAll('#modal-checkin .cqo').forEach(o => o.classList.remove('sel'));
   const range = document.getElementById('checkin-intensity');
-  if(range){ range.value = 5; text('int-v','5'); }
+  if(range) range.value = 5;
+  intensityTouched = false;
+  text('int-v', 'not set');
+  const hint = document.getElementById('int-hint');
+  if(hint) hint.textContent = "Drag to rate it. Leave it alone if you'd rather not — a blank is honest, a guess isn't.";
+  syncIntensityVisibility('');
   document.getElementById('modal-checkin').classList.add('open');
 }
 function submitCheckin(){
   const a = readAnswers('modal-checkin');
   a.date = todayKey();
-  a.intensity = parseInt(document.getElementById('checkin-intensity')?.value || '5', 10);
+  a.intensity = readIntensity(a.urges);
   S.checkinLog = (S.checkinLog || []).filter(x => x.date !== a.date);
   S.checkinLog.push(a);
   S.checkins = S.checkins || [];
@@ -1533,6 +1605,7 @@ function lastCheckin(){ return (S.checkinLog || []).slice().sort((x,y) => x.date
 // First-pass drift score built only from data the user actually
 // entered. Not the full Blueprint §3.2 engine — no predictive model,
 // no background execution. Every input here is observable on-device.
+const CHECKIN_FRESH_DAYS = 2;
 function getDriftScore(){
   let score = 0;
   const reasons = [];
@@ -1558,14 +1631,20 @@ function getDriftScore(){
     if(left <= 3 && left >= -2){ score += 2; reasons.push(`day ${days} of your ${cycle}-day cycle — your historical risk zone`); }
   }
 
-  // Last check-in said they were pulling back or gone dark
+  // Last check-in said they were pulling back or gone dark.
+  // Only a FRESH check-in scores. Previously lastCheckin() was used regardless
+  // of age, so someone who logged "gone dark" and then stopped checking in
+  // carried +3 forever and sat in permanent red — and a banner that is always
+  // on is a banner that is off. Anything older than CHECKIN_FRESH_DAYS is
+  // history, and history belongs in the pattern view, not in today's score.
   const last = lastCheckin();
-  if(last){
-    if(last.isolation === 'Gone dark'){ score += 3; reasons.push('you logged "gone dark"'); }
-    else if(last.isolation === 'Pulling back'){ score += 2; reasons.push('you logged "pulling back"'); }
-    if(last.urges === 'Strong'){ score += 2; reasons.push('you logged strong urges'); }
-    if(last.signalToday && last.signalToday !== 'None of these'){ score += 2; reasons.push(`you flagged "${last.signalToday}" — one of your own drift signals`); }
-    if(Number(last.intensity) >= 8){ score += 1; }
+  const fresh = last && last.date && daysBetweenLocal(last.date) <= CHECKIN_FRESH_DAYS ? last : null;
+  if(fresh){
+    if(fresh.isolation === 'Gone dark'){ score += 3; reasons.push('you logged "gone dark"'); }
+    else if(fresh.isolation === 'Pulling back'){ score += 2; reasons.push('you logged "pulling back"'); }
+    if(fresh.urges === 'Strong'){ score += 2; reasons.push('you logged strong urges'); }
+    if(fresh.signalToday && fresh.signalToday !== 'None of these'){ score += 2; reasons.push(`you flagged "${fresh.signalToday}" — one of your own drift signals`); }
+    if(isRated(fresh) && Number(fresh.intensity) >= 8){ score += 1; }
   }
   return { score, reasons };
 }
