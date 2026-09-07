@@ -1,7 +1,25 @@
 // RIA service worker.
-// Offline reliability IS the product: this app has to open at 2am with no signal.
-// Bump CACHE on every deploy so clients pick up the new shell.
-const CACHE = 'ria-v13';
+//
+// Offline reliability IS the product: this app has to open at 2am with no
+// signal. But the previous cache-first-for-everything strategy meant a shipped
+// fix could sit unseen on a phone indefinitely — the shell only changed when
+// the browser noticed a byte-changed sw.js, installed it, and activated it. If
+// any link in that chain stalls, the user keeps running the old app with no way
+// to know. This app's crisis numbers ship inside index.html, so "stuck on an
+// old build" is not a cosmetic risk.
+//
+// Strategy now:
+//   navigations  → network first, short timeout, cached shell as fallback
+//   everything else → cache first, refreshed in the background
+//
+// Offline still works: with no signal the navigation fetch fails immediately
+// and the cached shell is served, exactly as before.
+const CACHE = 'ria-v14';
+
+// How long a navigation waits for the network before serving the cached shell.
+// Deliberately short — an app that takes ten seconds to open at 2am has already
+// failed, and the cached copy is never more than one launch stale.
+const NAV_TIMEOUT_MS = 2500;
 
 const ASSETS = [
   './',
@@ -12,9 +30,8 @@ const ASSETS = [
   'icons/icon.svg'
 ];
 
-// INSTALL — precache the full shell. Individual failures must not
-// abort the whole install, or one missing icon leaves the app with
-// no offline cache at all.
+// INSTALL — precache the full shell. Individual failures must not abort the
+// whole install, or one missing icon leaves the app with no offline cache.
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(cache =>
@@ -40,18 +57,67 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// FETCH — cache-first, with a navigation fallback to index.html so a
-// deep link or a refresh still opens the app offline.
-self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
+// Rejects if the promise has not settled within ms. The underlying fetch is
+// left running — if it lands late it simply updates the cache for next time.
+function withTimeout(promise, ms){
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('sw: network timeout')), ms);
+    promise.then(
+      v => { clearTimeout(timer); resolve(v); },
+      e => { clearTimeout(timer); reject(e); }
+    );
+  });
+}
 
-  e.respondWith(
-    caches.match(e.request).then(response => {
-      if (response) return response;
-      return fetch(e.request).catch(() => {
-        if (e.request.mode === 'navigate') return caches.match('index.html');
-        return Response.error();
-      });
-    })
-  );
+// NAVIGATION — fresh shell when the network answers quickly, cached shell when
+// it does not. Every successful fetch replaces the cached copy, so the offline
+// fallback is the last good version rather than the version first installed.
+// Stored under the fixed 'index.html' key so query strings (?v=…) cannot
+// fragment the cache into one entry per launch.
+async function handleNavigation(request){
+  const cache = await caches.open(CACHE);
+  try {
+    const fresh = await withTimeout(fetch(request), NAV_TIMEOUT_MS);
+    if(fresh && fresh.ok){
+      cache.put('index.html', fresh.clone()).catch(err => console.warn('SW: shell not cached', err));
+      return fresh;
+    }
+    throw new Error('sw: bad navigation response');
+  } catch(err){
+    const cached = await cache.match('index.html') || await cache.match('./');
+    if(cached) return cached;
+    throw err;
+  }
+}
+
+// ASSETS — serve from cache immediately, refresh in the background so the next
+// launch has the newer copy. Icons and the manifest are never urgent enough to
+// wait on the network for.
+function handleAsset(event){
+  return caches.open(CACHE).then(async cache => {
+    const hit = await cache.match(event.request);
+    const network = fetch(event.request).then(res => {
+      if(res && res.ok) cache.put(event.request, res.clone()).catch(() => {});
+      return res;
+    }).catch(() => null);
+    if(hit){
+      event.waitUntil(network);
+      return hit;
+    }
+    const res = await network;
+    return res || Response.error();
+  });
+}
+
+self.addEventListener('fetch', e => {
+  if(e.request.method !== 'GET') return;
+
+  // Leave other origins alone entirely — the four meeting links in the app are
+  // ordinary outbound navigations and are none of this worker's business.
+  let url;
+  try { url = new URL(e.request.url); } catch(err){ return; }
+  if(url.origin !== self.location.origin) return;
+
+  if(e.request.mode === 'navigate'){ e.respondWith(handleNavigation(e.request)); return; }
+  e.respondWith(handleAsset(e));
 });

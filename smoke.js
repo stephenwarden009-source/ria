@@ -398,6 +398,20 @@ function check(name, cond, extra){ results.push({name, pass: !!cond, extra: extr
   check('no network calls anywhere in the app', net.length === 0, net.join(','));
   check('no geolocation access', !/navigator\.geolocation/.test(source));
 
+  // ── Service worker strategy, checked at the source level.
+  // Playwright over file:// cannot register a service worker, so these are
+  // static assertions, not behavioural ones. They exist to stop a future edit
+  // silently reverting navigations to cache-first, which is what let a shipped
+  // fix sit unseen on a phone.
+  const sw = fs.readFileSync(path.join(path.dirname(TARGET), 'sw.js'), 'utf8');
+  check('sw handles navigations separately', /mode === 'navigate'/.test(sw));
+  check('sw goes to the network first for navigations', /handleNavigation[\s\S]*?fetch\(request\)/.test(sw));
+  check('sw still falls back to the cached shell offline', /cache\.match\('index\.html'\)/.test(sw));
+  check('sw caps how long a navigation waits', /NAV_TIMEOUT_MS\s*=\s*\d+/.test(sw));
+  check('sw leaves other origins alone', /url\.origin !== self\.location\.origin/.test(sw));
+  const cacheName = (sw.match(/const CACHE = '([^']+)'/) || [])[1];
+  check('sw cache name bumped past ria-v13', cacheName && cacheName !== 'ria-v13' && cacheName !== 'ria-v12', cacheName);
+
   check('no page errors', errors.length === 0, errors.slice(0,3).join(' | '));
 
   await browser.close();
