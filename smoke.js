@@ -398,6 +398,16 @@ function check(name, cond, extra){ results.push({name, pass: !!cond, extra: extr
   check('no network calls anywhere in the app', net.length === 0, net.join(','));
   check('no geolocation access', !/navigator\.geolocation/.test(source));
 
+  // ── Build readout: which version is this device actually running
+  await page.evaluate(() => openSettings());
+  await page.waitForTimeout(200);
+  const buildTxt = await page.textContent('#s-build');
+  check('settings names the shell build', /Shell: \S/.test(buildTxt || ''), buildTxt);
+  check('settings reports cache state', /Cache: /.test(buildTxt || ''), buildTxt);
+  const shellConst = await page.evaluate(() => typeof SHELL_BUILD === 'string' && SHELL_BUILD.length > 0);
+  check('SHELL_BUILD is set', shellConst);
+  await page.evaluate(() => closeSettings());
+
   // ── Service worker strategy, checked at the source level.
   // Playwright over file:// cannot register a service worker, so these are
   // static assertions, not behavioural ones. They exist to stop a future edit
@@ -410,7 +420,7 @@ function check(name, cond, extra){ results.push({name, pass: !!cond, extra: extr
   check('sw caps how long a navigation waits', /NAV_TIMEOUT_MS\s*=\s*\d+/.test(sw));
   check('sw leaves other origins alone', /url\.origin !== self\.location\.origin/.test(sw));
   const cacheName = (sw.match(/const CACHE = '([^']+)'/) || [])[1];
-  check('sw cache name bumped past ria-v13', cacheName && cacheName !== 'ria-v13' && cacheName !== 'ria-v12', cacheName);
+  check('sw cache name bumped past ria-v13', cacheName && !['ria-v12','ria-v13'].includes(cacheName), cacheName);
 
   check('no page errors', errors.length === 0, errors.slice(0,3).join(' | '));
 
