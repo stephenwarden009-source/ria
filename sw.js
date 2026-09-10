@@ -14,7 +14,7 @@
 //
 // Offline still works: with no signal the navigation fetch fails immediately
 // and the cached shell is served, exactly as before.
-const CACHE = 'ria-v15';
+const CACHE = 'ria-v16';
 
 // How long a navigation waits for the network before serving the cached shell.
 // Deliberately short — an app that takes ten seconds to open at 2am has already
@@ -29,6 +29,18 @@ const ASSETS = [
   'icons/icon-512.png',
   'icons/icon.svg'
 ];
+
+// The one cache key the offline shell is ever stored under, and the only two
+// URLs allowed to write to it. Every navigation used to be written here
+// regardless of what was navigated to, so any other same-origin page in scope
+// — a stray build, a 404 page — became the app's offline shell after a single
+// visit.
+const SHELL_KEY = 'index.html';
+const SCOPE_PATH = new URL('./', self.location).pathname;
+
+function isShellRequest(url){
+  return url.pathname === SCOPE_PATH || url.pathname === SCOPE_PATH + 'index.html';
+}
 
 // INSTALL — precache the full shell. Individual failures must not abort the
 // whole install, or one missing icon leaves the app with no offline cache.
@@ -79,12 +91,12 @@ async function handleNavigation(request){
   try {
     const fresh = await withTimeout(fetch(request), NAV_TIMEOUT_MS);
     if(fresh && fresh.ok){
-      cache.put('index.html', fresh.clone()).catch(err => console.warn('SW: shell not cached', err));
+      cache.put(SHELL_KEY, fresh.clone()).catch(err => console.warn('SW: shell not cached', err));
       return fresh;
     }
     throw new Error('sw: bad navigation response');
   } catch(err){
-    const cached = await cache.match('index.html') || await cache.match('./');
+    const cached = await cache.match(SHELL_KEY) || await cache.match('./');
     if(cached) return cached;
     throw err;
   }
@@ -118,6 +130,13 @@ self.addEventListener('fetch', e => {
   try { url = new URL(e.request.url); } catch(err){ return; }
   if(url.origin !== self.location.origin) return;
 
-  if(e.request.mode === 'navigate'){ e.respondWith(handleNavigation(e.request)); return; }
+  // Only the app entry point gets the network-first-with-cached-shell
+  // treatment. Any other navigation in scope is left to the browser: serving
+  // it the shell would be wrong, and caching it as the shell is the bug this
+  // guard exists to prevent.
+  if(e.request.mode === 'navigate'){
+    if(isShellRequest(url)) e.respondWith(handleNavigation(e.request));
+    return;
+  }
   e.respondWith(handleAsset(e));
 });
