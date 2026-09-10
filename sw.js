@@ -42,6 +42,25 @@ function isShellRequest(url){
   return url.pathname === SCOPE_PATH || url.pathname === SCOPE_PATH + 'index.html';
 }
 
+// A 200 is not proof the network gave us the app. Captive portals — hotel,
+// airport, coffee shop — answer every request with their own login page, and
+// that page is a perfectly valid 200 text/html response. Caching one as the
+// shell leaves the app opening to a wifi login screen offline, at 2am, with
+// the crisis numbers unreachable. Verify before overwriting the one copy that
+// has to work.
+async function isTrustworthyShell(res){
+  if(!res || !res.ok || res.redirected) return false;   // a bounce is a portal tell
+  try {
+    if(new URL(res.url).origin !== self.location.origin) return false;
+  } catch(err){ return false; }
+  if(!(res.headers.get('content-type') || '').toLowerCase().includes('text/html')) return false;
+  try {
+    // The marker is a bare meta tag in index.html. A portal can return HTML,
+    // and can even sit on this origin, but it will not contain this.
+    return (await res.clone().text()).includes('name="ria-shell"');
+  } catch(err){ return false; }
+}
+
 // INSTALL — precache the full shell. Individual failures must not abort the
 // whole install, or one missing icon leaves the app with no offline cache.
 self.addEventListener('install', e => {
@@ -91,7 +110,14 @@ async function handleNavigation(request){
   try {
     const fresh = await withTimeout(fetch(request), NAV_TIMEOUT_MS);
     if(fresh && fresh.ok){
-      cache.put(SHELL_KEY, fresh.clone()).catch(err => console.warn('SW: shell not cached', err));
+      // Serve it either way — the user asked for the network and got an
+      // answer. Only the cached copy is gated, because that is the one that
+      // has to survive being wrong.
+      if(await isTrustworthyShell(fresh)){
+        cache.put(SHELL_KEY, fresh.clone()).catch(err => console.warn('SW: shell not cached', err));
+      } else {
+        console.warn('SW: navigation response not recognised as the shell — cache left alone');
+      }
       return fresh;
     }
     throw new Error('sw: bad navigation response');
