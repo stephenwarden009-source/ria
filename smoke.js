@@ -416,9 +416,23 @@ function check(name, cond, extra){ results.push({name, pass: !!cond, extra: extr
   const sw = fs.readFileSync(path.join(path.dirname(TARGET), 'sw.js'), 'utf8');
   check('sw handles navigations separately', /mode === 'navigate'/.test(sw));
   check('sw goes to the network first for navigations', /handleNavigation[\s\S]*?fetch\(request\)/.test(sw));
-  check('sw still falls back to the cached shell offline', /cache\.match\('index\.html'\)/.test(sw));
+  check('sw still falls back to the cached shell offline', /cache\.match\(SHELL_KEY\)[\s\S]*?cache\.match\('\.\/'\)/.test(sw));
   check('sw caps how long a navigation waits', /NAV_TIMEOUT_MS\s*=\s*\d+/.test(sw));
   check('sw leaves other origins alone', /url\.origin !== self\.location\.origin/.test(sw));
+
+  // Shell-poisoning guards. Both were added after a headless run showed that
+  // one visit to any other in-scope page replaced the offline shell with it.
+  // Static assertions like the rest of this block — the behavioural proof is
+  // in verify-fixes.js, which needs a real origin to register a worker on.
+  check('sw only treats the entry point as the shell', /isShellRequest\(url\)/.test(sw));
+  check('sw writes the shell key only from the entry point', /function isShellRequest/.test(sw));
+  check('sw validates a navigation response before caching it', /await isTrustworthyShell\(fresh\)/.test(sw));
+  check('sw rejects redirected or cross-origin shell responses', /res\.redirected/.test(sw) && /new URL\(res\.url\)\.origin !== self\.location\.origin/.test(sw));
+  check('shell marker present for the sw to check against', /name="ria-shell"/.test(source));
+  check('manifest pins an explicit app id', (() => {
+    try { return typeof JSON.parse(fs.readFileSync(path.join(path.dirname(TARGET), 'manifest.json'), 'utf8')).id === 'string'; }
+    catch(e){ return false; }
+  })());
   const cacheName = (sw.match(/const CACHE = '([^']+)'/) || [])[1];
   check('sw cache name bumped past ria-v13', cacheName && !['ria-v12','ria-v13'].includes(cacheName), cacheName);
 
