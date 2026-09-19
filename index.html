@@ -437,7 +437,7 @@ input[type=range]{padding:0;background:transparent;border:none}
       <div class="tile" onclick="go('tools')">🧰<br>Tools</div>
       <div class="tile" onclick="go('support')">🤝<br>Support</div>
       <div class="tile" onclick="go('media')">🎧<br>Reset</div>
-      <div class="tile" onclick="go('memory')">🖼<br>My People + Pets</div>
+      <div class="tile" onclick="go('memory')">🖼<br>My Family</div>
     </div>
     <div class="card">
       <div class="h3">Daily Check-In</div>
@@ -468,7 +468,7 @@ input[type=range]{padding:0;background:transparent;border:none}
 
   <!-- ══════════════════ MY PEOPLE + PETS ══════════════════ -->
   <div class="screen" id="screen-memory">
-    <div class="card hero"><div class="h2">My People + Pets</div><div class="sub">The people and animals you're fighting for.</div></div>
+    <div class="card hero"><div class="h2">My Family</div><div class="sub">The people and animals you're fighting for.</div></div>
     <div class="card"><div class="pill">Affirmation</div><div class="sub" id="aff-text" style="margin-top:8px">You are fighting for something real.</div>
       <div class="tool-actions"><button class="btn3" onclick="prevAff()">‹ Prev</button><button class="btn3" onclick="nextAff()">Next ›</button></div>
       <div class="small" id="aff-auth" style="margin-top:8px"></div>
@@ -571,7 +571,7 @@ input[type=range]{padding:0;background:transparent;border:none}
     <button id="nav-home" class="active" onclick="go('home')">🏠<span>Home</span></button>
     <button id="nav-urgent" onclick="go('urgent')">⚠️<span>Urgent</span></button>
     <button id="nav-media" onclick="go('media')">🎧<span>Reset</span></button>
-    <button id="nav-memory" onclick="go('memory')">🖼<span>People</span></button>
+    <button id="nav-memory" onclick="go('memory')">🖼<span>Family</span></button>
     <button id="nav-ai" onclick="go('ai')">💬<span>Moment</span></button>
     <button id="nav-support" onclick="go('support')">🤝<span>Support</span></button>
     <button id="nav-tools" onclick="go('tools')">🧰<span>Tools</span></button>
@@ -608,6 +608,7 @@ input[type=range]{padding:0;background:transparent;border:none}
     <div class="small" id="s-storage">—</div>
     <div class="lbl">This version</div>
     <div class="small" id="s-build">—</div>
+    <div class="small" style="margin-top:4px">© 2026 Stephen Warden. All rights reserved.</div>
     <div class="small" style="margin-top:8px">Everything you have entered lives on this device only. If you clear your browser data or lose this phone, it is gone — there is no copy anywhere else. A backup file is the only way to keep it.</div>
     <div class="tool-actions" style="margin-top:10px">
       <button class="btn3" onclick="exportBackup()">Save a backup file</button>
@@ -617,7 +618,7 @@ input[type=range]{padding:0;background:transparent;border:none}
     <button class="btn2" onclick="saveSettings()">Save Changes</button><div class="close" onclick="closeSettings()">Close</div>
   </div></div>
 
-  <div class="modal-wrap" id="modal-updates"><div class="modal"><div class="h2">Messages & Updates</div><div class="sub">A place for app notes, encouragement, and future updates.</div><div class="card"><div class="h3">Current build</div><div class="sub">Five-step setup, saved triggers, region-aware crisis lines, drift-weighted risk, re-entry module, and My People + Pets.</div></div><div class="close" onclick="closeUpdates()">Close</div></div></div>
+  <div class="modal-wrap" id="modal-updates"><div class="modal"><div class="h2">Messages & Updates</div><div class="sub">A place for app notes, encouragement, and future updates.</div><div class="card"><div class="h3">Current build</div><div class="sub">Five-step setup, saved triggers, region-aware crisis lines, drift-weighted risk, re-entry module, and My Family.</div></div><div class="close" onclick="closeUpdates()">Close</div></div></div>
 
   <!-- ══════════════════ DAILY CHECK-IN ══════════════════ -->
   <div class="modal-wrap" id="modal-checkin"><div class="modal">
@@ -691,10 +692,16 @@ const THEME_KEY = 'ria3_theme';
 // Crisis resources are region-scoped so RIA can ship outside Canada
 // without a code change. Add a territory by adding a key here.
 // Every number below was verified against the operator's own site.
+const CA_988  = { name:'9-8-8 Suicide Crisis Helpline', tel:'988', sms:'988', note:'24/7 · free · English & French' };
+const CA_NORS = { name:'NORS — National Overdose Response Service', tel:'18886886677', note:'Never use alone. Virtual overdose monitoring, Canada-wide.' };
+// Provincial lines get their own region so they never show to someone
+// the service cannot help. National lines stay in every Canadian region.
 const REGIONS = {
-  CA: { label:'Canada', lines:[
-    { name:'9-8-8 Suicide Crisis Helpline', tel:'988', sms:'988', note:'24/7 · free · English & French' },
-    { name:'NORS — National Overdose Response Service', tel:'18886886677', note:'Never use alone. Virtual overdose monitoring, Canada-wide.' }
+  CA: { label:'Canada', lines:[ CA_988, CA_NORS ]},
+  ON: { label:'Canada — Ontario', lines:[
+    CA_988,
+    { name:'ConnexOntario — Mental Health & Addiction Treatment Services', tel:'18665312600', sms:'247247', smsBody:'CONNEX', url:'https://www.connexontario.ca/', note:'24/7 · free · text CONNEX to 247247' },
+    CA_NORS
   ]},
   US: { label:'United States', lines:[
     { name:'988 Suicide & Crisis Lifeline', tel:'988', sms:'988', note:'24/7 · free · confidential' },
@@ -702,7 +709,7 @@ const REGIONS = {
   ]},
   OTHER: { label:'Other / not listed', custom:true, lines:[] }
 };
-const EMERGENCY = { CA:'911', US:'911', OTHER:'' };
+const EMERGENCY = { CA:'911', ON:'911', US:'911', OTHER:'' };
 
 const TRIGGER_SETS = {
   emotional:['Loneliness','Boredom','Anxiety','Anger','Depression','Stress / pressure','Shame','Grief / loss','Feeling invisible'],
@@ -740,7 +747,7 @@ const buy10Prompts = [
 ];
 
 // ─── PERSISTENCE ──────────────────────────────────────────────────
-function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); }catch(e){ console.error('saveState failed', e); showFlash('Storage full — remove a few photos in My People + Pets.'); } }
+function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); }catch(e){ console.error('saveState failed', e); showFlash('Storage full — remove a few photos in My Family.'); } }
 function loadState(){ try{ const raw = localStorage.getItem(STORAGE_KEY); if(!raw) return false; S = deepMerge(JSON.parse(JSON.stringify(DEFAULT_STATE)), JSON.parse(raw) || {}); return true; } catch(e){ console.error('loadState failed', e); return false; } }
 function deepMerge(base, incoming){ if(Array.isArray(base)) return Array.isArray(incoming) ? incoming : base; const out = {...base}; for(const k in incoming){ if(base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])) out[k] = deepMerge(base[k], incoming[k] || {}); else out[k] = incoming[k]; } return out; }
 
@@ -834,7 +841,7 @@ async function storageReadout(){
 // is why this readout exists.
 //
 // BUMP SHELL_BUILD ON EVERY DEPLOY, alongside CACHE in sw.js.
-const SHELL_BUILD = '2026-09-07 · network-first sw';
+const SHELL_BUILD = '2026-09-19 · ria-v17';
 async function buildReadout(){
   const el = document.getElementById('s-build');
   if(!el) return;
@@ -1095,7 +1102,8 @@ function crisisHtml(){
     return `<div class="crisis-line">
       <div class="cl-txt"><div class="cl-name">${escapeHtml(l.name)}</div><div class="cl-note">${escapeHtml(l.note || '')}</div></div>
       ${tel ? `<a class="crisis-act" href="tel:${tel}" aria-label="Call ${escapeHtml(l.name)}">📞</a>` : ''}
-      ${l.sms ? `<a class="crisis-act" href="sms:${extractPhone(l.sms)}" aria-label="Text ${escapeHtml(l.name)}">💬</a>` : ''}
+      ${l.sms ? `<a class="crisis-act" href="sms:${extractPhone(l.sms)}${l.smsBody ? '?body=' + encodeURIComponent(l.smsBody) : ''}" aria-label="Text ${escapeHtml(l.name)}">💬</a>` : ''}
+      ${l.url ? `<a class="crisis-act" href="${escapeHtml(l.url)}" target="_blank" rel="noopener" aria-label="Open ${escapeHtml(l.name)} website">🌐</a>` : ''}
     </div>`;
   }).join('');
   return `<div class="crisis-bar">

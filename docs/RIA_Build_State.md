@@ -171,7 +171,7 @@ The residual technical constraint stands: reliable self-directed reminders need 
 **Primary market is Canada, other territories planned.** Crisis lines live in the `REGIONS` object at the top of the script block, so adding a country is a data change:
 
 ```js
-REGIONS.AU = { label:'Australia', lines:[ {name, tel, sms?, note} ] };
+REGIONS.AU = { label:'Australia', lines:[ {name, tel, sms?, smsBody?, url?, note} ] };
 EMERGENCY.AU = '000';
 ```
 
@@ -179,6 +179,7 @@ Users in an unlisted country pick "Other" and enter their own line, stored in `S
 
 Currently shipping, each verified against the operator's own site on 2026-09-04:
 - **CA (default):** 9-8-8 Suicide Crisis Helpline (call or text, 24/7, EN/FR); NORS, 1-888-688-6677. Emergency 911.
+- **ON (Canada — Ontario, added 2026-09-19, `ria-v17`):** 988, then ConnexOntario (1-866-531-2600, text CONNEX to 247247, connexontario.ca — verified 2026-09-19), then NORS. Emergency 911. Provincial lines get their own region so a user outside the province never sees a line that cannot serve them; national lines are shared constants (`CA_988`, `CA_NORS`) so they cannot drift between CA and ON.
 - **US:** 988 Suicide & Crisis Lifeline; SAMHSA National Helpline 1-800-662-4357. Emergency 911.
 
 **Rule:** never add a number to a crisis path without checking it against the operator's own site first. A wrong number here is the worst bug in the app — and per §5, a wrong number on a stranded device cannot be corrected remotely.

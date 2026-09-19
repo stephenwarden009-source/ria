@@ -167,6 +167,15 @@ function check(name, cond, extra){ results.push({name, pass: !!cond, extra: extr
   check('triggers survive reload', trg2.signals.includes('Going quiet'));
 
   // ── Region switch changes crisis lines
+  const caText = await page.textContent('#crisis-home');
+  check('CA region does not show Ontario-only ConnexOntario', !caText.includes('ConnexOntario'));
+  await page.evaluate(() => { S.region='ON'; saveState(); renderCrisis(); });
+  await page.waitForTimeout(150);
+  const onLinks = await page.$$eval('#crisis-home a', as => as.map(a=>a.getAttribute('href')));
+  const onText = await page.textContent('#crisis-home');
+  check('ON region shows ConnexOntario between 988 and NORS', onText.indexOf('9-8-8') < onText.indexOf('ConnexOntario') && onText.indexOf('ConnexOntario') < onText.indexOf('NORS'));
+  check('ConnexOntario call, text and web actions', onLinks.includes('tel:18665312600') && onLinks.includes('sms:247247?body=CONNEX') && onLinks.includes('https://www.connexontario.ca/'), JSON.stringify(onLinks));
+  check('ON region keeps national lines', onLinks.includes('tel:988') && onLinks.includes('tel:18886886677'));
   await page.evaluate(() => { S.region='US'; saveState(); renderCrisis(); });
   await page.waitForTimeout(150);
   check('US region swaps to SAMHSA', (await page.textContent('#crisis-home')).includes('SAMHSA'));
