@@ -14,7 +14,7 @@
 //
 // Offline still works: with no signal the navigation fetch fails immediately
 // and the cached shell is served, exactly as before.
-const CACHE = 'ria-v18';
+const CACHE = 'ria-v19';
 
 // How long a navigation waits for the network before serving the cached shell.
 // Deliberately short — an app that takes ten seconds to open at 2am has already
@@ -100,6 +100,20 @@ function withTimeout(promise, ms){
   });
 }
 
+// Bypass the browser's HTTP cache for navigations. GitHub Pages serves pages
+// with a short max-age, and a plain fetch(request) may be answered from the
+// HTTP cache — so "network first" could hand back the previous deploy for
+// minutes after a push (2026-10-08: v18 live on desktop, phone still on v17,
+// worker reporting nothing pending). 'no-cache' revalidates with the server
+// every time; an unchanged page costs a 304.
+// A navigate-mode Request cannot be re-wrapped with an init object, so fetch
+// the URL. redirect:'manual' keeps the previous behaviour exactly: a redirect
+// (captive portal) comes back as an opaque redirect, fails .ok, and the
+// cached shell is served — crisis numbers stay reachable behind a wifi login.
+function fetchFreshShell(request){
+  return fetch(request.url, { cache: 'no-cache', redirect: 'manual', credentials: 'same-origin' });
+}
+
 // NAVIGATION — fresh shell when the network answers quickly, cached shell when
 // it does not. Every successful fetch replaces the cached copy, so the offline
 // fallback is the last good version rather than the version first installed.
@@ -108,7 +122,7 @@ function withTimeout(promise, ms){
 async function handleNavigation(request){
   const cache = await caches.open(CACHE);
   try {
-    const fresh = await withTimeout(fetch(request), NAV_TIMEOUT_MS);
+    const fresh = await withTimeout(fetchFreshShell(request), NAV_TIMEOUT_MS);
     if(fresh && fresh.ok){
       // Serve it either way — the user asked for the network and got an
       // answer. Only the cached copy is gated, because that is the one that

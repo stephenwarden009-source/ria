@@ -437,7 +437,11 @@ function check(name, cond, extra){ results.push({name, pass: !!cond, extra: extr
   // fix sit unseen on a phone.
   const sw = fs.readFileSync(path.join(path.dirname(TARGET), 'sw.js'), 'utf8');
   check('sw handles navigations separately', /mode === 'navigate'/.test(sw));
-  check('sw goes to the network first for navigations', /handleNavigation[\s\S]*?fetch\(request\)/.test(sw));
+  check('sw goes to the network first for navigations', /handleNavigation[\s\S]*?fetchFreshShell\(request\)/.test(sw));
+  // A plain fetch(request) may be answered from the HTTP cache, so a deploy
+  // can sit unseen for the host's max-age. Navigations must revalidate.
+  check('sw navigation fetch bypasses the HTTP cache', /function fetchFreshShell[\s\S]*?cache:\s*'no-cache'/.test(sw));
+  check('sw navigation fetch keeps manual redirects (captive portal → cached shell)', /function fetchFreshShell[\s\S]*?redirect:\s*'manual'/.test(sw));
   check('sw still falls back to the cached shell offline', /cache\.match\(SHELL_KEY\)[\s\S]*?cache\.match\('\.\/'\)/.test(sw));
   check('sw caps how long a navigation waits', /NAV_TIMEOUT_MS\s*=\s*\d+/.test(sw));
   check('sw leaves other origins alone', /url\.origin !== self\.location\.origin/.test(sw));
