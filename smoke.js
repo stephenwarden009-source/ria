@@ -415,7 +415,20 @@ function check(name, cond, extra){ results.push({name, pass: !!cond, extra: extr
   check('settings reports cache state', /Cache: /.test(buildTxt || ''), buildTxt);
   const shellConst = await page.evaluate(() => typeof SHELL_BUILD === 'string' && SHELL_BUILD.length > 0);
   check('SHELL_BUILD is set', shellConst);
+  // ── About RIA: one source (#about-ria on onboarding step 0), mirrored in Settings
+  const about = await page.evaluate(() => ({
+    ob: (document.getElementById('about-ria') || {}).textContent || '',
+    st: (document.getElementById('s-about') || {}).textContent || ''
+  }));
+  check('about copy present on onboarding step 0', /RIA helps you catch it/.test(about.ob) && /doesn't watch you/.test(about.ob));
+  check('settings about mirrors onboarding about', about.ob.trim().length > 0 && about.ob.trim() === about.st.trim());
+  check('settings about is visible', await page.isVisible('#s-about'));
   await page.evaluate(() => closeSettings());
+  // User-facing copy must not claim RIA observes the user. HTML comments stripped
+  // so the copy rule's own wording doesn't trip it. External service names excluded.
+  const uiText = source.replace(/<!--[\s\S]*?-->/g, '').replace(/\/\/[^\n]*/g, '');
+  const spy = uiText.match(/\b(RIA|it|we|app)\s+(watches|is watching|tracks|is tracking|monitors|noticed|detects|detected)\b|Drift detected/gi) || [];
+  check('no surveillance wording in UI copy', spy.length === 0, spy.join(','));
 
   // ── Service worker strategy, checked at the source level.
   // Playwright over file:// cannot register a service worker, so these are

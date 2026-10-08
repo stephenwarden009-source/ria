@@ -14,7 +14,7 @@
 //
 // Offline still works: with no signal the navigation fetch fails immediately
 // and the cached shell is served, exactly as before.
-const CACHE = 'ria-v17';
+const CACHE = 'ria-v18';
 
 // How long a navigation waits for the network before serving the cached shell.
 // Deliberately short — an app that takes ten seconds to open at 2am has already

@@ -32,7 +32,7 @@ index-stable-v1.html       428 lines   rollback copy (= the pre-rebuild tag)
 index-broken-test.html    1396 lines   dead
 index-broken-test-2.html  1094 lines   dead
 sw.js                      123 lines   service worker, cache "ria-v15", network-first navigations
-smoke.js                   428 lines   Playwright suite, 93 assertions
+smoke.js                   468 lines   Playwright suite, 107 assertions
 CHANGES.md                  45 lines   narrative changelog for the 2026-09-05 build — stale
 manifest.json               26 lines   PWA manifest
 _redirects                   1 line    inert on GitHub Pages — see §1
@@ -66,11 +66,13 @@ Architecture: **single-file vanilla JS PWA.** No framework, no build step, no bu
 
 **Added 2026-09-07 (`12a2853`) — network-first service worker.** Navigations go to the network first with a 2.5s cap and fall back to the cached shell; other GETs are cache-first with a background refresh; cross-origin requests are no longer intercepted. Every successful navigation replaces the cached shell, so the offline fallback is the last good version rather than the version first installed, stored under a fixed `index.html` key so query strings cannot fragment the cache. Offline behaviour is unchanged. Written in response to the Android stranding incident in §5.
 
+**Added 2026-10-08 — app description and the no-surveillance copy rule.** Onboarding step 0 opens with a user-facing description (`#about-ria`), replacing "Let's build your RIA." Settings gains an **About RIA** block that copies `#about-ria` at open time (`aboutReadout()`), so there is one source. Copy rule, now tested: the user is the subject of every input verb; UI copy never says RIA watches, tracks, monitors, notices or detects. Two existing lines broke it and were reworded — step 1 "RIA watches for these" → "RIA keeps these for you", and the high-risk banner "Drift detected." → "Your pattern is showing." Four new assertions, including a regex guard over UI text that fails on the pre-change copy. `ria-v18`.
+
 **Added 2026-09-07 (`5f9e23c`) — build readout in Settings.** Reports `SHELL_BUILD` (identifies `index.html`), the Cache Storage keys (identifies what the worker is serving), and the worker's own state — including "update ready — close and reopen the app", the one actionable case. When shell and cache disagree the device is mid-update or stuck. **Confirmed showing `ria-v15` on the author's Android device.**
 
 **Verified 2026-09-06:** zero `fetch`, `XMLHttpRequest`, `WebSocket`, `sendBeacon`, `navigator.geolocation` in `index.html` — asserted on every suite run, so it still holds. The only outbound URLs are four meeting links. The "everything stays on device" claim **holds in code today.**
 
-**Test coverage:** `smoke.js` — Playwright, **93 assertions**, all passing (Linux container and the author's Mac, 2026-09-07).
+**Test coverage:** `smoke.js` — Playwright, **107 assertions**, all passing (Linux container, 2026-10-08; last confirmed on the author's Mac at 93, 2026-09-07).
 
 ```bash
 npm install playwright && npx playwright install chromium
