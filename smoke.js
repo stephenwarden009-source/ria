@@ -430,6 +430,111 @@ function check(name, cond, extra){ results.push({name, pass: !!cond, extra: extr
   const spy = uiText.match(/\b(RIA|it|we|app)\s+(watches|is watching|tracks|is tracking|monitors|noticed|detects|detected)\b|Drift detected/gi) || [];
   check('no surveillance wording in UI copy', spy.length === 0, spy.join(','));
 
+  // ── Red flags. Driven through the UI, not injected into state: the
+  // slider bug survived 66 green assertions because nothing pressed the
+  // buttons. Only the calendar is moved by state, because the clock can't be.
+  await page.evaluate(() => { document.querySelectorAll('.modal-wrap.open,.redmode-wrap.open,.buy10-wrap.open').forEach(e => e.classList.remove('open')); go('tools'); });
+  check('red flags card on Tools', await page.isVisible('#flags-card'));
+  await page.click('#flags-card button:has-text("Manage red flags")');
+  check('red flags manager opens', await page.isVisible('#modal-flags'));
+  await page.fill('#flag-name', 'Mike');
+  await page.fill('#flag-phone', '(204) 555-0199');
+  await page.click('#modal-flags .btn2');
+  check('red flag needs a reason in the user\'s words', /in your words/i.test(await page.textContent('#flag-err')) && (await page.evaluate(() => (S.flags || []).length)) === 0);
+  await page.fill('#flag-why', 'Every time I call him I end up using.');
+  await page.click('#modal-flags .btn2');
+  const fl1 = await page.evaluate(() => JSON.parse(localStorage.getItem('ria3')).flags);
+  check('person flag persisted: digits-only number, 2-min default pause', fl1.length === 1 && fl1[0].kind === 'person' && fl1[0].phone === '2045550199' && fl1[0].pause === 120, JSON.stringify(fl1));
+  await page.click('#flag-kind .chip[data-val="app"]');
+  check('app flag hides the number field', !(await page.isVisible('#flag-phone')));
+  await page.fill('#flag-name', 'Instagram');
+  await page.fill('#flag-why', 'Scrolling at 2am is how it starts.');
+  await page.selectOption('#flag-pause', '60');
+  await page.click('#modal-flags .btn2');
+  const fl2 = await page.evaluate(() => S.flags);
+  check('app flag persisted with its own pause and no number', fl2.length === 2 && fl2[1].kind === 'app' && fl2[1].pause === 60 && !fl2[1].phone);
+  check('each flag gets a way in from Tools', (await page.locator('#flags-quick button').count()) === 2);
+  const mikeId = fl2[0].id, igId = fl2[1].id;
+  check('setup link points at the gate', (await page.inputValue(`#fl-${igId}`)).endsWith('#gate=' + igId));
+
+  // Asymmetry: stronger now, weaker tomorrow.
+  const pauseSel = `.flag-row[data-id="${igId}"] select[data-pause]`;
+  await page.selectOption(pauseSel, '300');
+  check('longer pause applies now', (await page.evaluate(id => findFlag(id).pause, igId)) === 300);
+  await page.selectOption(pauseSel, '60');
+  const pp = await page.evaluate(id => ({ p: findFlag(id).pause, pend: findFlag(id).pendingPause, tom: tomorrowKey() }), igId);
+  check('shorter pause waits until tomorrow', pp.p === 300 && pp.pend && pp.pend.sec === 60 && pp.pend.from === pp.tom, JSON.stringify(pp));
+  await page.click(`.flag-row[data-id="${igId}"] [data-remove]`);
+  check('removal is deferred to tomorrow', (await page.evaluate(id => findFlag(id).pendingRemove === tomorrowKey(), igId)));
+  await page.click(`.flag-row[data-id="${igId}"] [data-keep]`);
+  check('keep cancels a pending removal', !(await page.evaluate(id => findFlag(id).pendingRemove, igId)));
+  await page.evaluate(id => { findFlag(id).pendingPause.from = todayKey(); saveState(); applyPendingFlagChanges(); }, igId);
+  check('a pending shorter pause lands on its day', (await page.evaluate(id => findFlag(id).pause, igId)) === 60);
+  await page.evaluate(() => closeModal('modal-flags'));
+
+  // Gate, in a second page carrying the same saved state, with a fake clock
+  // for the pause. (The first page owns its context, so storage is copied in.)
+  const savedRaw = await page.evaluate(() => localStorage.getItem('ria3'));
+  const gctx = await browser.newContext({ viewport:{width:430,height:900} });
+  await gctx.addInitScript(raw => { if(!sessionStorage.getItem('seeded')){ localStorage.setItem('ria3', raw); sessionStorage.setItem('seeded', '1'); } }, savedRaw);
+  const gp = await gctx.newPage();
+  gp.on('pageerror', e => errors.push('gate page: ' + e.message));
+  await gp.clock.install();
+  await gp.goto(URL + '#gate=' + mikeId);
+  await gp.waitForTimeout(200);
+  check('gate opens from a #gate= link', await gp.isVisible('#gate-wrap'));
+  check('gate shows the user\'s own reason', /end up using/.test(await gp.textContent('#gate-why')));
+  const lossTxt = await gp.evaluate(() => S.loss);
+  check('gate shows what they lose, in their words', !!lossTxt && (await gp.textContent('#gate-loss')).includes(lossTxt), lossTxt);
+  check('exit to support is offered from the first second', await gp.isVisible('#gate-call'));
+  check('go-ahead is locked while the pause runs', !(await gp.isVisible('#gate-type')));
+  check('opening the gate is counted', (await gp.evaluate(id => findFlag(id).opens, mikeId)) === 1);
+  await gp.clock.runFor(60000);
+  check('still locked halfway through the pause', !(await gp.isVisible('#gate-type')), await gp.textContent('#gate-timer'));
+  await gp.clock.runFor(61000);
+  check('typing step appears when the pause ends', await gp.isVisible('#gate-type'));
+  check('go ahead disabled before the sentence is typed', await gp.isDisabled('#gate-go'));
+  const pasteBlocked = await gp.evaluate(() => { const ev = new Event('paste', { bubbles:true, cancelable:true }); document.getElementById('gate-input').dispatchEvent(ev); return ev.defaultPrevented; });
+  check('pasting the sentence is blocked', pasteBlocked);
+  await gp.fill('#gate-input', 'i know where this leads');
+  check('a partial sentence does not unlock', await gp.isDisabled('#gate-go'));
+  await gp.fill('#gate-input', 'I know where this leads, and I am choosing it anyway.');
+  check('the full sentence unlocks (case and punctuation forgiven)', !(await gp.isDisabled('#gate-go')));
+  await gp.click('#gate-go');
+  const through = await gp.evaluate(id => ({ f: findFlag(id), u: S.usage }), mikeId);
+  check('going ahead is counted on the flag and the ledger', through.f.wentThrough === 1 && through.f.turnedBack === 0 && through.u.gateWentThrough === 1, JSON.stringify({ f: through.f.wentThrough, u: through.u.gateWentThrough }));
+  check('number is handed over only after the gate', (await gp.getAttribute('#gate-done [data-gate-tel]', 'href')) === 'tel:2045550199');
+  // Backing out after going ahead closes, but must not count a second outcome.
+  await gp.click('#gate-back');
+  const once = await gp.evaluate(id => findFlag(id), mikeId);
+  check('one gate, one outcome: backing out after going ahead is not a second count', once.wentThrough === 1 && once.turnedBack === 0, JSON.stringify(once));
+  check('closing the gate clears the link from the address', !(await gp.evaluate(() => location.hash)) && !(await gp.isVisible('#gate-wrap')));
+
+  // Leaving the screen must not run the pause down.
+  await gp.evaluate(id => { Object.defineProperty(document, 'visibilityState', { get: () => 'hidden', configurable: true }); openGate(id); }, mikeId);
+  await gp.clock.runFor(300000);
+  check('pause does not run while the screen is hidden', !(await gp.isVisible('#gate-type')) && (await gp.textContent('#gate-timer')) === '2:00', await gp.textContent('#gate-timer'));
+  await gp.evaluate(() => { Object.defineProperty(document, 'visibilityState', { get: () => 'visible', configurable: true }); document.dispatchEvent(new Event('visibilitychange')); });
+  await gp.click('#gate-back');
+  const back = await gp.evaluate(id => ({ f: findFlag(id), u: S.usage }), mikeId);
+  check('turning back is counted once', back.f.turnedBack === 1 && back.f.wentThrough === 1 && back.u.gateTurnedBack === 1);
+
+  // "Just testing" un-counts the open.
+  const opensBefore = await gp.evaluate(id => findFlag(id).opens, igId);
+  await gp.evaluate(id => openGate(id), igId);
+  await gp.click('#gate-testlink');
+  const tested = await gp.evaluate(id => findFlag(id), igId);
+  check('"just testing" leaves no count behind', tested.opens === opensBefore && tested.turnedBack === 0 && tested.wentThrough === 0, JSON.stringify(tested));
+
+  // A shortcut whose flag isn't on this device still gets the full pause.
+  await gp.goto(URL + '#gate=nosuchflag1');
+  await gp.waitForTimeout(200);
+  check('unknown flag still opens a gate', await gp.isVisible('#gate-wrap') && /doesn't have/.test(await gp.textContent('#gate-sub')));
+  check('unknown flag gate is still locked', !(await gp.isVisible('#gate-type')));
+  const ledgerFlags = await gp.evaluate(() => JSON.stringify(S.usage));
+  check('ledger holds no red-flag names or reasons', !/Mike|Instagram|using|2am/.test(ledgerFlags), ledgerFlags.slice(0, 150));
+  await gctx.close();
+
   // ── Service worker strategy, checked at the source level.
   // Playwright over file:// cannot register a service worker, so these are
   // static assertions, not behavioural ones. They exist to stop a future edit

@@ -256,6 +256,27 @@ input[type=range]{padding:0;background:transparent;border:none}
 .buy10-hero{border-radius:20px; padding:18px; background:linear-gradient(135deg, rgba(245,158,11,.16), rgba(45,212,191,.12)); border:1px solid rgba(245,158,11,.22)}
 .buy10-prompt{min-height:68px; display:flex; align-items:center; justify-content:center; text-align:center; background:var(--panel); border:1px solid var(--border); border-radius:18px; padding:14px; font-size:16px; font-weight:700}
 .buy10-actions{display:grid; gap:10px; margin-top:auto}
+/* Red-flag gate. Sits under red mode (120) and Stop the Slide (121) so either can open on top of it. */
+/* Always dark, whatever the theme: it is an interruption, not a page. The
+   dark tokens are redeclared here so buttons inside don't take light values. */
+.gate-wrap{position:fixed; inset:0; background:#080F1C; display:none; z-index:119;
+  --bg:#0F172A; --panel:#1E293B; --panel2:#263548; --text:#E2E8F0; --muted:#94A3B8; --border:rgba(255,255,255,.12);
+  --teal:#2DD4BF; --teal2:#5EEAD4; --amber:#F59E0B; --sage:#84A98C; --red:#F87171; color:var(--text)}
+.gate-wrap input{background:#0F172A; color:#E2E8F0; border-color:rgba(255,255,255,.18)}
+.gate-wrap.open{display:block}
+.gate{position:absolute; inset:0; max-width:480px; margin:0 auto; padding:calc(16px + var(--safe-top)) 16px calc(18px + var(--safe-bot)); display:flex; flex-direction:column; gap:12px; overflow:auto; color:#F1F5F9}
+.gate .sub,.gate .small,.gate .lbl{color:#CBD5E1}
+.gate-hero{border-radius:20px; padding:18px; background:linear-gradient(135deg, rgba(248,113,113,.18), rgba(245,158,11,.12)); border:1px solid rgba(248,113,113,.32)}
+.gate-quote{background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12); border-left:3px solid var(--amber); border-radius:12px; padding:12px; font-size:15px; line-height:1.5; white-space:pre-wrap}
+.gate-photo{width:100%; max-height:220px; object-fit:cover; border-radius:16px}
+.gate-lock{background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:14px}
+.gate-phrase{font-size:16px; font-weight:800; margin:4px 0 8px; user-select:none; -webkit-user-select:none}
+.gate .btn:disabled{opacity:.35}
+.gate a.btn3{display:block; text-align:center; text-decoration:none}
+.gate-test{color:var(--muted); font-size:12px; text-align:center; text-decoration:underline; cursor:pointer}
+.flag-row{background:var(--panel2); border:1px solid var(--border); border-radius:14px; padding:12px; margin-bottom:10px}
+.flag-steps{margin:8px 0 8px 18px; font-size:13px; line-height:1.55}
+.flag-steps li{margin-bottom:6px}
 
 /* ── CHAT ──────────────────────────────────────────────────────── */
 .msg{max-width:85%;padding:11px 13px;border-radius:15px;font-size:13px;line-height:1.55;margin-bottom:9px}
@@ -502,6 +523,13 @@ input[type=range]{padding:0;background:transparent;border:none}
   <div class="screen" id="screen-tools">
     <div class="card hero"><div class="h2">Tools</div><div class="sub">Immediate actions for cravings, drift, and destabilization.</div></div>
 
+    <div class="tool-card" id="flags-card">
+      <h4>🚩 Red flags</h4>
+      <p>People and apps that lead you back. Put a pause in front of them: your own reason, a wait, then a choice.</p>
+      <div id="flags-quick"></div>
+      <button class="btn3" onclick="openFlags()">Manage red flags</button>
+    </div>
+
     <div class="tool-card">
       <div class="tc-head" onclick="toggleTool(this)"><h4>🫁 Breathing reset</h4><span class="tc-arr">▾</span></div>
       <div class="tc-body"><div class="tc-inner">
@@ -689,6 +717,60 @@ input[type=range]{padding:0;background:transparent;border:none}
     </div>
   </div></div>
 
+  <!-- ══════════════════ RED FLAGS ══════════════════ -->
+  <div class="modal-wrap" id="modal-flags"><div class="modal">
+    <div class="h2">Red flags</div>
+    <div class="sub">People and apps that lead you back. Each one gets a pause you set now, with a clear head, for the moment you won't have one.</div>
+    <div id="flags-list"></div>
+    <div class="lbl">Add a red flag</div>
+    <div class="chips" id="flag-kind"></div>
+    <div class="lbl" id="flag-name-lbl">Who is it?</div>
+    <input id="flag-name" type="text" maxlength="60" autocomplete="off">
+    <button class="btn3 hidden" id="flag-pick" onclick="pickFlagContact()">Choose from my contacts</button>
+    <div id="flag-phone-wrap">
+      <div class="lbl">Their number (optional, but it's what makes this work)</div>
+      <input id="flag-phone" type="tel" inputmode="tel" autocomplete="off">
+    </div>
+    <div class="lbl">Why is this a red flag? In your words.</div>
+    <textarea id="flag-why" maxlength="400" placeholder="e.g. Every time I call him, I end up using."></textarea>
+    <div class="small">You'll read this at the pause, at the moment it matters.</div>
+    <div class="lbl">Pause before you can go ahead</div>
+    <select id="flag-pause"></select>
+    <div class="ob-err" id="flag-err"></div>
+    <button class="btn2" onclick="addFlag()">Add red flag</button>
+    <div class="small" style="margin-top:10px">Making a red flag stronger works right away. Making one weaker — a shorter pause, or taking it off — waits until tomorrow. A craving doesn't get to undo what you decided with a clear head.</div>
+    <div class="close" onclick="closeModal('modal-flags')">Close</div>
+  </div></div>
+
+  <div class="gate-wrap" id="gate-wrap" role="dialog" aria-modal="true" aria-labelledby="gate-title"><div class="gate">
+    <div class="gate-hero"><div class="h2" id="gate-title">Hold on.</div><div class="sub" id="gate-sub"></div></div>
+    <div id="gate-why"></div>
+    <div id="gate-loss"></div>
+    <img id="gate-photo" class="gate-photo hidden" alt="">
+    <div class="buy10-actions" style="margin-top:0">
+      <button class="btn2 hidden" id="gate-call" onclick="gateCallSupport()">📞 Call support instead</button>
+      <button class="btn3" onclick="gateBuy10()">⏱ Buy 10 minutes</button>
+      <button class="btn3" id="gate-back" onclick="gateTurnBack()">I'm not doing this — close</button>
+    </div>
+    <div class="gate-lock" id="gate-lock">
+      <div class="h3">Still going ahead?</div>
+      <div class="sub" id="gate-lock-sub"></div>
+      <div id="gate-wait">
+        <div class="timer-big" id="gate-timer">2:00</div>
+        <div class="buy10-prompt" id="gate-prompt" style="color:#F1F5F9;background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12)"></div>
+      </div>
+      <div id="gate-type" class="hidden">
+        <div class="lbl">Type this, word for word</div>
+        <div class="gate-phrase" id="gate-phrase"></div>
+        <input id="gate-input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" onpaste="return false" ondrop="return false" oninput="gateCheckPhrase()">
+        <button class="btn" id="gate-go" disabled onclick="gateGoThrough()">Go ahead</button>
+      </div>
+      <div id="gate-done" class="hidden"></div>
+    </div>
+    <div id="crisis-gate"></div>
+    <div class="gate-test" id="gate-testlink" onclick="gateJustTesting()">Just testing the shortcut — don't count this</div>
+  </div></div>
+
   <div class="flash" id="flash"><span id="flash-txt"></span></div>
 </div>
 
@@ -743,12 +825,16 @@ const DEFAULT_STATE = {
   music:'', show:'', clip:'', pod:'',
   memories:[], checkins:[], checkinLog:[], relapses:[],
   mood:'', chatHistory:[], redMode:false,
+  // Red flags: people and apps the user put a pause in front of. Counts
+  // only — when a gate opens, whether they turned back or went ahead.
+  flags:[],
   schemaVersion: 3,
   // Usage ledger. Counts and dates only — never content, never text the user
   // wrote. Lives on this device. Leaves only if the user exports it themselves.
   usage:{ firstOpen:'', days:[], redMode:0, timerStarts:0, timerDone:0,
           breathDone:0, tools:{}, contactTaps:0, crisisTaps:0,
-          checkins:0, relapses:0, exports:0 }
+          checkins:0, relapses:0, exports:0,
+          gateOpens:0, gateTurnedBack:0, gateWentThrough:0 }
 };
 let S = JSON.parse(JSON.stringify(DEFAULT_STATE));
 
@@ -759,7 +845,7 @@ const buy10Prompts = [
 ];
 
 // ─── PERSISTENCE ──────────────────────────────────────────────────
-function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); }catch(e){ console.error('saveState failed', e); showFlash('Storage full — remove a few photos in My Family.'); } }
+function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(S)); return true; }catch(e){ console.error('saveState failed', e); showFlash('Storage full — remove a few photos in My Family.'); return false; } }
 function loadState(){ try{ const raw = localStorage.getItem(STORAGE_KEY); if(!raw) return false; S = deepMerge(JSON.parse(JSON.stringify(DEFAULT_STATE)), JSON.parse(raw) || {}); return true; } catch(e){ console.error('loadState failed', e); return false; } }
 function deepMerge(base, incoming){ if(Array.isArray(base)) return Array.isArray(incoming) ? incoming : base; const out = {...base}; for(const k in incoming){ if(base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])) out[k] = deepMerge(base[k], incoming[k] || {}); else out[k] = incoming[k]; } return out; }
 
@@ -853,7 +939,7 @@ async function storageReadout(){
 // is why this readout exists.
 //
 // BUMP SHELL_BUILD ON EVERY DEPLOY, alongside CACHE in sw.js.
-const SHELL_BUILD = '2026-10-08 · ria-v19';
+const SHELL_BUILD = '2026-10-20 · ria-v20';
 async function buildReadout(){
   const el = document.getElementById('s-build');
   if(!el) return;
@@ -1126,7 +1212,7 @@ function crisisHtml(){
 }
 function renderCrisis(){
   const html = crisisHtml();
-  ['crisis-home','crisis-urgent','crisis-support','crisis-ai','crisis-red'].forEach(id => {
+  ['crisis-home','crisis-urgent','crisis-support','crisis-ai','crisis-red','crisis-gate'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.innerHTML = html;
   });
@@ -1454,6 +1540,7 @@ function populate(){
   buildTriggerChips('s-chips-'); buildToneChips('s-chips-tone');
   renderContacts(); renderUrgent(); renderMedia(); renderMemory(); renderCalendar();
   renderRiskBanner(); renderChat(); renderCrisis(); renderRedCopy(); renderRelapseHistory();
+  applyPendingFlagChanges(); renderFlags();
 
   const feedback = document.getElementById('mood-feedback');
   if(feedback){
@@ -1953,6 +2040,349 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Enter' && document.activeElement && document.activeElement.id === 'chat-input') sendChat();
 });
 
+// ─── RED FLAGS ────────────────────────────────────────────────────
+// The user names people and apps that lead them back. Reaching one goes
+// through a gate: their own reason, a pause that only counts down while the
+// screen is open, then a sentence they have to type. The exits are one tap
+// from the first second; only "go ahead" waits.
+//
+// RIA cannot see calls or app launches — a web app has no such access. The
+// gate opens only because the user routes a contact or a home-screen
+// shortcut through it (#gate=<id>). That keeps hard rule §4.3 intact: the
+// user is binding themselves, nothing is observing them.
+//
+// Asymmetry rule: anything that makes a flag stronger applies now; anything
+// that weakens it (a shorter pause, taking it off) applies tomorrow.
+const FLAG_PAUSES = [60, 120, 300, 600];
+const FLAG_DEFAULT_PAUSE = 120;
+const GATE_PHRASE = 'I know where this leads and I am choosing it anyway';
+const GATE_PROMPTS = {
+  gentle:  ['Breathe out slowly. There is time.', 'What is the urge promising you right now?', 'Picture the hour after. Then the morning after.', 'You set this pause for exactly this moment.', 'Who would you want to tell about this tomorrow?', 'The urge rises, peaks, then falls. You are in it now.'],
+  direct:  ['What happens in the hour after this?', 'You flagged this for a reason. Read it again.', 'The urge is lying about how good this will be.', 'Who gets hurt if this goes the usual way?', 'Waves peak and fall. Outlast this one.', 'You can still call someone instead.'],
+  hardline:['You know exactly how this ends.', 'Read your reason again. You wrote it.', 'This is the moment you built this for.', 'The urge is not a decision. You are.', 'Count what this cost you last time.', 'Still here? Good. Call someone.']
+};
+const GATE_TITLES = { gentle:'Pause with me.', direct:'Stop. You flagged this.', hardline:'No. Not on autopilot.' };
+let flagKind = 'person';
+let gate = null;
+
+function tomorrowKey(){ const d = new Date(); d.setDate(d.getDate() + 1); return getLocalDateKey(d); }
+function newFlagId(){ return 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function safeFlagId(id){ return /^[A-Za-z0-9]{1,40}$/.test(String(id || '')); }
+function findFlag(id){ return (S.flags || []).find(f => f && f.id === id) || null; }
+function fmtPause(sec){ return sec >= 60 ? (sec / 60) + ' min' : sec + ' sec'; }
+function fmtClock(sec){ sec = Math.max(0, Math.ceil(sec)); return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); }
+// location.origin is the string "null" on file://, so build from href.
+function gateLink(id){ return location.href.split('#')[0] + '#gate=' + id; }
+function primarySupport(){ return S.contacts.find(c => c && c.name && c.phone) || S.contacts.find(c => c && c.phone) || null; }
+
+function applyPendingFlagChanges(){
+  const today = todayKey();
+  let changed = false;
+  S.flags = (S.flags || []).filter(f => {
+    if(!f || !safeFlagId(f.id)){ changed = true; return false; }
+    if(f.pendingRemove && f.pendingRemove <= today){ changed = true; return false; }
+    if(f.pendingPause && f.pendingPause.from <= today){ f.pause = f.pendingPause.sec; delete f.pendingPause; changed = true; }
+    return true;
+  });
+  if(changed) saveState();
+}
+
+// ── Manager
+function openFlags(){
+  applyPendingFlagChanges();
+  buildChips('flag-kind', [{id:'person', label:'A person'}, {id:'app', label:'An app'}], [flagKind], (v) => setFlagKind(v));
+  const sel = document.getElementById('flag-pause');
+  if(sel && !sel.options.length){
+    sel.innerHTML = FLAG_PAUSES.map(p => `<option value="${p}"${p === FLAG_DEFAULT_PAUSE ? ' selected' : ''}>${fmtPause(p)}</option>`).join('');
+  }
+  setFlagKind(flagKind);
+  text('flag-err', '');
+  renderFlags();
+  document.getElementById('modal-flags').classList.add('open');
+}
+function setFlagKind(kind){
+  flagKind = kind === 'app' ? 'app' : 'person';
+  document.querySelectorAll('#flag-kind .chip').forEach(c => c.classList.toggle('on', c.getAttribute('data-val') === flagKind));
+  text('flag-name-lbl', flagKind === 'person' ? 'Who is it?' : 'Which app?');
+  const name = document.getElementById('flag-name');
+  if(name) name.placeholder = flagKind === 'person' ? 'Name' : 'e.g. Instagram, a betting app';
+  const pw = document.getElementById('flag-phone-wrap');
+  if(pw) pw.classList.toggle('hidden', flagKind !== 'person');
+  // Contact Picker is Android Chrome only. It reads one contact the user
+  // chooses, on the device; nothing leaves it.
+  const pick = document.getElementById('flag-pick');
+  if(pick) pick.classList.toggle('hidden', !(flagKind === 'person' && navigator.contacts && navigator.contacts.select));
+}
+async function pickFlagContact(){
+  try {
+    const r = await navigator.contacts.select(['name', 'tel'], { multiple:false });
+    if(r && r[0]){
+      if(r[0].name && r[0].name[0]) setVal('flag-name', r[0].name[0]);
+      if(r[0].tel && r[0].tel[0]) setVal('flag-phone', r[0].tel[0]);
+    }
+  } catch(e){ /* picker cancelled or unavailable */ }
+}
+function addFlag(){
+  const name = val('flag-name').slice(0, 60), why = val('flag-why').slice(0, 400);
+  const phone = flagKind === 'person' ? extractPhone(val('flag-phone')) : '';
+  const p = Number(val('flag-pause'));
+  if(!name){ text('flag-err', flagKind === 'person' ? 'Who is it?' : 'Which app?'); return; }
+  if(!why){ text('flag-err', 'Write why, in your words. This is what you will read at the pause.'); return; }
+  text('flag-err', '');
+  S.flags = S.flags || [];
+  S.flags.push({ id:newFlagId(), kind:flagKind, name, phone, why,
+                 pause: FLAG_PAUSES.includes(p) ? p : FLAG_DEFAULT_PAUSE,
+                 added: todayKey(), opens:0, turnedBack:0, wentThrough:0 });
+  const ok = saveState();
+  setVal('flag-name', ''); setVal('flag-phone', ''); setVal('flag-why', '');
+  renderFlags();
+  if(ok) showFlash('Red flag added ✓ — now set it up below.');
+}
+function setFlagPause(id, v){
+  const f = findFlag(id), sec = Number(v);
+  if(!f || !FLAG_PAUSES.includes(sec)) return;
+  let msg;
+  if(sec >= f.pause){ f.pause = sec; delete f.pendingPause; msg = 'Pause is ' + fmtPause(sec) + ' ✓'; }
+  else { f.pendingPause = { sec, from: tomorrowKey() }; msg = 'The shorter pause starts tomorrow.'; }
+  const ok = saveState();
+  renderFlags();
+  if(ok) showFlash(msg);
+}
+function addFlagPhone(id){
+  const f = findFlag(id), phone = extractPhone(val('fp-' + id));
+  if(!f || !phone) return;
+  f.phone = phone;
+  const ok = saveState();
+  renderFlags();
+  if(ok) showFlash('Number saved ✓');
+}
+function removeFlag(id){
+  const f = findFlag(id);
+  if(!f) return;
+  f.pendingRemove = tomorrowKey();
+  const ok = saveState();
+  renderFlags();
+  if(ok) showFlash('It comes off tomorrow. You can keep it any time before then.');
+}
+function keepFlag(id){
+  const f = findFlag(id);
+  if(!f) return;
+  delete f.pendingRemove;
+  const ok = saveState();
+  renderFlags();
+  if(ok) showFlash('Kept ✓');
+}
+function toggleFlagSetup(id){ const el = document.getElementById('setup-' + id); if(el) el.classList.toggle('hidden'); }
+function copyGateLink(id){
+  const link = gateLink(id);
+  const fallback = () => { const el = document.getElementById('fl-' + id); if(el){ el.focus(); el.select(); } showFlash('Select the link and copy it.'); };
+  try {
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(() => showFlash('Link copied ✓'), fallback);
+    else fallback();
+  } catch(e){ fallback(); }
+}
+function flagSetupHtml(f){
+  const n = escapeHtml(f.name);
+  let steps;
+  if(f.kind === 'person' && f.phone){
+    steps = [
+      `Delete ${n} from your phone's Contacts app. RIA keeps the number now, behind the pause.`,
+      `Clear ${n} from your recent calls and messages if you can. Otherwise the number is still one tap away.`,
+      `To reach ${n}, use <strong>Tools → Red flags → ${n}</strong>. Or put an icon on your home screen: copy the link below, open it in Chrome, tap ⋮ → <strong>Add to Home screen</strong>.`
+    ];
+  } else if(f.kind === 'person'){
+    steps = [
+      `RIA can only stand between you and a number it has. Add ${n}'s number here, then delete it from your Contacts.`,
+      `<input id="fp-${f.id}" type="tel" inputmode="tel" placeholder="Their number" style="margin-top:6px"><button class="btn3" onclick="addFlagPhone('${f.id}')">Save number</button>`
+    ];
+  } else {
+    steps = [
+      'Copy the link below.',
+      'Open Chrome, paste it into the address bar, and open it.',
+      `Tap ⋮ → <strong>Add to Home screen</strong> and name it ${n}.`,
+      `Long-press the real ${n} icon → <strong>Remove</strong> (from the home screen only — the app stays installed). Put the new icon where the old one was.`,
+      'Tap the new icon once. If RIA opens on the pause screen, it works. Tap "Just testing" at the bottom so it isn\'t counted.'
+    ];
+  }
+  return `<ol class="flag-steps">${steps.map(s => '<li>' + s + '</li>').join('')}</ol>
+    <div style="display:flex;gap:8px;align-items:center"><input id="fl-${f.id}" type="text" readonly value="${escapeHtml(gateLink(f.id))}"><button class="btn3" style="width:auto;margin-top:0" onclick="copyGateLink('${f.id}')">Copy</button></div>
+    <div class="small" style="margin-top:8px">Android with Chrome. iPhone isn't supported yet.</div>
+    <div class="small" style="margin-top:4px">This adds a step, not a lock. ${f.kind === 'app' ? 'The app is still in your app drawer.' : 'The number can still be dialled by hand.'} That's deliberate: it's a pause you built for yourself, not a cage.</div>`;
+}
+function renderFlags(){
+  const flags = (S.flags || []).filter(f => f && safeFlagId(f.id));
+  const quick = document.getElementById('flags-quick');
+  if(quick){
+    quick.innerHTML = flags.length
+      ? flags.map(f => `<button class="btn3" data-flag="${f.id}" onclick="openGate('${f.id}')">🚩 ${f.kind === 'person' ? 'Contact' : 'Open'} ${escapeHtml(f.name)}</button>`).join('')
+      : '<div class="small">None yet.</div>';
+  }
+  const list = document.getElementById('flags-list');
+  if(!list) return;
+  if(!flags.length){ list.innerHTML = '<div class="card"><div class="sub">No red flags yet. Add the first one below.</div></div>'; return; }
+  list.innerHTML = flags.map(f => {
+    const opened = f.opens || 0;
+    const tally = opened
+      ? `Turned back ${f.turnedBack || 0} · went ahead ${f.wentThrough || 0} · opened ${opened}`
+      : 'Not used yet.';
+    const pending = [
+      f.pendingPause ? `<div class="small" style="color:var(--amber)">Pause drops to ${fmtPause(f.pendingPause.sec)} tomorrow.</div>` : '',
+      f.pendingRemove ? `<div class="small" style="color:var(--amber)">Comes off tomorrow.</div>` : ''
+    ].join('');
+    const opts = FLAG_PAUSES.map(p => `<option value="${p}"${p === f.pause ? ' selected' : ''}>${fmtPause(p)}</option>`).join('');
+    return `<div class="flag-row" data-id="${f.id}">
+      <div class="h3">🚩 ${escapeHtml(f.name)}</div>
+      <div class="small">${f.kind === 'person' ? 'Person' + (f.phone ? ' · number kept here' : ' · no number') : 'App'}</div>
+      <div class="small" data-tally>${tally}</div>
+      ${pending}
+      <div class="lbl">Pause</div><select data-pause onchange="setFlagPause('${f.id}', this.value)">${opts}</select>
+      <div class="tool-actions" style="flex-wrap:wrap">
+        <button class="btn3" onclick="toggleFlagSetup('${f.id}')">Set it up</button>
+        ${f.pendingRemove ? `<button class="btn3" data-keep onclick="keepFlag('${f.id}')">Keep it</button>` : `<button class="btn3" data-remove onclick="removeFlag('${f.id}')">Remove</button>`}
+      </div>
+      <div class="hidden" id="setup-${f.id}">${flagSetupHtml(f)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Gate
+function gateFromHash(){
+  const m = /^#gate=([A-Za-z0-9]{1,40})$/.exec(location.hash || '');
+  if(m) openGate(m[1]);
+}
+function openGate(id){
+  applyPendingFlagChanges();
+  if(gate) stopGateTimer();
+  const f = safeFlagId(id) ? findFlag(id) : null;
+  gate = { id, flag:f, remaining: f ? f.pause : FLAG_DEFAULT_PAUSE, elapsed:0, last: Date.now(),
+           timer:null, resolved:false, counted:false };
+  // Count the open, never what happens outside the app afterwards.
+  bump('gateOpens');
+  if(f){ f.opens = (f.opens || 0) + 1; saveState(); }
+  gate.counted = true;
+
+  const tone = GATE_TITLES[S.tone] ? S.tone : 'gentle';
+  text('gate-title', GATE_TITLES[tone]);
+  text('gate-sub', f
+    ? `You marked ${f.name} as a red flag.`
+    : "This shortcut points to a red flag this copy of RIA doesn't have. The pause still stands.");
+  document.getElementById('gate-why').innerHTML = f
+    ? `<div class="lbl">Why, in your words</div><div class="gate-quote">${escapeHtml(f.why)}</div>` : '';
+  document.getElementById('gate-loss').innerHTML = S.loss
+    ? `<div class="lbl">What you lose</div><div class="gate-quote">${escapeHtml(S.loss)}</div>` : '';
+  gatePhoto();
+  const p = primarySupport();
+  const call = document.getElementById('gate-call');
+  if(call){ call.classList.toggle('hidden', !p); if(p) call.textContent = `📞 Call ${p.name || p.label} instead`; }
+
+  text('gate-lock-sub', `You can — after a ${fmtPause(gate.remaining)} pause. It only counts down while this screen is open.`);
+  text('gate-timer', fmtClock(gate.remaining));
+  text('gate-prompt', GATE_PROMPTS[tone][0]);
+  text('gate-phrase', GATE_PHRASE);
+  setVal('gate-input', '');
+  document.getElementById('gate-go').disabled = true;
+  document.getElementById('gate-wait').classList.remove('hidden');
+  document.getElementById('gate-type').classList.add('hidden');
+  document.getElementById('gate-done').classList.add('hidden');
+  document.getElementById('gate-testlink').classList.remove('hidden');
+  renderCrisis();
+  document.getElementById('gate-wrap').classList.add('open');
+  gate.timer = setInterval(gateTick, 1000);
+}
+function gatePhoto(){
+  const img = document.getElementById('gate-photo');
+  if(!img) return;
+  const srcs = (S.memories || []).map(memSrc).filter(Boolean);
+  if(!srcs.length){ img.classList.add('hidden'); img.removeAttribute('src'); return; }
+  img.src = srcs[Math.floor(Math.random() * srcs.length)];
+  img.classList.remove('hidden');
+}
+function stopGateTimer(){ if(gate && gate.timer){ clearInterval(gate.timer); gate.timer = null; } }
+function gateTick(){
+  if(!gate || gate.resolved) return;
+  const now = Date.now();
+  // Leaving the screen does not run the clock down.
+  if(document.visibilityState === 'hidden'){ gate.last = now; return; }
+  // Capped per tick so a sleeping device or a throttled timer can't skip the wait.
+  const dt = Math.min(2, Math.max(0, (now - gate.last) / 1000));
+  gate.last = now;
+  gate.remaining -= dt; gate.elapsed += dt;
+  text('gate-timer', fmtClock(gate.remaining));
+  const prompts = GATE_PROMPTS[GATE_TITLES[S.tone] ? S.tone : 'gentle'];
+  text('gate-prompt', prompts[Math.floor(gate.elapsed / 10) % prompts.length]);
+  if(gate.remaining <= 0){
+    stopGateTimer();
+    document.getElementById('gate-wait').classList.add('hidden');
+    document.getElementById('gate-type').classList.remove('hidden');
+    text('gate-lock-sub', 'The pause is over. If you still want to go ahead, type this. The other buttons are still there.');
+  }
+}
+document.addEventListener('visibilitychange', () => { if(gate && document.visibilityState === 'visible') gate.last = Date.now(); });
+function normPhrase(s){ return String(s || '').toLowerCase().replace(/[^a-z ]/g, '').replace(/\s+/g, ' ').trim(); }
+function gateCheckPhrase(){
+  if(!gate) return;
+  document.getElementById('gate-go').disabled = !(gate.remaining <= 0 && normPhrase(val('gate-input')) === normPhrase(GATE_PHRASE));
+}
+// Exactly one outcome per gate. Counts only.
+function gateResolve(outcome){
+  if(!gate || gate.resolved) return;
+  gate.resolved = true; stopGateTimer();
+  document.getElementById('gate-testlink').classList.add('hidden');
+  if(!gate.counted) return;
+  const f = gate.flag;
+  if(outcome === 'back'){ bump('gateTurnedBack'); if(f){ f.turnedBack = (f.turnedBack || 0) + 1; saveState(); } }
+  else { bump('gateWentThrough'); if(f){ f.wentThrough = (f.wentThrough || 0) + 1; saveState(); } }
+}
+function gateTurnBack(){
+  // After "go ahead", backing out still closes — but the open was already
+  // resolved, so it is not counted a second time.
+  const first = !!gate && !gate.resolved;
+  gateResolve('back'); closeGate();
+  showFlash(first ? 'You turned back. That was the hard part.' : 'Closed. Good call.');
+}
+function gateBuy10(){ gateResolve('back'); closeGate(); openBuy10(); }
+function gateCallSupport(){ gateResolve('back'); closeGate(); callPrimarySupport(); }
+function gateGoThrough(){
+  if(!gate || gate.resolved || gate.remaining > 0 || normPhrase(val('gate-input')) !== normPhrase(GATE_PHRASE)) return;
+  gateResolve('through');
+  const f = gate.flag, n = f ? escapeHtml(f.name) : '';
+  let next;
+  if(f && f.kind === 'person' && f.phone){
+    next = `<div class="sub">It's your call.</div>
+      <a class="btn3" data-gate-tel href="tel:${f.phone}">Call ${n}</a>
+      <a class="btn3" href="sms:${f.phone}">Text ${n}</a>`;
+  } else if(f && f.kind === 'app'){
+    next = `<div class="sub">Open ${n} yourself. It's your call.</div>`;
+  } else {
+    next = `<div class="sub">It's your call.</div>`;
+  }
+  document.getElementById('gate-type').classList.add('hidden');
+  const done = document.getElementById('gate-done');
+  done.innerHTML = next + `<div class="small" style="margin-top:12px">If this goes badly, come back fast. Re-entry is in Support — no shame, no starting from nothing.</div><button class="btn3" onclick="closeGate()">Close</button>`;
+  done.classList.remove('hidden');
+  text('gate-lock-sub', '');
+}
+// For checking a new home-screen shortcut: un-counts this open and closes.
+function gateJustTesting(){
+  if(!gate || gate.resolved) return;
+  if(gate.counted){
+    const u = ledger(); u.gateOpens = Math.max(0, (u.gateOpens || 0) - 1);
+    if(gate.flag) gate.flag.opens = Math.max(0, (gate.flag.opens || 0) - 1);
+    gate.counted = false;
+    saveState();
+  }
+  gate.resolved = true; stopGateTimer();
+  closeGate();
+  showFlash('The shortcut works. Nothing was counted.');
+}
+function closeGate(){
+  stopGateTimer();
+  document.getElementById('gate-wrap').classList.remove('open');
+  gate = null;
+  if(/^#gate=/.test(location.hash || '')) history.replaceState(null, '', location.href.split('#')[0]);
+  renderFlags();
+}
+
 // ─── BOOT ─────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   initTheme();
@@ -1960,7 +2390,7 @@ window.addEventListener('DOMContentLoaded', () => {
   stopBuy10();
   const had = loadState();
   noteSession();
-  migratePhotos().then(loadPhotos).then(() => { renderMemory(); renderPhotoPreviews(); }).catch(e => console.warn('photo init', e));
+  migratePhotos().then(loadPhotos).then(() => { renderMemory(); renderPhotoPreviews(); if(gate) gatePhoto(); }).catch(e => console.warn('photo init', e));
   // Crisis-bar taps are counted, never their outcome. This is the only
   // signal that says the app routed someone to a human being.
   document.addEventListener('click', (e) => {
@@ -1974,7 +2404,11 @@ window.addEventListener('DOMContentLoaded', () => {
   renderCrisis();
   if(had && S.name){ launchApp(); }
   else { renderCalendar(); renderPhotoPreviews(); }
+  // A red-flag shortcut opens RIA at #gate=<id>. Checked after launch so
+  // the gate sits on top of whatever screen is underneath.
+  gateFromHash();
 });
+window.addEventListener('hashchange', gateFromHash);
 </script>
 <script>
 if ('serviceWorker' in navigator) {

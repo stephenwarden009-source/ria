@@ -32,7 +32,7 @@ index-stable-v1.html       428 lines   rollback copy (= the pre-rebuild tag)
 index-broken-test.html    1396 lines   dead
 index-broken-test-2.html  1094 lines   dead
 sw.js                      123 lines   service worker, cache "ria-v15", network-first navigations
-smoke.js                   472 lines   Playwright suite, 109 assertions
+smoke.js                              Playwright suite, 144 assertions
 CHANGES.md                  45 lines   narrative changelog for the 2026-09-05 build — stale
 manifest.json               26 lines   PWA manifest
 _redirects                   1 line    inert on GitHub Pages — see §1
@@ -70,11 +70,21 @@ Architecture: **single-file vanilla JS PWA.** No framework, no build step, no bu
 
 **Added 2026-10-08 — app description and the no-surveillance copy rule.** Onboarding step 0 opens with a user-facing description (`#about-ria`), replacing "Let's build your RIA." Settings gains an **About RIA** block that copies `#about-ria` at open time (`aboutReadout()`), so there is one source. Copy rule, now tested: the user is the subject of every input verb; UI copy never says RIA watches, tracks, monitors, notices or detects. Two existing lines broke it and were reworded — step 1 "RIA watches for these" → "RIA keeps these for you", and the high-risk banner "Drift detected." → "Your pattern is showing." Four new assertions, including a regex guard over UI text that fails on the pre-change copy. `ria-v18`.
 
+**Added 2026-10-20 — red flags (`ria-v20`).** The user names people and apps that lead them back (Tools → Red flags). Reaching one goes through a full-screen **gate**: the user's own reason, their loss statement, a photo, then a pause (1/2/5/10 min, default 2) that **only counts down while the screen is visible** and is capped at 2s per tick so a sleeping device can't skip it, then a typed sentence (paste blocked; case and punctuation forgiven). Call-support, Stop the Slide and close are available from the first second; only "go ahead" waits. A person's number, if given, is held in RIA and handed over as `tel:`/`sms:` only after the gate.
+
+*How it reaches the gate:* RIA cannot see calls or app launches — no web app can. The user routes things through it: contacts by deleting the number from their phone and calling via RIA; apps by replacing the home-screen icon with a shortcut to `…/ria/#gate=<id>`. The link carries an opaque id only — never a name or reason, because Chrome can sync history URLs off the device. An unknown id still gets the full pause.
+
+*Asymmetry rule (§4.12):* strengthening a flag applies now; shortening a pause or removing a flag applies tomorrow.
+
+*Counts only:* per flag `opens / turnedBack / wentThrough`, plus `gateOpens / gateTurnedBack / gateWentThrough` in the ledger. One outcome per gate. "Just testing the shortcut" un-counts an open. Shown back to the user in the manager, never as a score. 35 new assertions, UI-driven, with a Playwright fake clock for the pause; mutation-checked (removing the visibility pause, the paste block, the one-outcome guard, the deferral, or the pause itself each fails the suite).
+
+*Not built:* native interception (Android `CallRedirectionService` / app-launch detection), iPhone support (Shortcuts automations open Safari, which has separate storage from the home-screen app — untested and expected not to work), editing a flag's reason.
+
 **Added 2026-09-07 (`5f9e23c`) — build readout in Settings.** Reports `SHELL_BUILD` (identifies `index.html`), the Cache Storage keys (identifies what the worker is serving), and the worker's own state — including "update ready — close and reopen the app", the one actionable case. When shell and cache disagree the device is mid-update or stuck. **Confirmed showing `ria-v15` on the author's Android device.**
 
 **Verified 2026-09-06:** zero `fetch`, `XMLHttpRequest`, `WebSocket`, `sendBeacon`, `navigator.geolocation` in `index.html` — asserted on every suite run, so it still holds. The only outbound URLs are four meeting links. The "everything stays on device" claim **holds in code today.**
 
-**Test coverage:** `smoke.js` — Playwright, **109 assertions**, all passing (Linux container, 2026-10-08; last confirmed on the author's Mac at 93, 2026-09-07).
+**Test coverage:** `smoke.js` — Playwright, **144 assertions**, all passing (Linux container, 2026-10-20; last confirmed on the author's Mac at 93, 2026-09-07).
 
 ```bash
 npm install playwright && npx playwright install chromium
@@ -102,6 +112,7 @@ Gotchas worth an hour each:
 9. **Never record a number the user did not enter.** A widget default written to `checkinLog` is indistinguishable from a real answer. Unrated is `null` and renders as a gap, never a zero.
 10. **The drift score is a mirror, never a verdict.** The integer must never appear in the UI or in any export a clinician could read as an assessment. A quiet app must never read as a safety clearance — hence the floor statement. See §11.
 11. **A user must always be able to tell which version they are running, and the app must always be able to update itself.** The crisis numbers ship inside `index.html`; a device stranded on an old shell is a safety failure, not a cosmetic one. See §5 and §12.
+12. **Self-binding is asymmetric.** Anything the user sets up to slow themselves down can be strengthened immediately and weakened only after a delay (red flags: tomorrow). The person in a craving does not get to undo, in the moment, what the person with a clear head decided. Exits to help are never delayed.
 
 ## 5. Open defects
 
@@ -154,7 +165,7 @@ Why this is P1 rather than a nuisance: a stranded install means a user can be ru
 | 3.2 Drift detection engine | Partial — `getDriftScore()` weights missed check-ins, cycle proximity, time of day, and (only if logged in the last 2 days) isolation, urge strength and self-flagged warning signs. No predictive model, no background execution. See §11 |
 | 3.3 Intervention escalation L1–L3 | Partial — drift banner (L1) → red mode (L2) → alert-my-people (L3); no formal ladder |
 | 3.3 Level 4 | **Rejected on principle** — see §4.3 and §7 |
-| 4. Moment-of-choice (if X → then Y) | Partial — buy10 timer + urgent tools; no user-defined if/then rules |
+| 4. Moment-of-choice (if X → then Y) | Partial — buy10 timer + urgent tools; **red flags** cover "if I reach for X → pause and read my reason" for named people and apps; no general if/then rules |
 | 5. Dopamine reward system | Partial — money-saved tally, photo grid, media, check-in calendar |
 | 6. Reality panel | Built (People tab) |
 | 7. Daily check-in | Built, persisted, shown back, and no longer fabricating an intensity |
@@ -204,7 +215,7 @@ The worker deploy at `cold-cherry-007a...` is an **earlier design prototype**, n
 
 **Blocking: the iOS Safari device pass (§5).** The crisis path and the backup path are load-bearing and have only ever run in headless Chromium.
 
-**Now also blocking-adjacent: finish the Android pass.** The device is current at `ria-v15`; what remains is the check-in slider under touch and a `tel:` dial from the installed app.
+**Now also blocking-adjacent: finish the Android pass.** What remains is the check-in slider under touch and a `tel:` dial from the installed app — plus, from `ria-v20`, the red-flags pass: (1) a home-screen shortcut made from a `#gate=` link opens *inside the installed app* and finds the flag (if it shows "this copy of RIA doesn't have", Chrome is giving the shortcut separate storage and the app route needs rethinking); (2) the Contact Picker fills name and number; (3) the pause holds when the screen is switched away; (4) `tel:` dials after the gate.
 
 **Deploy rules:**
 
