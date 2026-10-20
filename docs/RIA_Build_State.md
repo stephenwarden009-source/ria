@@ -32,7 +32,7 @@ index-stable-v1.html       428 lines   rollback copy (= the pre-rebuild tag)
 index-broken-test.html    1396 lines   dead
 index-broken-test-2.html  1094 lines   dead
 sw.js                      123 lines   service worker, cache "ria-v15", network-first navigations
-smoke.js                              Playwright suite, 144 assertions
+smoke.js                              Playwright suite, 146 assertions
 CHANGES.md                  45 lines   narrative changelog for the 2026-09-05 build — stale
 manifest.json               26 lines   PWA manifest
 _redirects                   1 line    inert on GitHub Pages — see §1
@@ -76,7 +76,9 @@ Architecture: **single-file vanilla JS PWA.** No framework, no build step, no bu
 
 *Asymmetry rule (§4.12):* strengthening a flag applies now; shortening a pause or removing a flag applies tomorrow.
 
-*Counts only:* per flag `opens / turnedBack / wentThrough`, plus `gateOpens / gateTurnedBack / gateWentThrough` in the ledger. One outcome per gate. "Just testing the shortcut" un-counts an open. Shown back to the user in the manager, never as a score. 35 new assertions, UI-driven, with a Playwright fake clock for the pause; mutation-checked (removing the visibility pause, the paste block, the one-outcome guard, the deferral, or the pause itself each fails the suite).
+*Counts only:* per flag `opens / turnedBack / wentThrough`, plus `gateOpens / gateTurnedBack / gateWentThrough` in the ledger. One outcome per gate. "Just testing the shortcut" un-counts an open. Shown back to the user in the manager, never as a score. 37 new assertions, UI-driven, with a Playwright fake clock for the pause; mutation-checked (removing the visibility pause, the paste block, the one-outcome guard, the deferral, or the pause itself each fails the suite).
+
+*Side doors:* each flag's setup adds "Make it harder still" — for apps: notifications off, sign out, and for gambling a device-wide blocker (BetBlocker / Gamban, named without links — not verified against their sites) plus operator self-exclusion; for people: block the number, remove them from messaging apps. RIA is the pause; blockers are the wall.
 
 *Not built:* native interception (Android `CallRedirectionService` / app-launch detection), iPhone support (Shortcuts automations open Safari, which has separate storage from the home-screen app — untested and expected not to work), editing a flag's reason.
 
@@ -84,7 +86,7 @@ Architecture: **single-file vanilla JS PWA.** No framework, no build step, no bu
 
 **Verified 2026-09-06:** zero `fetch`, `XMLHttpRequest`, `WebSocket`, `sendBeacon`, `navigator.geolocation` in `index.html` — asserted on every suite run, so it still holds. The only outbound URLs are four meeting links. The "everything stays on device" claim **holds in code today.**
 
-**Test coverage:** `smoke.js` — Playwright, **144 assertions**, all passing (Linux container, 2026-10-20; last confirmed on the author's Mac at 93, 2026-09-07).
+**Test coverage:** `smoke.js` — Playwright, **146 assertions**, all passing (Linux container, 2026-10-20; last confirmed on the author's Mac at 93, 2026-09-07).
 
 ```bash
 npm install playwright && npx playwright install chromium

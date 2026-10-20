@@ -2204,7 +2204,18 @@ function flagSetupHtml(f){
       'Tap the new icon once. If RIA opens on the pause screen, it works. Tap "Just testing" at the bottom so it isn\'t counted.'
     ];
   }
+  // RIA is the pause. These steps close the doors it can't stand in front of.
+  const harder = f.kind === 'app' ? [
+    `Turn off notifications from ${n}: long-press its icon → <strong>App info</strong> → <strong>Notifications</strong> → off. A notification is a way in that skips this pause.`,
+    `Sign out of ${n}, so going back means typing a password.`,
+    'If it\'s gambling: a blocker app — <strong>BetBlocker</strong> (free) or <strong>Gamban</strong> (paid), both in the Play Store — blocks gambling apps <em>and</em> websites across the whole phone, browser included. Also self-exclude on every gambling site you have an account with. RIA is the pause; those are the wall.'
+  ] : [
+    `Block ${n}'s number in your Phone app, so their calls and texts don't reach you.`,
+    `Remove or mute ${n} in WhatsApp and any other messaging app. Those keep their own copy of the contact.`
+  ];
   return `<ol class="flag-steps">${steps.map(s => '<li>' + s + '</li>').join('')}</ol>
+    <div class="lbl">Make it harder still</div>
+    <ul class="flag-steps" data-harder>${harder.map(s => '<li>' + s + '</li>').join('')}</ul>
     <div style="display:flex;gap:8px;align-items:center"><input id="fl-${f.id}" type="text" readonly value="${escapeHtml(gateLink(f.id))}"><button class="btn3" style="width:auto;margin-top:0" onclick="copyGateLink('${f.id}')">Copy</button></div>
     <div class="small" style="margin-top:8px">Android with Chrome. iPhone isn't supported yet.</div>
     <div class="small" style="margin-top:4px">This adds a step, not a lock. ${f.kind === 'app' ? 'The app is still in your app drawer.' : 'The number can still be dialled by hand.'} That's deliberate: it's a pause you built for yourself, not a cage.</div>`;

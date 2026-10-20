@@ -457,6 +457,11 @@ function check(name, cond, extra){ results.push({name, pass: !!cond, extra: extr
   const mikeId = fl2[0].id, igId = fl2[1].id;
   check('setup link points at the gate', (await page.inputValue(`#fl-${igId}`)).endsWith('#gate=' + igId));
 
+  const harderApp = await page.textContent(`#setup-${igId} [data-harder]`);
+  const harderPerson = await page.textContent(`#setup-${mikeId} [data-harder]`);
+  check('app setup closes the side doors: notifications, sign-out, gambling blocker', /Notifications/.test(harderApp) && /Sign out/.test(harderApp) && /BetBlocker/.test(harderApp), harderApp.slice(0, 120));
+  check('person setup closes the side doors: block number, messaging apps', /Block/.test(harderPerson) && /WhatsApp/.test(harderPerson), harderPerson.slice(0, 120));
+
   // Asymmetry: stronger now, weaker tomorrow.
   const pauseSel = `.flag-row[data-id="${igId}"] select[data-pause]`;
   await page.selectOption(pauseSel, '300');
