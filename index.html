@@ -304,7 +304,8 @@ input[type=range]{padding:0;background:transparent;border:none}
 .pat-int{font-size:12px;font-weight:600;white-space:nowrap}
 .pat-bits{font-size:12px;opacity:.85}
 .pat-flag{font-size:10px;color:var(--amber);white-space:nowrap}
-#risk-floor{margin:-2px 0 12px;opacity:.62;line-height:1.45}
+#risk-floor{margin:-2px 0 12px;opacity:.75;line-height:1.45}
+.linkbtn{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer;font-weight:600}
 </style>
 </head>
 <body>
@@ -447,8 +448,10 @@ input[type=range]{padding:0;background:transparent;border:none}
     <div id="risk-banner" class="risk-banner hidden"></div>
     <!-- Floor statement. A quiet app must never read as a safety clearance:
          the false negative (no banner, user about to use) is this design's
-         most plausible harm. See rule §4.10 — mirror, never verdict. -->
-    <div class="small" id="risk-floor">RIA only sees what you tell it. A quiet screen isn't a safety check — you know things it doesn't.</div>
+         most plausible harm. See rule §4.10 — mirror, never verdict.
+         Shown only when it is true: no check-in, or the last one is stale.
+         A line that is always on stops being read. Text set by renderRiskFloor(). -->
+    <div class="small hidden" id="risk-floor"></div>
     <div class="statgrid">
       <div class="stat"><div class="n" id="stat-days">—</div><div class="small">Days Clean</div></div>
       <div class="stat"><div class="n" id="stat-saved">$0</div><div class="small">Saved</div></div>
@@ -939,7 +942,7 @@ async function storageReadout(){
 // is why this readout exists.
 //
 // BUMP SHELL_BUILD ON EVERY DEPLOY, alongside CACHE in sw.js.
-const SHELL_BUILD = '2026-10-20 · ria-v20';
+const SHELL_BUILD = '2026-11-05 · ria-v21';
 async function buildReadout(){
   const el = document.getElementById('s-build');
   if(!el) return;
@@ -1802,7 +1805,23 @@ function getRiskState(){
   if(score >= 2) return 'rising';
   return 'low';
 }
+function renderRiskFloor(){
+  const el = document.getElementById('risk-floor');
+  if(!el) return;
+  const last = lastCheckin();
+  const age = last && last.date ? daysBetweenLocal(last.date) : null;
+  if(age !== null && age <= CHECKIN_FRESH_DAYS){ el.classList.add('hidden'); el.textContent = ''; return; }
+  el.textContent = age === null
+    ? "You haven't checked in yet. RIA only knows what you tell it."
+    : `Your last check-in was ${age} days ago, so RIA is out of date on how you're doing.`;
+  const btn = document.createElement('button');
+  btn.className = 'linkbtn'; btn.type = 'button'; btn.textContent = 'Check in now';
+  btn.onclick = () => openCheckin();
+  el.appendChild(document.createTextNode(' ')); el.appendChild(btn);
+  el.classList.remove('hidden');
+}
 function renderRiskBanner(){
+  renderRiskFloor();
   const el = document.getElementById('risk-banner');
   if(!el) return;
   const risk = getRiskState();

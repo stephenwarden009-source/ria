@@ -338,8 +338,21 @@ function check(name, cond, extra){ results.push({name, pass: !!cond, extra: extr
   check('migration stamps schemaVersion 3', mig.v === 3, String(mig.v));
 
   // ── The score is a mirror, never a verdict (rule 4.10)
-  const floorTxt = await page.textContent('#risk-floor');
-  check('home carries the floor statement', /safety check/i.test(floorTxt || ''), floorTxt);
+  // Floor line shows only when it is true: no check-in, or a stale one.
+  const floor = await page.evaluate(() => {
+    const key = d => { const x = new Date(); x.setDate(x.getDate() - d); return getLocalDateKey(x); };
+    const el = document.getElementById('risk-floor');
+    const read = () => ({ shown: !el.classList.contains('hidden'), txt: el.textContent });
+    const saved = S.checkinLog;
+    S.checkinLog = []; renderRiskBanner(); const none = read();
+    S.checkinLog = [{ date: key(5), urges:'None', isolation:'Connected', intensity:0 }]; renderRiskBanner(); const stale = read();
+    S.checkinLog = [{ date: key(0), urges:'None', isolation:'Connected', intensity:0 }]; renderRiskBanner(); const fresh = read();
+    S.checkinLog = saved; renderRiskBanner();
+    return { none, stale, fresh };
+  });
+  check('floor line shows when there are no check-ins', floor.none.shown && /haven't checked in/i.test(floor.none.txt), JSON.stringify(floor.none));
+  check('floor line shows and names the age when stale', floor.stale.shown && /5 days ago/.test(floor.stale.txt), JSON.stringify(floor.stale));
+  check('floor line hides after a fresh check-in', !floor.fresh.shown, JSON.stringify(floor.fresh));
   const bannerHtml = await page.evaluate(() => {
     const key = d => { const x = new Date(); x.setDate(x.getDate() - d); return getLocalDateKey(x); };
     S.checkinLog = [{ date: key(0), urges:'Strong', isolation:'Gone dark', intensity:9 }];
